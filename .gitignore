@@ -1,3 +1,9 @@
+# custom
+*.example
+build/*
+*.old
+*.pod
+
 # Prerequisites
 *.d
 
