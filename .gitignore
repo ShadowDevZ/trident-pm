@@ -3,7 +3,7 @@
 build/*
 *.old
 *.pod
-
+.vscode/*
 # Prerequisites
 *.d
 
