@@ -14,7 +14,7 @@ typedef uint32_t trd_err_t;
 
 typedef void* TRD_PKG;
 typedef void* TRD_HDR;
-typedef void* TRD_TBL*
+typedef void* TRD_TBL;
 trd_err_t TRPX_InitLibrary();
 void TRPX_ShutdownLibrary();
 
