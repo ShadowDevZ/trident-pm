@@ -4,9 +4,15 @@
 
 #define LIB_TRIDENT_STANDARD 0x1A11313FF
 
+typedef enum {
+    TRD_CT_NONE = 2,
+    TRD_CT_GZIP = 4,
+    TRD_CT_LZ4 = 6,
+    TRD_CT_XZ = 10
+}TRD_COMPRESS_TYPE;
 
 
-#define __TRIDENT_PACKED __attribute__((__packed__))
+#define __STRUCT_PACK __attribute__((__packed__))
 #include "trheader.h"
 
 typedef void* TRD_CTX; //<----make it struct with path values, ... 
