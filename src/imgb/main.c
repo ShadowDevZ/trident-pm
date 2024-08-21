@@ -25,6 +25,10 @@ int main() {
     else{
         printf("checksum verified\n");
     }
+    TRD_SetLastError(TRDE_SUCCESS);
+    trderr_t le = TRD_GetLastError();
+    printf("Status: %u[%s]\n", le, le == TRDE_SUCCESS ? "OK":"FAIL");
+
 
   
     

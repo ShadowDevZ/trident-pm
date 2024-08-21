@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "buildflg.h"
-#include <errno.h>
+
 uint32_t TRD_HeaderChecksum(const TRPD_HEADER *hdr) {
     uint32_t sum = 0;
     const uint8_t *bytes = (const uint8_t *)hdr;
@@ -34,18 +34,18 @@ uint16_t TRD_VersionToFormat(uint8_t major, uint8_t minor, uint8_t revision) {
     char buff[6];
     snprintf(buff, sizeof(buff), "%02u%02u%01u", major,minor,revision);
     uint16_t formatted = (uint16_t)strtoul(buff,NULL ,10);
-    if (formatted == UINT16_MAX || errno == ERANGE) {
+    if (formatted == UINT16_MAX || formatted == 0) {
         return 0;
     }
     return formatted;
 
 }
-uint8_t StrCombineDigits(char c1, char c2) {
+_INTERNALF_ uint8_t StrCombineDigits(char c1, char c2) {
     char buff[3];
     snprintf(buff, sizeof(buff), "%c%c", c1,c2);
    
     uint8_t formatted = (uint8_t)strtoul(buff, NULL, 10);
-    if (errno == ERANGE || formatted > 99) {
+    if (formatted == 0 || formatted > 99) {
         return 0;
     }
     return formatted;
