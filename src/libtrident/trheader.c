@@ -4,20 +4,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include "buildflg.h"
-
+#include "trderr.h"
 uint32_t TRD_HeaderChecksum(const TRPD_HEADER *hdr) {
     uint32_t sum = 0;
     const uint8_t *bytes = (const uint8_t *)hdr;
     
     // Calculate checksum for the part before the checksum field
-    for (size_t i = 0; i < sizeof(hdr->magic) + sizeof(hdr->fmtVersion) + sizeof(hdr->compressionType) + sizeof(hdr->buildFlags); i++) {
+    for (size_t i = 0; i < sizeof(hdr->magic) + sizeof(hdr->fmtVersion) + \
+     sizeof(hdr->compressionType) + sizeof(hdr->buildFlags); i++) {
         sum += bytes[i];
     }
     
     // Calculate checksum for the part after the checksum field
-    for (size_t i = sizeof(hdr->magic) + sizeof(hdr->fmtVersion) + sizeof(hdr->compressionType) + sizeof(hdr->buildFlags) + sizeof(hdr->headerChecksum) + sizeof(hdr->padding); 
-         i < sizeof(TRPD_HEADER); 
-         i++) {
+    for (size_t i = sizeof(hdr->magic) + sizeof(hdr->fmtVersion) + \
+    sizeof(hdr->compressionType) + sizeof(hdr->buildFlags) + sizeof(hdr->headerChecksum) + \
+    sizeof(hdr->padding) + sizeof(hdr->fileLen) + sizeof(hdr->padding2) + \
+    sizeof(hdr->lock); i < sizeof(TRPD_HEADER); i++) {
+
         sum += bytes[i];
     }
 
@@ -62,22 +65,31 @@ TRPD_PKG_VERSION TRD_FormatToVersion(uint16_t fmt) {
     return ver;
 }
 //todo error check and return status
-void TRD_WriteHeader(_TRD_PKGI* pkg, uint8_t comprType, uint16_t fmtVersion) {
+trderr_t TRD_WriteHeader(_TRD_PKGI* pkg, uint8_t comprType,
+uint32_t buildFlags, uint16_t fmtVersion) {
     if (pkg == NULL){
-        return;
+        return TRDE_NULL;
     }
     TRPD_HEADER hdr = {0};
-   
+    
     memcpy(hdr.magic, TRD_PKG_MAGIC, strlen(TRD_PKG_MAGIC));
     hdr.fmtVersion = fmtVersion;
     hdr.compressionType = comprType;
-   hdr.buildFlags = TRD_BF_PLATF_LINUX | TRD_BF_FMT_LE | \
-    TRD_BF_DEBUG | TRD_BF_AP_AMD64;
+   hdr.buildFlags = buildFlags;
     memset(hdr.padding, 0, sizeof(hdr.padding));
     hdr.headerChecksum = TRD_HeaderChecksum(&hdr);
+    //This field will be set during section writing
+    hdr.fileLen = 0;
+    memset(hdr.padding2, 0, sizeof(hdr.padding2));
+    hdr.lock = true;
+    
+    pkg->hdr = hdr;
+    if (fwrite(&hdr, sizeof(TRPD_HEADER), 1,  pkg->pkgHandle) != 1) {
+        return TRDE_IO_FAIL;
+    }
     
 
-    pkg->hdr = hdr;
+    return TRDE_SUCCESS;
 
 
     

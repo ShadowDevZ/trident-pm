@@ -75,7 +75,6 @@ utiparse
 verifydeveloper
 getauthorhandle
 */
-bool TRD_CheckHeader(TRPD_HEADER* hdr);
-TRPD_HEADER TRD_GetHeader();
+#include "trheader.h"
 
 

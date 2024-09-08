@@ -10,7 +10,7 @@ typedef struct {
     uint64_t tblSize;
     uint16_t tblRevision;
 
-}__TRIDENT_PACKED TRPD_TABLE_TEMPLATE;
+}__STRUCT_PACK TRPD_TABLE_TEMPLATE;
 
 enum TRPD_TABLE_LIST {
     TRPD_TBL_MANIFEST = 1 << 1,

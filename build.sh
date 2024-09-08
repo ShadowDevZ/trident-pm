@@ -19,3 +19,6 @@ mkdir build
 
 cmake -S . -B build 
 make -C build
+echo
+echo
+./build/out/bin/trdbld

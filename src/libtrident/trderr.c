@@ -27,8 +27,8 @@ const char* __trd_err_msg[] = {
     [TRDE_FMT_UNSUPPORTED] = "Unsupported package format. Possibly an outdated API",
     [TRDE_FILE_CORRUPTED] = "File or segment of it's content is corrupted",
     [TRDE_XMLPARSE] = "Package manifest could not be properly tokenized",
-    [TRDE_NOFILE] = "The local file or resource could not be found"
-
+    [TRDE_NOFILE] = "The local file or resource could not be found",
+    [TRDE_NULL] = "The pointer was null"
 
 };
 

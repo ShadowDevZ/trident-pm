@@ -1,7 +1,9 @@
 #pragma once
-#include "libtrident.h"
 #include <stdint.h>
 typedef uint32_t trderr_t;
+#include <stdio.h>
+#include "libtrident.h"
+
 
 #define _TRD_MERR_STR(x) #x 
 trderr_t TRD_GetLastError();
@@ -33,6 +35,7 @@ typedef enum {
     TRDE_FMT_UNSUPPORTED = 21,
     TRDE_FILE_CORRUPTED = 22,
     TRDE_XMLPARSE = 23,
-    TRDE_NOFILE = 24
+    TRDE_NOFILE = 24,
+    TRDE_NULL = 25
 
 }TRD_ERR_CODES;
