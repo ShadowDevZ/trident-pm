@@ -10,7 +10,7 @@ int main() {
     TRPD_PKG_VERSION fver = {1,0,1};
    
     
-    FILE* f = fopen("package.test", "wb");
+    FILE* f = fopen("package.test", "wb+");
     if (f == NULL) {
         perror("Failed to open file\n");
         return 1;
@@ -38,6 +38,11 @@ int main() {
    // TRD_Wri
     trderr_t a = TRD_GenerateSectionHeader(&pkgi, 10);
     printf("%d\n",a);
+
+    TRD_SECTION_DESCRIPTOR tsd = {0};
+    trd_err_t offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
+    printf("secdesc: %d", offsErr);
+    printf("\n\t::%u\n\t::%u\n", tsd.tableCount, tsd.tableFlags);
 
      fclose(f);
   
