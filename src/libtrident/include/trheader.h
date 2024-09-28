@@ -79,16 +79,20 @@ typedef struct{
 }__STRUCT_PACK TRPD_PKG_VERSION;
 
 
+typedef struct {
+    uint16_t tableCount;
+    uint64_t tableSeekOffset[];
+}__STRUCT_PACK _TRD_TABLE_OFFSETS;
 
 typedef struct {
-    //number of tables inside .DYNAMIC section
-    uint16_t tableCount;
+
     //which tables are present ? Binary flags
     uint32_t tableFlags; 
     //Seek offset to every table if present otherwise 0
-    uint64_t* tableSeekOffset;
+    _TRD_TABLE_OFFSETS* offsets;
 
 }__STRUCT_PACK TRD_SECTION_DESCRIPTOR;
+
 
 
 #include <stdio.h>

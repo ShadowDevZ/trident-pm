@@ -9,6 +9,15 @@ int main() {
     _TRD_PKGI pkgi = {0};
     TRPD_PKG_VERSION fver = {1,0,1};
    
+
+     uint16_t tables = 10;
+     TRD_SECTION_DESCRIPTOR tsd = {0};
+    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tables);
+    tsd.offsets = malloc(tableSeekOffsetSize);
+    if (tsd.offsets == NULL) {
+        printf("@!!!!MALLOC ERROR DEBUG\n");
+        return 1;
+    }
     
     FILE* f = fopen("package.test", "wb+");
     if (f == NULL) {
@@ -35,16 +44,21 @@ int main() {
     TRD_SetLastError(TRDE_SUCCESS);
     trderr_t le = TRD_GetLastError();
     printf("Status: %u[%s]\n", le, le == TRDE_SUCCESS ? "OK":"FAIL");
-   // TRD_Wri
-    trderr_t a = TRD_GenerateSectionHeader(&pkgi, 10);
-    printf("%d\n",a);
 
-    TRD_SECTION_DESCRIPTOR tsd = {0};
+   
+    trderr_t a = TRD_GenerateSectionHeader(&pkgi, tables);
+    printf("Generated header status ::%d\n\n",a);
+
+   
+
     trd_err_t offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
-    printf("secdesc: %d", offsErr);
-    printf("\n\t::%u\n\t::%u\n", tsd.tableCount, tsd.tableFlags);
+    printf("Reabback header status ::%d\n\n", offsErr);
+    printf("\n\t::%u\n\t::0x%X\n", tsd.offsets->tableCount, tsd.tableFlags);
+    printf("::::%lu\n",tsd.offsets->tableSeekOffset[0]);
 
-     fclose(f);
+
+    free(tsd.offsets);
+    fclose(f);
   
     
     return 0;

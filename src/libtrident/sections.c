@@ -40,16 +40,14 @@ trd_err_t TRD_Val2Offset(_TRD_PKGI* pkg, uint64_t value, int64_t* offsetOut) {
 }
 
 
-
+//Warning function provides allocated memory to tsd. This memory has to be freed
+//by developer manually (tsd->offsets)
 trderr_t TRD_GetSectionDescriptor(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* tsd) {
-    if (pkg == NULL) {
+    if (pkg == NULL || tsd == NULL) {
         return TRDE_NULL;
     }
     if (pkg->pkgHandle == NULL) {
         return TRDE_NOFILE;
-    }
-    if (tsd == NULL) {
-        return TRDE_NULL;
     }
     int64_t seekPos = ftell(pkg->pkgHandle);
     if (seekPos == -1) {
@@ -57,8 +55,8 @@ trderr_t TRD_GetSectionDescriptor(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* tsd) {
     }
     
     int64_t token = 0;
-    TRD_SECTION_DESCRIPTOR secDesc = {0};
-   
+    
+    
   
     trderr_t status =  TRD_Val2Offset(pkg, TRD_SECDESC_START_TOK, &token);
     rewind(pkg->pkgHandle);
@@ -67,47 +65,73 @@ trderr_t TRD_GetSectionDescriptor(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* tsd) {
         
         return TRDE_IO_FAIL;
     }
-    
+    uint16_t tableCount = 0;
 
     //we cannot just read the whole struct because we are expecting to fill the
     //offset with the SEEK position
-    if (fread(&secDesc.tableCount, sizeof(secDesc.tableCount), 1, pkg->pkgHandle) != 1) {
+    
+    if (fread(&tableCount, sizeof(tableCount), 1, pkg->pkgHandle) != 1) {
          fseek(pkg->pkgHandle, seekPos, SEEK_SET);
          return TRDE_IO_FAIL;
     }
+    
+
+    TRD_SECTION_DESCRIPTOR secDesc = {0};
+    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tableCount);
+    secDesc.offsets = (_TRD_TABLE_OFFSETS*)malloc(tableSeekOffsetSize); 
+    
+    if (secDesc.offsets == NULL) {
+        return TRDE_MALLOC_FAIL;
+    }
+
+    secDesc.offsets->tableCount = tableCount;
+  
+   
+    
     if (fread(&secDesc.tableFlags, sizeof(secDesc.tableFlags), 1, pkg->pkgHandle) != 1) {
          fseek(pkg->pkgHandle, seekPos, SEEK_SET);
+         goto mclean;
          return TRDE_IO_FAIL;
     }
-   // uint64_t* offsets = malloc(secDesc.tableFlags * 8);
 
-    //if (fread(offsets, sizeof(uint64_t), secDesc.tableCount, pkg->pkgHandle) != 8) {
-      //   fseek(pkg->pkgHandle, seekPos, SEEK_SET);
-        // return TRDE_IO_FAIL;
-   // }
-   
+    
+    size_t g = 0;
+    if ((g = fread(&secDesc.offsets->tableSeekOffset, tableSeekOffsetSize, 1, pkg->pkgHandle)) != 1) {
+        printf("got :: %lu, needed %d", g, secDesc.offsets->tableCount);
+        goto mclean;
+        return TRDE_IO_FAIL;
+    }
 
-   // printf("%luu", secDesc.tableSeekOffset[0]);
+    for (int i = 0; i < tableCount; ++i) {
+        printf("Readback [%d]: %lu\n", i, secDesc.offsets->tableSeekOffset[i]);
+    }
 
-   //just for now
-    fseek(pkg->pkgHandle, 10*8, SEEK_CUR);
+ 
 
     uint64_t endval = 0;
     if (fread(&endval, sizeof(endval), 1, pkg->pkgHandle) != 1) {
          fseek(pkg->pkgHandle, seekPos, SEEK_SET);
+         goto mclean;
          return TRDE_IO_FAIL;
     }
+    
 
 
     fseek(pkg->pkgHandle, seekPos, SEEK_SET);
 
     if (endval != TRD_SECDESC_END_TOK) {
+         free(secDesc.offsets);
         return TRDE_FILE_CORRUPTED;
     }
-    *tsd = secDesc;
     
-    return TRDE_SUCCESS;
+    *tsd = secDesc;
 
+    //the developer has to free the memory manually after use
+    //free(secDesc.offsets);
+    return TRDE_SUCCESS;
+mclean:
+    free(secDesc.offsets);
+    return TRDE_IO_FAIL;
 
 
 }
@@ -130,42 +154,61 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, uint16_t tablesMax) {
 
     // Initialize section descriptor
     TRD_SECTION_DESCRIPTOR sd = {0};
-    sd.tableCount = tablesMax;
+   // sd.offsets.tableCount = tablesMax;
     sd.tableFlags = 0xDEADED;
 
     // Allocate memory for tableSeekOffset
-    sd.tableSeekOffset = (uint64_t *)malloc(sizeof(uint64_t) * tablesMax);
-    if (sd.tableSeekOffset == NULL) {
+    
+    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tablesMax);
+    sd.offsets = (_TRD_TABLE_OFFSETS*)malloc(tableSeekOffsetSize); 
+    if (sd.offsets == NULL) {
         return TRDE_MALLOC_FAIL;
     }
+    for (int i = 0; i < tablesMax; ++i) {
+        sd.offsets->tableSeekOffset[i] = UINT64_MAX - i;
+    }
+    
+    sd.offsets->tableCount = tablesMax;
+    
+  
+    for (int i = 0; i < tablesMax; ++i) {
+        printf("Writeback [%d]: %lu\n", i, sd.offsets->tableSeekOffset[i]);
+    }
+ 
 
-    //example values for debugging 
-   
-   for (int i = 0; i < tablesMax; ++i) {
-        sd.tableSeekOffset[i] = UINT64_MAX;
-   }
 
     // Write the structure's fixed fields first 
-    if (fwrite(&sd.tableCount, sizeof(sd.tableCount), 1, pkg->pkgHandle) != 1 ||
+    uint16_t tblCount = sd.offsets->tableCount;
+    
+    if (fwrite(&tblCount, sizeof(uint16_t), 1, pkg->pkgHandle) != 1 ||
         fwrite(&sd.tableFlags, sizeof(sd.tableFlags), 1, pkg->pkgHandle) != 1) {
-        free(sd.tableSeekOffset);
+        goto free_reg;
         return TRDE_IO_FAIL;
     }
-
+   
+   
+    size_t g = 0;
+        
     // Write the dynamically allocated tableSeekOffset array
-    if (fwrite(sd.tableSeekOffset, sizeof(uint64_t), sd.tableCount, pkg->pkgHandle) != sd.tableCount) {
-        free(sd.tableSeekOffset);
+    if ( (g = fwrite(&sd.offsets->tableSeekOffset, sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tablesMax), 1, pkg->pkgHandle)) != 1) {
+        printf("tables written==%lu, needed: %d\n", g, tablesMax);
+        goto free_reg;
         return TRDE_IO_FAIL;
     }
+     
 
     // Write the end token
     if (fwrite(&TRD_SECDESC_END_TOK, sizeof(TRD_SECDESC_END_TOK), 1, pkg->pkgHandle) != 1) {
-        free(sd.tableSeekOffset);
+        goto free_reg;
         return TRDE_IO_FAIL;
     }
 
     
-    free(sd.tableSeekOffset);
-    
+  
+    free(sd.offsets);
     return TRDE_SUCCESS;
+
+free_reg:
+    free(sd.offsets);
+    return TRDE_IO_FAIL;
 }
