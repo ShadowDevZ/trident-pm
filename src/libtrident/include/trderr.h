@@ -36,6 +36,7 @@ typedef enum {
     TRDE_FILE_CORRUPTED = 22,
     TRDE_XMLPARSE = 23,
     TRDE_NOFILE = 24,
-    TRDE_NULL = 25
+    TRDE_NULL = 25,
+    TRDE_NOSECTION = 26
 
 }TRD_ERR_CODES;

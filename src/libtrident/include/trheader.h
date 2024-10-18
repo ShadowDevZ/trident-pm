@@ -65,14 +65,7 @@ FILE SPECIFICATION
 
 
 */
-typedef struct {
-    uint32_t tuidStart;
-    uint16_t revision;
-    uint64_t dataLen;
-    void* data; //custom content
-    uint32_t tuidEnd;
 
-}TRD_DYN_TBL;
 
 typedef struct{
     uint8_t Major, Minor, Revision;

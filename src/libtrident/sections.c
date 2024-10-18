@@ -4,6 +4,7 @@
 #include <string.h>
 #include <string.h>
 #include <errno.h>
+
 const uint64_t TRD_SECDESC_START_TOK = 0x6bf95b011917d968;
 const uint64_t TRD_SECDESC_END_TOK =  0x9b7b1a36ca422afc;
 
@@ -20,7 +21,7 @@ trd_err_t TRD_Val2Offset(_TRD_PKGI* pkg, uint64_t value, int64_t* offsetOut) {
     int64_t origSeek = ftell(pkg->pkgHandle);
     uint64_t buffer = 0;
     size_t readSize = 0;
-   
+    
 
     rewind(pkg->pkgHandle);
     while ((readSize = fread(&buffer, 1, sizeof(buffer), pkg->pkgHandle)) == sizeof(buffer)) {
@@ -34,10 +35,11 @@ trd_err_t TRD_Val2Offset(_TRD_PKGI* pkg, uint64_t value, int64_t* offsetOut) {
 
     }
     fseek(pkg->pkgHandle, origSeek, SEEK_SET);
-
+    *offsetOut = -1;
     return TRDE_FAILURE;
 
 }
+
 
 
 //Warning function provides allocated memory to tsd. This memory has to be freed
@@ -138,13 +140,13 @@ mclean:
 
 
 //TRD_SECTION_DESCRIPTOR
-trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, uint16_t tablesMax) {
-    if (pkg == NULL) {
+trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc, uint16_t tablesMax) {
+    if (pkg == NULL)
         return TRDE_NULL;
-    }
-    if (pkg->pkgHandle == NULL) {
+    if (pkg->pkgHandle == NULL)
         return TRDE_NOFILE;
-    }
+    if (desc == NULL) 
+        return TRDE_BAD_ARG;
 
     // Write the start token
     if (fwrite(&TRD_SECDESC_START_TOK, sizeof(TRD_SECDESC_START_TOK), 1, pkg->pkgHandle) != 1) {
@@ -155,17 +157,19 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, uint16_t tablesMax) {
     // Initialize section descriptor
     TRD_SECTION_DESCRIPTOR sd = {0};
    // sd.offsets.tableCount = tablesMax;
-    sd.tableFlags = 0xDEADED;
+    sd.tableFlags = desc->tableFlags;
+
 
     // Allocate memory for tableSeekOffset
     
-    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tablesMax);
-    sd.offsets = (_TRD_TABLE_OFFSETS*)malloc(tableSeekOffsetSize); 
+    
+    sd.offsets = TRD_OffsetTblAlloc(tablesMax);
     if (sd.offsets == NULL) {
         return TRDE_MALLOC_FAIL;
     }
+  
     for (int i = 0; i < tablesMax; ++i) {
-        sd.offsets->tableSeekOffset[i] = UINT64_MAX - i;
+        sd.offsets->tableSeekOffset[i] = desc->offsets->tableSeekOffset[i];
     }
     
     sd.offsets->tableCount = tablesMax;

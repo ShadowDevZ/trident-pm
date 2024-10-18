@@ -4,6 +4,8 @@
 #include <string.h>
 #include "buildflg.h"
 #include "sections.h"
+#include "dyntbl.h"
+#include <time.h>
 int main() {
     printf("Trident Package Builder %s\n", TRD_BUILDER_VERSION);
     _TRD_PKGI pkgi = {0};
@@ -12,14 +14,15 @@ int main() {
 
      uint16_t tables = 10;
      TRD_SECTION_DESCRIPTOR tsd = {0};
-    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tables);
-    tsd.offsets = malloc(tableSeekOffsetSize);
+     tsd.tableFlags = 0xDEADBEEF;
+    
+    tsd.offsets = TRD_OffsetTblAlloc(tables);
     if (tsd.offsets == NULL) {
         printf("@!!!!MALLOC ERROR DEBUG\n");
         return 1;
     }
     
-    FILE* f = fopen("package.test", "wb+");
+    FILE* f = fopen("package.tpx", "wb+");
     if (f == NULL) {
         perror("Failed to open file\n");
         return 1;
@@ -44,19 +47,43 @@ int main() {
     TRD_SetLastError(TRDE_SUCCESS);
     trderr_t le = TRD_GetLastError();
     printf("Status: %u[%s]\n", le, le == TRDE_SUCCESS ? "OK":"FAIL");
+    srand(time(NULL));
+    for (int i=0; i < tables; ++i) {
+        tsd.offsets->tableSeekOffset[i] = rand() % (126226 + 1 - 5432) + 5432;
+    }
 
-   
-    trderr_t a = TRD_GenerateSectionHeader(&pkgi, tables);
+    trderr_t a = TRD_GenerateSectionHeader(&pkgi,&tsd, tables);
     printf("Generated header status ::%d\n\n",a);
 
    
 
     trd_err_t offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
     printf("Reabback header status ::%d\n\n", offsErr);
-    printf("\n\t::%u\n\t::0x%X\n", tsd.offsets->tableCount, tsd.tableFlags);
-    printf("::::%lu\n",tsd.offsets->tableSeekOffset[0]);
+    printf("Table count: %d\nTable flags 0x%X\n", tsd.offsets->tableCount, tsd.tableFlags);
+    printf("table dump: \n");
+    for (int i=0;i < tsd.offsets->tableCount; ++i) {
+        printf("\t::TC_%i%lx\n",i, tsd.offsets->tableSeekOffset[i]);
+    }
+    TRD_InitDynamicTables(&pkgi, &tsd);
+    
+    uint64_t allocSize = sizeof(TRD_DYNTBL_TEST);
+    TRD_DYNTBL_TEST* tst = malloc(allocSize);
+    if (tst == NULL){
+        printf("!!!error\n");
+    }
+    TRD_DYNTBL_META meta_test = {
+        .tuid0 = 0x1337,
+        .revision = 0xfed5,
+        .tuid1 = 0x1337,
+        .dynTblLen = allocSize
+    };
 
 
+    trderr_t gg =  TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);
+    printf("gg=%d\n", gg);
+    TRD_FinitDynamicTables(&pkgi, &tsd);
+
+    free(tst);
     free(tsd.offsets);
     fclose(f);
   
