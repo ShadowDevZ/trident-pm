@@ -22,13 +22,11 @@ int main() {
         return 1;
     }
     
-    FILE* f = fopen("package.tpx", "wb+");
-    if (f == NULL) {
-        perror("Failed to open file\n");
+    trderr_t openRet = TRD_OpenPackage("package.tpx", &pkgi);
+    if (openRet != TRDE_SUCCESS) {
         return 1;
     }
-    //todo add interface for IO operations
-    pkgi.pkgHandle = f;
+
 
      TRD_WriteHeader(&pkgi, TRD_CT_LZ4, TRD_BF_AP_AMD64| TRD_BF_PLATF_LINUX\
     ,TRD_VersionToFormat(fver.Major,fver.Minor, \
@@ -37,9 +35,9 @@ int main() {
    
     printf("created package test\n");
 
-    uint32_t hsum = TRD_HeaderChecksum(&pkgi.hdr);
-    if (hsum != pkgi.hdr.headerChecksum) {
-        printf("checksum missmatch\nog: %u cal: %u", pkgi.hdr.headerChecksum, hsum);
+    trderr_t hdrStatus = TRD_VerifyHeader(&pkgi);
+    if (hdrStatus != TRDE_SUCCESS) {
+        printf("checksum missmatch\n");
     }
     else{
         printf("checksum verified\n");
@@ -81,11 +79,15 @@ int main() {
 
     trderr_t gg =  TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);
     printf("gg=%d\n", gg);
+    
     TRD_FinitDynamicTables(&pkgi, &tsd);
+    if (TRD_FinishFile(&pkgi) != TRDE_SUCCESS) {
+        printf("!!!!corrupted file!!!\n");
+    };
 
     free(tst);
     free(tsd.offsets);
-    fclose(f);
+    TRD_ClosePackage(&pkgi);
   
     
     return 0;

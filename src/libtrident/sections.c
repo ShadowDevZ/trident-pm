@@ -149,7 +149,7 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
         return TRDE_BAD_ARG;
 
     // Write the start token
-    if (fwrite(&TRD_SECDESC_START_TOK, sizeof(TRD_SECDESC_START_TOK), 1, pkg->pkgHandle) != 1) {
+    if (trd_fwrite(&TRD_SECDESC_START_TOK, sizeof(TRD_SECDESC_START_TOK), 1, pkg) != 1) {
         
         return TRDE_IO_FAIL;
     }
@@ -184,8 +184,8 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
     // Write the structure's fixed fields first 
     uint16_t tblCount = sd.offsets->tableCount;
     
-    if (fwrite(&tblCount, sizeof(uint16_t), 1, pkg->pkgHandle) != 1 ||
-        fwrite(&sd.tableFlags, sizeof(sd.tableFlags), 1, pkg->pkgHandle) != 1) {
+    if (trd_fwrite(&tblCount, sizeof(uint16_t), 1, pkg) != 1 ||
+        trd_fwrite(&sd.tableFlags, sizeof(sd.tableFlags), 1, pkg) != 1) {
         goto free_reg;
         return TRDE_IO_FAIL;
     }
@@ -194,7 +194,7 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
     size_t g = 0;
         
     // Write the dynamically allocated tableSeekOffset array
-    if ( (g = fwrite(&sd.offsets->tableSeekOffset, sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tablesMax), 1, pkg->pkgHandle)) != 1) {
+    if ( (g = trd_fwrite(&sd.offsets->tableSeekOffset, sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tablesMax), 1, pkg)) != 1) {
         printf("tables written==%lu, needed: %d\n", g, tablesMax);
         goto free_reg;
         return TRDE_IO_FAIL;
@@ -202,7 +202,7 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
      
 
     // Write the end token
-    if (fwrite(&TRD_SECDESC_END_TOK, sizeof(TRD_SECDESC_END_TOK), 1, pkg->pkgHandle) != 1) {
+    if (trd_fwrite(&TRD_SECDESC_END_TOK, sizeof(TRD_SECDESC_END_TOK), 1, pkg) != 1) {
         goto free_reg;
         return TRDE_IO_FAIL;
     }

@@ -70,6 +70,7 @@ uint32_t buildFlags, uint16_t fmtVersion) {
     if (pkg == NULL){
         return TRDE_NULL;
     }
+    //todo check if seek is 0
     TRPD_HEADER hdr = {0};
     
     memcpy(hdr.magic, TRD_PKG_MAGIC, strlen(TRD_PKG_MAGIC));
@@ -84,7 +85,7 @@ uint32_t buildFlags, uint16_t fmtVersion) {
     hdr.lock = true;
     
     pkg->hdr = hdr;
-    if (fwrite(&hdr, sizeof(TRPD_HEADER), 1,  pkg->pkgHandle) != 1) {
+    if (trd_fwrite(&hdr, sizeof(TRPD_HEADER), 1,  pkg) != 1) {
         return TRDE_IO_FAIL;
     }
     
@@ -94,4 +95,48 @@ uint32_t buildFlags, uint16_t fmtVersion) {
 
     
 
+}
+
+trderr_t TRD_FinishFile(_TRD_PKGI* pkg) {
+    if (pkg == NULL){
+        return TRDE_NULL;
+    }
+    if (pkg->pkgHandle == NULL) {
+        return TRDE_NOFILE;
+    }
+    uint64_t eofMagic = TRD_EOFID_MAGIC;
+    if (trd_fwrite(&eofMagic, sizeof(eofMagic), 1, pkg) != 1)
+        return TRDE_IO_FAIL;
+
+    long currentSeek = ftell(pkg->pkgHandle);
+
+    fseek(pkg->pkgHandle, 0, SEEK_END);
+
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wsign-compare" 
+    if (currentSeek != pkg->hdr.fileLen) {
+    #pragma GCC diagnostic pop
+        fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
+        return TRDE_FILE_CORRUPTED;
+    }
+    fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
+    return TRDE_SUCCESS;
+}
+
+trderr_t TRD_VerifyHeader(_TRD_PKGI* pkg) {
+    uint32_t hsum = TRD_HeaderChecksum(&pkg->hdr);
+    if (hsum != pkg->hdr.headerChecksum) {
+        return TRDE_INV_CHKSUM;
+    }
+    return TRDE_SUCCESS;
+}
+trderr_t TRD_AddFileLength(_TRD_PKGI* pkg, uint64_t len) {
+    if (pkg == NULL) {
+        return TRDE_NULL;
+    }
+    if (pkg->pkgHandle == NULL) {
+        return TRDE_NOFILE;
+    }
+    pkg->hdr.fileLen += len;
+    return TRDE_SUCCESS;
 }

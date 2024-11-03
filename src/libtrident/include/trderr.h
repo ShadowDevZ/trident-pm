@@ -37,6 +37,8 @@ typedef enum {
     TRDE_XMLPARSE = 23,
     TRDE_NOFILE = 24,
     TRDE_NULL = 25,
-    TRDE_NOSECTION = 26
+    TRDE_NOSECTION = 26,
+    TRDE_ALREXISTS = 27 
 
 }TRD_ERR_CODES;
+

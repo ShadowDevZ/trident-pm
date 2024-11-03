@@ -29,7 +29,8 @@ const char* __trd_err_msg[] = {
     [TRDE_XMLPARSE] = "Package manifest could not be properly tokenized",
     [TRDE_NOFILE] = "The local file or resource could not be found",
     [TRDE_NULL] = "The pointer was null",
-    [TRDE_NOSECTION] = "No section was provided in the source file"
+    [TRDE_NOSECTION] = "No section was provided in the source file",
+    [TRDE_ALREXISTS] = "Object with requested attributes already exists"
 
 };
 

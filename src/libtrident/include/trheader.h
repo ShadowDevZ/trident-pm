@@ -9,7 +9,7 @@
 #define TRD_HDR_PAD1_SIZE 6
 #define TRD_HDR_PAD2_SIZE 4
 #define TRD_FMT_VER 0x1C
-#define TRD_EOFID 0xCCD55AB1E8FF1E
+#define TRD_EOFID_MAGIC 0xC92C155AB1E9FF1E
 
 typedef struct {
     char magic[sizeof(TRD_PKG_MAGIC)];
@@ -89,6 +89,7 @@ typedef struct {
 
 
 #include <stdio.h>
+
 typedef struct {
     FILE *pkgHandle;
     TRPD_HEADER hdr;
@@ -102,7 +103,7 @@ typedef struct {
 
 }__STRUCT_PACK _TRD_PKGI;
 
-#include "trderr.h"
+
 trderr_t TRD_WriteHeader(_TRD_PKGI* pkg, uint8_t comprType, uint32_t buildFlags, uint16_t fmtVersion);
 
 uint32_t TRD_HeaderChecksum(const TRPD_HEADER *hdr);
@@ -111,3 +112,18 @@ TRPD_PKG_VERSION TRD_FormatToVersion(uint16_t fmt);
 
 bool TRD_CheckHeader(TRPD_HEADER* hdr);
 TRPD_HEADER TRD_GetHeader();
+trderr_t TRD_FinishFile(_TRD_PKGI* pkg);
+
+trderr_t TRD_OpenPackage(const char* path, _TRD_PKGI* pkg);
+trderr_t TRD_ClosePackage(_TRD_PKGI* pkg);
+trderr_t TRD_VerifyHeader(_TRD_PKGI* pkg);
+trderr_t TRD_AddFileLength(_TRD_PKGI* pkg, uint64_t len);
+#include "trderr.h"
+static inline size_t trd_fwrite(const void* ptr, size_t size, size_t nmemb, _TRD_PKGI* pkg) {
+    size_t res = fwrite(ptr, size, nmemb, pkg->pkgHandle);
+    trderr_t val = TRD_AddFileLength(pkg, size * nmemb);
+    if (val != 0) {
+        return 0;
+    }
+    return res;
+}

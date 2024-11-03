@@ -1,5 +1,5 @@
 #include "dyntbl.h"
-
+#include "trderr.h"
 
 
 trderr_t __TRD_DynamicTables(_TRD_PKGI* pkg, bool init,TRD_SECTION_DESCRIPTOR* secdesc) {
@@ -22,12 +22,12 @@ trderr_t __TRD_DynamicTables(_TRD_PKGI* pkg, bool init,TRD_SECTION_DESCRIPTOR* s
         return TRDE_TOKEN_INV;
     }
     if (init) {
-        if (!fwrite(&TRD_DYNSEC_START_TOK, sizeof(TRD_DYNSEC_START_TOK), 1, pkg->pkgHandle))
+        if (!trd_fwrite(&TRD_DYNSEC_START_TOK, sizeof(TRD_DYNSEC_START_TOK), 1, pkg))
             return TRDE_SUCCESS;
         
     }
     else {
-        if (!fwrite(&TRD_DYNSEC_END_TOK, sizeof(TRD_DYNSEC_END_TOK), 1, pkg->pkgHandle))
+        if (!trd_fwrite(&TRD_DYNSEC_END_TOK, sizeof(TRD_DYNSEC_END_TOK), 1, pkg))
             return TRDE_SUCCESS;
     }
 
@@ -56,19 +56,19 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
 
 
 
-    if (fwrite(&meta.tuid0, sizeof(meta.tuid0), 1, pkg->pkgHandle) != 1)
+    if (trd_fwrite(&meta.tuid0, sizeof(meta.tuid0), 1, pkg) != 1)
         return TRDE_IO_FAIL;
-    if (fwrite(&meta.revision, sizeof(meta.revision), 1, pkg->pkgHandle) != 1)
+    if (trd_fwrite(&meta.revision, sizeof(meta.revision), 1, pkg) != 1)
         return TRDE_IO_FAIL;
 
     //dynamic table start
-    if (fwrite(&dtbl, sizeof(meta.dynTblLen), 1, pkg->pkgHandle) != 1)
+    if (trd_fwrite(&dtbl, sizeof(meta.dynTblLen), 1, pkg) != 1)
         return TRDE_IO_FAIL;
 
     //dynamic table end
-    if (fwrite(&meta.dynTblLen, sizeof(meta.dynTblLen), 1, pkg->pkgHandle) != 1)
+    if (trd_fwrite(&meta.dynTblLen, sizeof(meta.dynTblLen), 1, pkg) != 1)
         return TRDE_IO_FAIL;
-    if (fwrite(&meta.tuid1, sizeof(meta.tuid1), 1, pkg->pkgHandle) != 1)
+    if (trd_fwrite(&meta.tuid1, sizeof(meta.tuid1), 1, pkg) != 1)
         return TRDE_IO_FAIL;
     
     return TRDE_SUCCESS;
