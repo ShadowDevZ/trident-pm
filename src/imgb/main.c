@@ -31,6 +31,15 @@ int main() {
      TRD_WriteHeader(&pkgi, TRD_CT_LZ4, TRD_BF_AP_AMD64| TRD_BF_PLATF_LINUX\
     ,TRD_VersionToFormat(fver.Major,fver.Minor, \
     fver.Revision));
+   
+   
+
+    trderr_t rcheck = TRD_ReadHeader(&pkgi);
+    if (rcheck != TRDE_SUCCESS) {
+        printf("@@Failed to read header\n");
+    }
+ 
+   
     
    
     printf("created package test\n");
@@ -75,6 +84,7 @@ int main() {
         .tuid1 = 0x1337,
         .dynTblLen = allocSize
     };
+   
 
 
     trderr_t gg =  TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);

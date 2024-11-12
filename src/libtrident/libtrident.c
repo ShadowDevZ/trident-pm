@@ -21,6 +21,7 @@ trderr_t TRD_ClosePackage(_TRD_PKGI* pkg) {
     if (pkg->pkgHandle == NULL) {
         return TRDE_NOFILE;
     }
+    pkg->hdr.lock = false;
     if (!fclose(pkg->pkgHandle)) {
         return TRDE_SUCCESS;
     }

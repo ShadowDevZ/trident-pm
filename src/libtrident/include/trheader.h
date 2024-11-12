@@ -105,7 +105,7 @@ typedef struct {
 
 
 trderr_t TRD_WriteHeader(_TRD_PKGI* pkg, uint8_t comprType, uint32_t buildFlags, uint16_t fmtVersion);
-
+trderr_t TRD_ReadHeader(_TRD_PKGI* pkg);
 uint32_t TRD_HeaderChecksum(const TRPD_HEADER *hdr);
 uint16_t TRD_VersionToFormat(uint8_t major, uint8_t minor, uint8_t revision);
 TRPD_PKG_VERSION TRD_FormatToVersion(uint16_t fmt);

@@ -83,8 +83,8 @@ uint32_t buildFlags, uint16_t fmtVersion) {
     hdr.fileLen = 0;
     memset(hdr.padding2, 0, sizeof(hdr.padding2));
     hdr.lock = true;
-    
-    pkg->hdr = hdr;
+    //this part should be in readheader
+   // pkg->hdr = hdr;
     if (trd_fwrite(&hdr, sizeof(TRPD_HEADER), 1,  pkg) != 1) {
         return TRDE_IO_FAIL;
     }
@@ -96,6 +96,40 @@ uint32_t buildFlags, uint16_t fmtVersion) {
     
 
 }
+trderr_t TRD_ReadHeader(_TRD_PKGI* pkg) {
+    if (pkg == NULL){
+        return TRDE_NULL;
+    }
+    //todo test if it is actual file with read privileges
+    if (pkg->pkgHandle == NULL) {
+
+        return TRDE_NOFILE;
+    }
+    TRPD_HEADER hdr = {0};
+    int64_t curSeek = ftell(pkg->pkgHandle);
+    fseek(pkg->pkgHandle, 0, SEEK_SET);
+    
+    //if (fread(&tableCount, sizeof(tableCount), 1, pkg->pkgHandle) != 1) {
+    if (fread(&hdr, sizeof(hdr), 1, pkg->pkgHandle) != 1) {
+        fseek(pkg->pkgHandle, curSeek, SEEK_SET);
+        return TRDE_FILE_CORRUPTED;
+    }
+   
+    
+    fseek(pkg->pkgHandle, curSeek, SEEK_SET);
+    if (memcmp(hdr.magic, TRD_PKG_MAGIC, strlen(TRD_PKG_MAGIC)) != 0) {
+        return TRDE_FILE_CORRUPTED;
+    }
+    pkg->hdr = hdr;
+
+    return TRDE_SUCCESS;
+    
+
+}
+
+
+
+
 
 trderr_t TRD_FinishFile(_TRD_PKGI* pkg) {
     if (pkg == NULL){
@@ -104,14 +138,16 @@ trderr_t TRD_FinishFile(_TRD_PKGI* pkg) {
     if (pkg->pkgHandle == NULL) {
         return TRDE_NOFILE;
     }
+    
     uint64_t eofMagic = TRD_EOFID_MAGIC;
     if (trd_fwrite(&eofMagic, sizeof(eofMagic), 1, pkg) != 1)
         return TRDE_IO_FAIL;
-
+/*
     long currentSeek = ftell(pkg->pkgHandle);
 
     fseek(pkg->pkgHandle, 0, SEEK_END);
 
+interferes with read header
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wsign-compare" 
     if (currentSeek != pkg->hdr.fileLen) {
@@ -119,7 +155,9 @@ trderr_t TRD_FinishFile(_TRD_PKGI* pkg) {
         fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
         return TRDE_FILE_CORRUPTED;
     }
+    
     fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
+  */
     return TRDE_SUCCESS;
 }
 
