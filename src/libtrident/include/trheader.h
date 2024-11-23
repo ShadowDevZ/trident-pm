@@ -2,9 +2,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "stdlib.h"
+#include <stdlib.h>
 #include "libtrident.h"
 #include "trderr.h"
+typedef uint64_t tuid_t;
+
 #define TRD_PKG_MAGIC "\223TRD!\r\n"
 #define TRD_HDR_PAD1_SIZE 6
 #define TRD_HDR_PAD2_SIZE 4
@@ -78,11 +80,18 @@ typedef struct {
 }__STRUCT_PACK _TRD_TABLE_OFFSETS;
 
 typedef struct {
+    char _dummy;
+    tuid_t tableSeekIds[];
+}__STRUCT_PACK _TRD_TABLE_IDS;
+
+typedef struct {
 
     //which tables are present ? Binary flags
     uint32_t tableFlags; 
     //Seek offset to every table if present otherwise 0
     _TRD_TABLE_OFFSETS* offsets;
+    _TRD_TABLE_IDS* ids;
+    
 
 }__STRUCT_PACK TRD_SECTION_DESCRIPTOR;
 
@@ -94,6 +103,9 @@ typedef struct {
     FILE *pkgHandle;
     TRPD_HEADER hdr;
     TRD_SECTION_DESCRIPTOR secDesc;
+    //current id of table to append to
+    uint32_t currentTable;
+    uint64_t idtblOffset;
    //TRD_TABLES[TABLE_MAX];
    //TRD_MANIFEST_INFORMATION...
     

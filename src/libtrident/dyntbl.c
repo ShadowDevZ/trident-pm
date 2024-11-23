@@ -44,18 +44,34 @@ trderr_t TRD_FinitDynamicTables(_TRD_PKGI* pkg ,TRD_SECTION_DESCRIPTOR* secdesc)
 trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META meta, trd_dyntbl_t dtbl) {
     if (!TRD_DynTblPresent(pkg))
         return TRDE_NOSECTION;
-    if (pkg == NULL || secDesc == NULL || dtbl == NULL)
+    if (pkg == NULL || secDesc == NULL || dtbl == NULL \
+    || secDesc->ids == NULL || secDesc->offsets == NULL)
         return TRDE_NULL;
     if (pkg->pkgHandle == NULL)
         return TRDE_NOFILE;
+   
+
+    uint32_t currentTable = pkg->currentTable;
+    secDesc->ids->tableSeekIds[currentTable] = meta.tuid0;
+    printf("%lx\n", secDesc->ids->tableSeekIds[currentTable]);
+
+
+    
+    fseek(pkg->pkgHandle, pkg->idtblOffset, SEEK_SET);
+
+   
+    if ( (trd_fwrite(&secDesc->ids->tableSeekIds, sizeof(_TRD_TABLE_IDS) + ((sizeof(uint64_t)) * secDesc->offsets->tableCount), 1, pkg)) != 1) {
+        return TRDE_IO_FAIL;
+    }
+
    //todo roll back to the start via fseek and check instead of blindly trusting it wasnt
-   //manipulated, maybe adjust the function TRDval2offset to not rewind the file by default
+   //manipulated, maybe adjust the function TRDVal2offset to not rewind the file by default
    //roll back like few bytes and then check
     fseek(pkg->pkgHandle, 0, SEEK_END);
    
 
 
-
+    //todo find the correct table seek offse4t and write it
     if (trd_fwrite(&meta.tuid0, sizeof(meta.tuid0), 1, pkg) != 1)
         return TRDE_IO_FAIL;
     if (trd_fwrite(&meta.revision, sizeof(meta.revision), 1, pkg) != 1)
@@ -71,7 +87,11 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     if (trd_fwrite(&meta.tuid1, sizeof(meta.tuid1), 1, pkg) != 1)
         return TRDE_IO_FAIL;
     
+    ++currentTable;
+    pkg->currentTable = currentTable;
+
     return TRDE_SUCCESS;
     
 
 }
+//trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META meta, trd_dyntbl_t dtbl) {

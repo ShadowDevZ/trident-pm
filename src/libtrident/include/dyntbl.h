@@ -1,10 +1,13 @@
 #pragma once
+#include <stdint.h>
+
 #include "trheader.h"
 #include "sections.h"
 //todo add checks if section descriptor is valid
 typedef void* trd_dyntbl_t;
-//table UID, unique for each different type
 typedef uint64_t tuid_t;
+//table UID, unique for each different type
+
 
 const uint64_t TRD_DYNSEC_START_TOK = 0x13d6f63458f6b9f4;
 const uint64_t TRD_DYNSEC_END_TOK =   0x4dfbf705853ce8e2;
