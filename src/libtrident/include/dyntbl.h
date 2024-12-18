@@ -38,3 +38,5 @@ trderr_t TRD_InitDynamicTables(_TRD_PKGI* pkg ,TRD_SECTION_DESCRIPTOR* secdesc);
 trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META meta, trd_dyntbl_t dtbl);
 trderr_t TRD_GetDynamicTable(TRD_SECTION_DESCRIPTOR* secDesc, tuid_t tuid, trd_dyntbl_t* tblOut);
 trderr_t TRD_FinitDynamicTables(_TRD_PKGI* pkg ,TRD_SECTION_DESCRIPTOR* secdesc);
+
+trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META* meta,tuid_t tuid, trd_dyntbl_t dtbl);

@@ -1,7 +1,8 @@
 #pragma once
 #include "trheader.h"
 #include "trderr.h"
-
+#include <stdlib.h>
+#include <string.h>
 trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg,TRD_SECTION_DESCRIPTOR* desc, uint16_t tablesMax);
 trderr_t TRD_GetSectionDescriptor(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* tsd);
 //finds corresponding SEEK offset in file if value is found
@@ -18,6 +19,7 @@ static inline _TRD_TABLE_OFFSETS* TRD_OffsetTblAlloc(uint16_t tableCount, uint64
     TRD_SECTION_DESCRIPTOR secDesc;
     secDesc.offsets = (_TRD_TABLE_OFFSETS*)malloc(tableSeekOffsetSize);
     if (sizeOut != NULL) {
+        memset(secDesc.offsets, 0, tableCount*sizeof(uint16_t));
         *sizeOut = tableSeekOffsetSize;
     }
     
@@ -28,7 +30,9 @@ static inline _TRD_TABLE_IDS* TRD_IdTblAlloc(uint16_t tableCount, uint64_t* size
     TRD_SECTION_DESCRIPTOR secDesc;
     secDesc.ids = (_TRD_TABLE_IDS*)malloc(tableIdSize);
     if (sizeOut != NULL) {
+        memset(secDesc.ids, 0, tableCount*sizeof(uint16_t));
         *sizeOut = tableIdSize;
     }
     return secDesc.ids;
 }
+trderr_t TRD_RegenerateTableOffsets(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc);

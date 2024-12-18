@@ -191,6 +191,7 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
         return TRDE_MALLOC_FAIL;
    }
 
+   pkg->offsetTbl = ftell(pkg->pkgHandle);
    for (int i = 0; i < tablesMax; ++i) {
         sd.offsets->tableSeekOffset[i] = desc->offsets->tableSeekOffset[i];
         sd.ids->tableSeekIds[i] = 0;
@@ -260,4 +261,38 @@ free_reg:
     free(sd.offsets);
     free(sd.ids);
     return TRDE_IO_FAIL;
+}
+trderr_t TRD_RegenerateTableOffsets(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc) {
+    if (pkg == NULL)
+        return TRDE_NULL;
+    if (pkg->pkgHandle == NULL)
+        return TRDE_NOFILE;
+    if (desc == NULL) 
+        return TRDE_BAD_ARG;
+
+    uint16_t tblCount = desc->offsets->tableCount;
+    long curSeek = ftell(pkg->pkgHandle);
+    fseek(pkg->pkgHandle ,pkg->offsetTbl, SEEK_SET);
+
+    if (trd_fwrite(&tblCount, sizeof(uint16_t), 1, pkg) != 1 ||
+        trd_fwrite(&desc->tableFlags, sizeof(desc->tableFlags), 1, pkg) != 1) {
+        return TRDE_IO_FAIL;
+    }
+   
+   
+    size_t g = 0;
+        
+    // Write the dynamically allocated tableSeekOffset array
+    if ( (g = trd_fwrite(&desc->offsets->tableSeekOffset, sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tblCount), 1, pkg)) != 1) {
+        printf("offset tables written==%lu, needed: %d\n", g, tblCount);
+        
+        return TRDE_IO_FAIL;
+    }    
+
+
+    fseek(pkg->pkgHandle, curSeek, SEEK_SET);
+
+    return TRDE_SUCCESS;
+
+
 }

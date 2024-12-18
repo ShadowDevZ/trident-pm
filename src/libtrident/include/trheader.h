@@ -106,6 +106,7 @@ typedef struct {
     //current id of table to append to
     uint32_t currentTable;
     uint64_t idtblOffset;
+    int offsetTbl;
    //TRD_TABLES[TABLE_MAX];
    //TRD_MANIFEST_INFORMATION...
     

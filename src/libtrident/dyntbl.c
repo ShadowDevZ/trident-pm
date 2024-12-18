@@ -70,20 +70,26 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     fseek(pkg->pkgHandle, 0, SEEK_END);
    
 
+    long currentSeek = ftell(pkg->pkgHandle);
+    secDesc->offsets->tableSeekOffset[currentTable] = currentSeek;
+    TRD_RegenerateTableOffsets(pkg, secDesc);
+    
 
     //todo find the correct table seek offse4t and write it
     if (trd_fwrite(&meta.tuid0, sizeof(meta.tuid0), 1, pkg) != 1)
         return TRDE_IO_FAIL;
     if (trd_fwrite(&meta.revision, sizeof(meta.revision), 1, pkg) != 1)
         return TRDE_IO_FAIL;
+    if (trd_fwrite(&meta.dynTblLen, sizeof(meta.dynTblLen), 1, pkg) != 1)
+        return TRDE_IO_FAIL;
 
     //dynamic table start
     if (trd_fwrite(&dtbl, sizeof(meta.dynTblLen), 1, pkg) != 1)
         return TRDE_IO_FAIL;
-
+    
+    
     //dynamic table end
-    if (trd_fwrite(&meta.dynTblLen, sizeof(meta.dynTblLen), 1, pkg) != 1)
-        return TRDE_IO_FAIL;
+    
     if (trd_fwrite(&meta.tuid1, sizeof(meta.tuid1), 1, pkg) != 1)
         return TRDE_IO_FAIL;
     
@@ -94,4 +100,64 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     
 
 }
-//trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META meta, trd_dyntbl_t dtbl) {
+trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META* meta,tuid_t tuid, trd_dyntbl_t dtbl) {
+    if (!TRD_DynTblPresent(pkg))
+        return TRDE_NOSECTION;
+    if (pkg == NULL || secDesc == NULL
+    || secDesc->ids == NULL || secDesc->offsets == NULL  || dtbl == NULL)
+        return TRDE_NULL;
+    if (pkg->pkgHandle == NULL)
+        return TRDE_NOFILE;
+    long currentSeek = ftell(pkg->pkgHandle);
+
+    uint16_t tblCount =  secDesc->offsets->tableCount;
+    int tblIndex;
+    for (tblIndex = 0; tblIndex < tblCount; ++tblIndex) {
+       tuid_t id =  secDesc->ids->tableSeekIds[tblIndex];
+       if (id == tuid) {
+
+        printf("found table with tuid 0x%lx, i=%d\n", id,tblIndex);
+        break;
+       }
+    }
+    
+    uint64_t tblSeek = secDesc->offsets->tableSeekOffset[0];
+  
+    fseek(pkg->pkgHandle, tblSeek, SEEK_SET);
+    
+
+    
+   
+    TRD_DYNTBL_META metaRead = {0};
+    if (fread(&metaRead.tuid0, sizeof(metaRead.tuid0), 1, pkg->pkgHandle) != 1) {
+       goto fix_seek;
+    }
+    if (fread(&metaRead.revision, sizeof(metaRead.revision), 1, pkg->pkgHandle) != 1) {
+       goto fix_seek;
+    }
+    if (fread(&metaRead.dynTblLen, sizeof(metaRead.dynTblLen), 1, pkg->pkgHandle) != 1) {
+       goto fix_seek;
+    }
+    //dyntbl start
+    if (fread(&dtbl, sizeof(metaRead.dynTblLen), 1, pkg->pkgHandle) != 1)
+        goto fix_seek;
+
+    //dyntbl end
+
+    if (fread(&metaRead.tuid1, sizeof(metaRead.tuid1), 1, pkg->pkgHandle) != 1) {
+       goto fix_seek;
+    }
+
+
+    
+   
+
+
+
+    *meta = metaRead;
+    fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
+    return TRDE_SUCCESS;
+fix_seek:
+    fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
+    return TRDE_IO_FAIL;
+}

@@ -57,7 +57,7 @@ int main() {
     printf("Status: %u[%s]\n", le, le == TRDE_SUCCESS ? "OK":"FAIL");
     srand(time(NULL));
     for (int i=0; i < tables; ++i) {
-        tsd.offsets->tableSeekOffset[i] = rand() % (126226 + 1 - 5432) + 5432;
+        tsd.offsets->tableSeekOffset[i] = 0x999;
     }
   
     trderr_t a = TRD_GenerateSectionHeader(&pkgi,&tsd, tables);
@@ -91,14 +91,28 @@ int main() {
 
     
     trderr_t gg =  TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);
+    printf("before %lx\n", tsd.offsets->tableSeekOffset[0]);
     printf("gg=%d\n", gg);
     offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
     for (int i=0;i < tsd.offsets->tableCount; ++i) {
-        printf("\tID%lx::TC_%i%lx\n",tsd.ids->tableSeekIds[i],i, tsd.offsets->tableSeekOffset[i]);
+        printf("\tID%lx:: SEEK%i_%lx\n",tsd.ids->tableSeekIds[i],i, tsd.offsets->tableSeekOffset[i]);
     }
+   
+    
+    
+    
+    
+    TRD_DYNTBL_TEST* readTable = malloc(sizeof(meta_test.dynTblLen));
+    if (readTable == NULL) {
+        printf("@@malloc error\n");
+        return TRDE_MALLOC_FAIL;
+    }
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, &readTable);
+    
 
+    printf("success\n%d.%d\n", tst->test0, tst->test1);
    
-   
+
     TRD_FinitDynamicTables(&pkgi, &tsd);
     if (TRD_FinishFile(&pkgi) != TRDE_SUCCESS) {
         printf("!!!!corrupted file!!!\n");
@@ -106,6 +120,7 @@ int main() {
 
     free(tst);
     free(tsd.offsets);
+    free(readTable);
     TRD_ClosePackage(&pkgi);
   
     
