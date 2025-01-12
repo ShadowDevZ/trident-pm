@@ -6,6 +6,7 @@
 #include "sections.h"
 #include "dyntbl.h"
 #include <time.h>
+#include <libxml2/libxml/parser.h>
 int main() {
     printf("Trident Package Builder %s\n", TRD_BUILDER_VERSION);
     _TRD_PKGI pkgi = {0};
@@ -110,8 +111,63 @@ int main() {
     TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, &readTable);
     
 
+
     printf("success\n%d.%d\n", tst->test0, tst->test1);
-   
+
+    
+   /*
+    char* file = "test.tar";
+    FILE* vvv = fopen(file, "rb");
+    if (!file) {
+        perror("Failed to open file\n");
+        return 1;
+        
+    }
+    TRD_RAWBIN_TBL* raw;
+    fseek(vvv,0, SEEK_END);
+    size_t size = ftell(vvv);
+    fseek(vvv, 0, SEEK_SET);
+
+    raw = malloc(sizeof(TRD_RAWBIN_TBL));
+    raw->data = (unsigned char*)malloc(size);
+    raw->size = size;
+    if (raw->data == NULL || raw == NULL) {
+        perror("malloc()");
+        fclose(vvv);
+        return 1;
+    }
+    printf("%lu\n", raw->size);
+    if(fread(raw->data, raw->size, 1, vvv) != 1) {
+        printf("read error\n");
+        fclose(vvv);
+        return 1;
+    }
+    fclose(vvv);
+
+ TRD_DYNTBL_META meta_vvv = {
+        .tuid0 = (tuid_t)0xc0ffee,
+        .revision = (tuid_t)0x55aa,
+        .tuid1 = (tuid_t)0xc0ffee,
+        .dynTblLen = (uint64_t)size + sizeof(TRD_RAWBIN_TBL)
+    };
+
+    int agv = TRD_AppendDynamicTable(&pkgi,  &tsd, meta_vvv, &raw);
+    printf("agv::%d\n", agv);
+
+    offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
+    for (int i=0;i < tsd.offsets->tableCount; ++i) {
+        printf("\tID%lx:: SEEK%i_%lx\n",tsd.ids->tableSeekIds[i],i, tsd.offsets->tableSeekOffset[i]);
+    }
+
+    TRD_RAWBIN_TBL* readTableX = malloc(size + sizeof(TRD_RAWBIN_TBL));
+    if (readTable == NULL) {
+        printf("@@malloc error\n");
+        return TRDE_MALLOC_FAIL;
+    }
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_vvv, 0xc0ffee, &readTableX);
+   printf("s==%lu\n", readTableX->size);
+   printf("s==%lu\n", raw->size);
+   */
 
     TRD_FinitDynamicTables(&pkgi, &tsd);
     if (TRD_FinishFile(&pkgi) != TRDE_SUCCESS) {

@@ -1,0 +1,29 @@
+TRPD_TBL_MANIFEST 0xf8339907
+    contains XML manifest with package information, and dependencies similiar to android manifest
+
+TRPD_TBL_RAW_BIN 0x2cd32674
+    contains all file which have to be extracted, ususally TAR archive
+
+TRPD_TBL_EXT_INFO 0x22d731b8
+    contains information about where and how to extract the raw binary files
+
+TRPD_TBL_SEC_HASH 0xd7b99bc6
+    contains all checksums eg. SHA256
+
+TRPD_TBL_SEC_SIGN 0xcbb85242
+    contains pgp signatures
+
+TRPD_TBL_PKG_AUTORUN 0x16ea2c23
+    contains executable shell script which is executed during the installation process
+    if the current execution policy allow is
+
+TRPD_UTI_NOTICE 0xf534f703
+    contains message which are displayed to the user warning them or notifying them
+    about the package status
+
+TRPD_UTI_CHRONO 0xc096ff13d
+    contains information about the time of the creation of the archive
+
+TRPD_UTI_DBG 0xcf6397fd
+    contains debugging information like package symbols, trident debugging variables
+    and options which were used during the creation of the archive and package

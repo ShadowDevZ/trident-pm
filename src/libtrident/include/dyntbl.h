@@ -25,6 +25,12 @@ typedef struct {
     int test1;
 }__STRUCT_PACK TRD_DYNTBL_TEST;
 #define TUID_DYNTBL 0xabcd
+typedef struct {
+    size_t size;
+    unsigned char* data;
+
+}__STRUCT_PACK TRD_RAWBIN_TBL;
+
 
 static inline bool TRD_DynTblPresent(_TRD_PKGI* pkg) {
     int64_t offset = 0;
