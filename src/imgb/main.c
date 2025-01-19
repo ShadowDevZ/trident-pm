@@ -103,7 +103,7 @@ int main() {
     
     
     
-    TRD_DYNTBL_TEST* readTable = malloc(sizeof(meta_test.dynTblLen));
+    TRD_DYNTBL_TEST* readTable = malloc((meta_test.dynTblLen));
     if (readTable == NULL) {
         printf("@@malloc error\n");
         return TRDE_MALLOC_FAIL;
@@ -114,8 +114,24 @@ int main() {
 
     printf("success\n%d.%d\n", tst->test0, tst->test1);
 
+
     
-   /*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
     char* file = "test.tar";
     FILE* vvv = fopen(file, "rb");
     if (!file) {
@@ -123,12 +139,13 @@ int main() {
         return 1;
         
     }
-    TRD_RAWBIN_TBL* raw;
+    
     fseek(vvv,0, SEEK_END);
     size_t size = ftell(vvv);
+    uint64_t allocSizeX = sizeof(TRD_RAWBIN_TBL);
     fseek(vvv, 0, SEEK_SET);
 
-    raw = malloc(sizeof(TRD_RAWBIN_TBL));
+    TRD_RAWBIN_TBL* raw = malloc(allocSizeX);
     raw->data = (unsigned char*)malloc(size);
     raw->size = size;
     if (raw->data == NULL || raw == NULL) {
@@ -143,15 +160,16 @@ int main() {
         return 1;
     }
     fclose(vvv);
+//just temporary mess for testinf without any free()
 
  TRD_DYNTBL_META meta_vvv = {
-        .tuid0 = (tuid_t)0xc0ffee,
-        .revision = (tuid_t)0x55aa,
-        .tuid1 = (tuid_t)0xc0ffee,
-        .dynTblLen = (uint64_t)size + sizeof(TRD_RAWBIN_TBL)
+        .tuid0 = (tuid_t)0x1111,
+        .revision = (tuid_t)0xbeef,
+        .tuid1 = (tuid_t)0x1111,
+        .dynTblLen = (uint64_t)allocSize
     };
 
-    int agv = TRD_AppendDynamicTable(&pkgi,  &tsd, meta_vvv, &raw);
+    int agv = TRD_AppendDynamicTable(&pkgi,  &tsd, meta_vvv, raw);
     printf("agv::%d\n", agv);
 
     offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
@@ -159,15 +177,26 @@ int main() {
         printf("\tID%lx:: SEEK%i_%lx\n",tsd.ids->tableSeekIds[i],i, tsd.offsets->tableSeekOffset[i]);
     }
 
-    TRD_RAWBIN_TBL* readTableX = malloc(size + sizeof(TRD_RAWBIN_TBL));
-    if (readTable == NULL) {
+    TRD_RAWBIN_TBL* readTableX = malloc(allocSizeX);
+    readTableX->data = (unsigned char*)malloc(size);
+   
+    if (readTableX == NULL || readTableX->data == NULL) {
         printf("@@malloc error\n");
         return TRDE_MALLOC_FAIL;
     }
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_vvv, 0xc0ffee, &readTableX);
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_vvv, 0x1111, &readTableX);
    printf("s==%lu\n", readTableX->size);
    printf("s==%lu\n", raw->size);
-   */
+ 
+   FILE* outtar = fopen("tarout.tar", "wb");
+   //problem is that we cannot for some reason apass the data to the readTable
+   if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
+    perror("error");
+    return 1;
+   }
+
+   fclose(outtar);
+   
 
     TRD_FinitDynamicTables(&pkgi, &tsd);
     if (TRD_FinishFile(&pkgi) != TRDE_SUCCESS) {
