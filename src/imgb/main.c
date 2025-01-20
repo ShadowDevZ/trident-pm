@@ -108,7 +108,7 @@ int main() {
         printf("@@malloc error\n");
         return TRDE_MALLOC_FAIL;
     }
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, &readTable);
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, &readTable, 0);
     
 
 
@@ -157,6 +157,8 @@ int main() {
     if(fread(raw->data, raw->size, 1, vvv) != 1) {
         printf("read error\n");
         fclose(vvv);
+        free(raw->data);
+        free(raw);
         return 1;
     }
     fclose(vvv);
@@ -166,7 +168,7 @@ int main() {
         .tuid0 = (tuid_t)0x1111,
         .revision = (tuid_t)0xbeef,
         .tuid1 = (tuid_t)0x1111,
-        .dynTblLen = (uint64_t)allocSize
+        .dynTblLen = (uint64_t)allocSizeX + raw->size
     };
 
     int agv = TRD_AppendDynamicTable(&pkgi,  &tsd, meta_vvv, raw);
@@ -179,21 +181,29 @@ int main() {
 
     TRD_RAWBIN_TBL* readTableX = malloc(allocSizeX);
     readTableX->data = (unsigned char*)malloc(size);
+    printf("ddd%lu\n", size);
+    
+    printf("!!!!!!!!!!!!!!!!!%s\n", readTableX->data);
    
     if (readTableX == NULL || readTableX->data == NULL) {
         printf("@@malloc error\n");
         return TRDE_MALLOC_FAIL;
     }
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_vvv, 0x1111, &readTableX);
-   printf("s==%lu\n", readTableX->size);
-   printf("s==%lu\n", raw->size);
- 
+    TRD_DYNTBL_META meta_read = {0};
+
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, &readTableX, 1);
+  // printf("s==%lx\n", meta_read.tuid0);
+  // printf("s==%s\n", readTableX->data);
+  // printf("s==%lu\n", readTableX->size);
+    
    FILE* outtar = fopen("tarout.tar", "wb");
+   
    //problem is that we cannot for some reason apass the data to the readTable
-   if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
-    perror("error");
-    return 1;
-   }
+  //  if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
+    //perror("error");
+   // return 1;
+   //}
+   
 
    fclose(outtar);
    
@@ -203,9 +213,8 @@ int main() {
         printf("!!!!corrupted file!!!\n");
     };
 
-    free(tst);
-    free(tsd.offsets);
-    free(readTable);
+  
+   
     TRD_ClosePackage(&pkgi);
   
     
