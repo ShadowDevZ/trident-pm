@@ -165,6 +165,12 @@ trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, T
     case 0x1111:
     //todo call specific function to write the file instead
         TRD_RAWBIN_TBL* rw = (TRD_RAWBIN_TBL*)dtbl;
+        if (rw == NULL) {
+            printf("null ptr\n");
+            break;
+        }
+        
+      
        
         if (fread(&rw->size, sizeof(rw->size), 1, pkg->pkgHandle) != 1) {
              
@@ -182,14 +188,15 @@ trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, T
         }
         
        rw->data = vg;
-       printf("fff:%lu\n", rw->size);
-       printf("fff:%s\n", vg);
-       printf("fff:%s\n", rw->data);
+       printf("tars:%lu\n", rw->size);
+       printf("tarc:%s\n", vg);
+       printf("tard:%s\n", rw->data);
      //  rw->data = (unsigned char*)"aaa";
      //  printf("fff:%s\n", rw->data);
       
      
-        printf("<<<<data len: %lu, meta %lx\n", rw->size, metaRead.tuid0);
+        printf("<<<<data len: %lu, meta_tuid %lx\n", rw->size, metaRead.tuid0);
+        
         break;
          
     

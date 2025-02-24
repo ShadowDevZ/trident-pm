@@ -6,7 +6,7 @@
 #include "sections.h"
 #include "dyntbl.h"
 #include <time.h>
-#include <libxml2/libxml/parser.h>
+
 int main() {
     printf("Trident Package Builder %s\n", TRD_BUILDER_VERSION);
     _TRD_PKGI pkgi = {0};
@@ -108,7 +108,7 @@ int main() {
         printf("@@malloc error\n");
         return TRDE_MALLOC_FAIL;
     }
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, &readTable, 0);
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, readTable, 0);
     
 
 
@@ -180,7 +180,9 @@ int main() {
     }
 
     TRD_RAWBIN_TBL* readTableX = malloc(allocSizeX);
+    memset(readTableX, 0, sizeof(TRD_RAWBIN_TBL));
     readTableX->data = (unsigned char*)malloc(size);
+    readTableX->size = 1722;
     printf("ddd%lu\n", size);
     
     printf("!!!!!!!!!!!!!!!!!%s\n", readTableX->data);
@@ -191,18 +193,19 @@ int main() {
     }
     TRD_DYNTBL_META meta_read = {0};
 
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, &readTableX, 1);
+    
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, readTableX, 1);
   // printf("s==%lx\n", meta_read.tuid0);
-  // printf("s==%s\n", readTableX->data);
-  // printf("s==%lu\n", readTableX->size);
+   printf("s==%lu\n", readTableX->size);
+   printf("d==%s\n", readTableX->data);
     
    FILE* outtar = fopen("tarout.tar", "wb");
    
    //problem is that we cannot for some reason apass the data to the readTable
-  //  if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
-    //perror("error");
-   // return 1;
-   //}
+    if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
+         perror("error");
+        return 1;
+   }
    
 
    fclose(outtar);
