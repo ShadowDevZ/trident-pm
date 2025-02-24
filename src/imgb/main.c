@@ -109,11 +109,12 @@ int main() {
         return TRDE_MALLOC_FAIL;
     }
     TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, readTable, 0);
-    
+
 
 
     printf("success\n%d.%d\n", tst->test0, tst->test1);
-
+    free(tst);
+    free(readTable);
 
     
 
@@ -172,6 +173,8 @@ int main() {
     };
 
     int agv = TRD_AppendDynamicTable(&pkgi,  &tsd, meta_vvv, raw);
+    free(raw->data);
+    free(raw);
     printf("agv::%d\n", agv);
 
     offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
@@ -185,7 +188,7 @@ int main() {
     readTableX->size = 1722;
     printf("ddd%lu\n", size);
     
-    printf("!!!!!!!!!!!!!!!!!%s\n", readTableX->data);
+    
    
     if (readTableX == NULL || readTableX->data == NULL) {
         printf("@@malloc error\n");
@@ -206,12 +209,15 @@ int main() {
          perror("error");
         return 1;
    }
-   
+   free(readTableX->data);
+   free(readTableX);
 
    fclose(outtar);
    
-
+   free(tsd.ids);
+   free(tsd.offsets);
     TRD_FinitDynamicTables(&pkgi, &tsd);
+    
     if (TRD_FinishFile(&pkgi) != TRDE_SUCCESS) {
         printf("!!!!corrupted file!!!\n");
     };

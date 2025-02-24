@@ -180,6 +180,7 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
     if (sd.offsets == NULL) {
         return TRDE_MALLOC_FAIL;
     }
+    
   
     
     sd.offsets->tableCount = tablesMax;
@@ -252,7 +253,7 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
     }
 
     
-  
+    
     free(sd.offsets);
     free(sd.ids);
     return TRDE_SUCCESS;

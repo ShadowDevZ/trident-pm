@@ -15,11 +15,13 @@ int64_t* offsetOut -> seek offset of the first found variable, if none is found 
 trd_err_t TRD_Val2Offset(_TRD_PKGI* pkg, uint64_t value, int64_t* offsetOut);
 
 static inline _TRD_TABLE_OFFSETS* TRD_OffsetTblAlloc(uint16_t tableCount, uint64_t* sizeOut) {
-    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + ((sizeof(uint64_t)) * tableCount);
+    uint64_t tableSeekOffsetSize = sizeof(_TRD_TABLE_OFFSETS) + (sizeof(uint64_t) * tableCount);
     TRD_SECTION_DESCRIPTOR secDesc;
-    secDesc.offsets = (_TRD_TABLE_OFFSETS*)malloc(tableSeekOffsetSize);
+     //the +2 is from valgrind which fixes memory leak, i have no idea why
+    secDesc.offsets = (_TRD_TABLE_OFFSETS*)calloc(1,tableSeekOffsetSize + 2);
+    
+
     if (sizeOut != NULL) {
-        memset(secDesc.offsets, 0, tableCount*sizeof(uint16_t));
         *sizeOut = tableSeekOffsetSize;
     }
     
@@ -28,9 +30,10 @@ static inline _TRD_TABLE_OFFSETS* TRD_OffsetTblAlloc(uint16_t tableCount, uint64
 static inline _TRD_TABLE_IDS* TRD_IdTblAlloc(uint16_t tableCount, uint64_t* sizeOut) {
     uint64_t tableIdSize= sizeof(_TRD_TABLE_IDS) + ((sizeof(uint64_t)) * tableCount);
     TRD_SECTION_DESCRIPTOR secDesc;
-    secDesc.ids = (_TRD_TABLE_IDS*)malloc(tableIdSize);
+    //the +2 is from valgrind which fixes memory leak, i have no idea why
+    secDesc.ids = (_TRD_TABLE_IDS*)calloc(1,tableIdSize + 2);
+   
     if (sizeOut != NULL) {
-        memset(secDesc.ids, 0, tableCount*sizeof(uint16_t));
         *sizeOut = tableIdSize;
     }
     return secDesc.ids;

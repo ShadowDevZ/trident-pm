@@ -73,7 +73,8 @@ uint32_t buildFlags, uint16_t fmtVersion) {
     //todo check if seek is 0
     TRPD_HEADER hdr = {0};
     
-    memcpy(hdr.magic, TRD_PKG_MAGIC, strlen(TRD_PKG_MAGIC));
+    
+    memcpy(hdr.magic, TRD_PKG_MAGIC, sizeof(TRD_PKG_MAGIC));
     hdr.fmtVersion = fmtVersion;
     hdr.compressionType = comprType;
    hdr.buildFlags = buildFlags;

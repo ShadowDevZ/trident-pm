@@ -179,17 +179,17 @@ trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, T
     
        
 //data still doesnt work to be read
-    unsigned char* vg = malloc(rw->size);
+
     
    
-       if (fread(vg, rw->size, 1, pkg->pkgHandle) != 1) {
+       if (fread(rw->data, rw->size, 1, pkg->pkgHandle) != 1) {
           
            goto fix_seek;
         }
         
-       rw->data = vg;
+
        printf("tars:%lu\n", rw->size);
-       printf("tarc:%s\n", vg);
+       
        printf("tard:%s\n", rw->data);
      //  rw->data = (unsigned char*)"aaa";
      //  printf("fff:%s\n", rw->data);

@@ -6,6 +6,8 @@ build/*
 .vscode/*
 # Prerequisites
 *.d
+*.log
+valgrind-out*
 
 # Object files
 *.o
