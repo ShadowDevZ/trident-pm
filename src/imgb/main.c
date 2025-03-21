@@ -8,6 +8,8 @@
 #include <time.h>
 
 int main() {
+    int ixx = 3;
+    
     printf("Trident Package Builder %s\n", TRD_BUILDER_VERSION);
     _TRD_PKGI pkgi = {0};
     TRPD_PKG_VERSION fver = {1,0,1};
@@ -25,9 +27,7 @@ int main() {
     }
     
     trderr_t openRet = TRD_OpenPackage("package.tpx", &pkgi);
-    if (openRet != TRDE_SUCCESS) {
-        return 1;
-    }
+    TSASSERT(openRet, "Failed to open package");
 
 
      TRD_WriteHeader(&pkgi, TRD_CT_LZ4, TRD_BF_AP_AMD64| TRD_BF_PLATF_LINUX\
@@ -37,9 +37,7 @@ int main() {
    
 
     trderr_t rcheck = TRD_ReadHeader(&pkgi);
-    if (rcheck != TRDE_SUCCESS) {
-        printf("@@Failed to read header\n");
-    }
+    TSASSERT(rcheck, "Failed to read header");
  
    
     
@@ -47,12 +45,9 @@ int main() {
     printf("created package test\n");
 
     trderr_t hdrStatus = TRD_VerifyHeader(&pkgi);
-    if (hdrStatus != TRDE_SUCCESS) {
-        printf("checksum missmatch\n");
-    }
-    else{
-        printf("checksum verified\n");
-    }
+    TSASSERT(hdrStatus, "Checksum missmatch");
+    printf("checksum verified\n");
+    
     TRD_SetLastError(TRDE_SUCCESS);
     trderr_t le = TRD_GetLastError();
     printf("Status: %u[%s]\n", le, le == TRDE_SUCCESS ? "OK":"FAIL");
@@ -73,9 +68,7 @@ int main() {
     TRD_DYNTBL_TEST* tst = malloc(allocSize);
     tst->test0 = 1337;
     tst->test1 = 69;
-    if (tst == NULL){
-        printf("!!!error\n");
-    }
+    TEASSERT(tst, NULL, "Dyntbl test failed to allocate memory");
     TRD_DYNTBL_META meta_test = {
         .tuid0 = (tuid_t)0x1337,
         .revision = (tuid_t)0xfed5,
@@ -104,11 +97,8 @@ int main() {
     
     
     TRD_DYNTBL_TEST* readTable = malloc((meta_test.dynTblLen));
-    if (readTable == NULL) {
-        printf("@@malloc error\n");
-        return TRDE_MALLOC_FAIL;
-    }
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, readTable, 0);
+    TEASSERT(readTable, NULL, "ReadTable test failed to allocate memory");
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, readTable);
 
 
 
@@ -117,18 +107,6 @@ int main() {
     free(readTable);
 
     
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     
@@ -197,7 +175,7 @@ int main() {
     TRD_DYNTBL_META meta_read = {0};
 
     
-    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, readTableX, 1);
+    TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, readTableX);
   // printf("s==%lx\n", meta_read.tuid0);
    printf("s==%lu\n", readTableX->size);
    printf("d==%s\n", readTableX->data);
@@ -218,13 +196,16 @@ int main() {
    free(tsd.offsets);
     TRD_FinitDynamicTables(&pkgi, &tsd);
     
-    if (TRD_FinishFile(&pkgi) != TRDE_SUCCESS) {
-        printf("!!!!corrupted file!!!\n");
-    };
+    TSASSERT(TRD_FinishFile(&pkgi), "Corrupted file");
 
-  
+   
+    _TrdPrintTable();
    
     TRD_ClosePackage(&pkgi);
+
+   
+   
+    
   
     
     return 0;

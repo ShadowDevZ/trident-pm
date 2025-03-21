@@ -104,13 +104,12 @@ typedef struct {
     TRPD_HEADER hdr;
     TRD_SECTION_DESCRIPTOR secDesc;
     //current id of table to append to
-    uint32_t currentTable;
+    uint16_t currentTable;
     uint64_t idtblOffset;
     int offsetTbl;
    //TRD_TABLES[TABLE_MAX];
    //TRD_MANIFEST_INFORMATION...
     
-
     uint64_t eofid;
     
 

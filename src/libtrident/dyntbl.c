@@ -1,6 +1,6 @@
 #include "dyntbl.h"
 #include "trderr.h"
-
+#include "vec/vec.h"
 
 trderr_t __TRD_DynamicTables(_TRD_PKGI* pkg, bool init,TRD_SECTION_DESCRIPTOR* secdesc) {
     if (secdesc == NULL || pkg == NULL)
@@ -52,6 +52,10 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     
     if (meta.tuid0 != meta.tuid1)
         return TRDE_INV_CHKSUM;
+    
+    if (TRD_DtblOffsetLookup(meta.tuid0) != -1){
+        return TRDE_ALREXISTS;
+    }
 
     uint32_t currentTable = pkg->currentTable;
     secDesc->ids->tableSeekIds[currentTable] = meta.tuid0;
@@ -75,6 +79,7 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     long currentSeek = ftell(pkg->pkgHandle);
     secDesc->offsets->tableSeekOffset[currentTable] = currentSeek;
     TRD_RegenerateTableOffsets(pkg, secDesc);
+    
     
 
     //todo find the correct table seek offse4t and write it
@@ -113,12 +118,16 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     
     ++currentTable;
     pkg->currentTable = currentTable;
+    _TRD_DtblAddEntry(meta.tuid0);
 
     return TRDE_SUCCESS;
     
 
 }
-trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META* meta,tuid_t tuid, trd_dyntbl_t dtbl, int offset) {
+
+
+trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META* meta,tuid_t tuid,
+trd_dyntbl_t dtbl) {
     if (!TRD_DynTblPresent(pkg))
         return TRDE_NOSECTION;
     if (pkg == NULL || secDesc == NULL
@@ -126,7 +135,11 @@ trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, T
         return TRDE_NULL;
     if (pkg->pkgHandle == NULL)
         return TRDE_NOFILE;
-    
+    int offset = TRD_DtblOffsetLookup(tuid);
+    printf("current table offset index is %d\n", offset);
+    if (offset == -1) {
+        return TRDE_BAD_ARG;
+    }
     
     long currentSeek = ftell(pkg->pkgHandle);
 
@@ -230,4 +243,37 @@ trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, T
 fix_seek:
     fseek(pkg->pkgHandle, currentSeek, SEEK_SET);
     return TRDE_IO_FAIL;
+}
+static vec_int_t g_dtblLookup;
+
+trderr_t _TRD_DtblOffsetTableInit() {
+    vec_init(&g_dtblLookup);
+    return TRDE_SUCCESS;
+}
+trderr_t _TRD_DtblOffsetTableFree() {
+    vec_deinit(&g_dtblLookup);
+    return TRDE_SUCCESS;
+}
+trderr_t _TRD_DtblAddEntry(tuid_t tuid) {
+    int i;
+    vec_find(&g_dtblLookup, tuid, i);
+    if (i != -1)
+        return TRDE_ALREXISTS;
+
+
+    vec_push(&g_dtblLookup, tuid);
+    return TRDE_SUCCESS;
+}
+
+int TRD_DtblOffsetLookup(tuid_t tuid) {
+    int i;
+    vec_find(&g_dtblLookup, tuid, i);
+    return i;
+    
+}
+void _TrdPrintTable() {
+    int i; tuid_t val;
+    vec_foreach(&g_dtblLookup, val, i) {
+    printf("%x : %lx\n", i, val);
+}   
 }

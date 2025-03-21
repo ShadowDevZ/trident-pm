@@ -42,3 +42,11 @@ typedef enum {
 
 }TRD_ERR_CODES;
 
+__attribute__((noreturn)) static inline void __tassert_and_exit(const char* msg) {
+    printf("\n\n[ASSERTION_FAILED]%s[ASSERTION_FAILED]\n", msg);
+    exit(EXIT_FAILURE);
+}
+#define TSASSERT( x,m ) { if( (x) != TRDE_SUCCESS ) __tassert_and_exit( (m) ); }
+#define TASSERT( x,v,m ) { if( (x) != (v) ) __tassert_and_exit( (m) ); }
+#define TEASSERT( x,v,m ) { if( (x) == (v) ) __tassert_and_exit( (m) ); }
+
