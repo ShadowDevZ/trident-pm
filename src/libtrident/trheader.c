@@ -10,15 +10,15 @@ uint32_t TRD_HeaderChecksum(const TRPD_HEADER *hdr) {
     const uint8_t *bytes = (const uint8_t *)hdr;
     
     // Calculate checksum for the part before the checksum field
-    for (size_t i = 0; i < sizeof(hdr->magic) + sizeof(hdr->fmtVersion) + \
-     sizeof(hdr->compressionType) + sizeof(hdr->buildFlags); i++) {
+    for (size_t i = 0; i < sizeof(hdr->magic) + sizeof(hdr->padding) + sizeof(hdr->fmtVersion) + \
+     sizeof(hdr->compressionType) + sizeof(hdr->buildFlags) ; i++) {
         sum += bytes[i];
     }
     
     // Calculate checksum for the part after the checksum field
-    for (size_t i = sizeof(hdr->magic) + sizeof(hdr->fmtVersion) + \
+    for (size_t i = sizeof(hdr->magic) + sizeof(hdr->padding) + sizeof(hdr->fmtVersion) + \
     sizeof(hdr->compressionType) + sizeof(hdr->buildFlags) + sizeof(hdr->headerChecksum) + \
-    sizeof(hdr->padding) + sizeof(hdr->fileLen) + sizeof(hdr->padding2) + \
+     + sizeof(hdr->fileLen)  + \
     sizeof(hdr->lock); i < sizeof(TRPD_HEADER); i++) {
 
         sum += bytes[i];
@@ -78,11 +78,11 @@ uint32_t buildFlags, uint16_t fmtVersion) {
     hdr.fmtVersion = fmtVersion;
     hdr.compressionType = comprType;
    hdr.buildFlags = buildFlags;
-    memset(hdr.padding, 0, sizeof(hdr.padding));
+  //  memset(hdr.padding, 0, sizeof(hdr.padding));
     hdr.headerChecksum = TRD_HeaderChecksum(&hdr);
     //This field will be set during section writing
     hdr.fileLen = 0;
-    memset(hdr.padding2, 0, sizeof(hdr.padding2));
+  //  memset(hdr.padding2, 0, sizeof(hdr.padding2));
     hdr.lock = true;
     //this part should be in readheader
    // pkg->hdr = hdr;
