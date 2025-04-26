@@ -68,7 +68,7 @@ int main(void) {
 
     TRD_DYNTBL_META meta_test = {
         .tuid0 = (tuid_t)0x1337,
-        .crc32 = 1222,
+        .crc32 = 0,
         .revision = (tuid_t)0xfed5,
         .tuid1 = (tuid_t)0x1337,
         .dynTblLen = (uint64_t)allocSize
@@ -82,17 +82,19 @@ int main(void) {
     trderr_t dynTblRet = TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);
     printf("TSD before mod=0x%lx\n", tsd.offsets->tableSeekOffset[0]);
     printf("dynTblRet = %d\n", dynTblRet);
+   
 
     offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
     for (int i = 0; i < tsd.offsets->tableCount; ++i) {
         printf("\tID %lx :: SEEK %i_%lx\n", tsd.ids->tableSeekIds[i], i, tsd.offsets->tableSeekOffset[i]);
     }
-
+    
     TRD_DYNTBL_TEST *readTable = malloc(meta_test.dynTblLen);
     TEASSERT(readTable, NULL, "ReadTable test failed to allocate memory");
 
     TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, readTable);
 
+    _TrdPrintMeta(meta_test);
     printf("TestTableArgs=%d.%d\n", tst->test0, tst->test1);
     free(tst);
     free(readTable);
@@ -135,13 +137,14 @@ int main(void) {
 
     TRD_DYNTBL_META meta_fileToCompress = {
         .tuid0 = (tuid_t)0x1111,
-        .crc32 = 122,
+        .crc32 = 0,
         .revision = (tuid_t)0xbeef,
         .tuid1 = (tuid_t)0x1111,
-        .dynTblLen = (uint64_t)(allocSizeX + raw->size)
+        .dynTblLen = (uint64_t)(allocSizeX)+(raw->size)
     };
 
     int appendDynamicRet = TRD_AppendDynamicTable(&pkgi, &tsd, meta_fileToCompress, raw);
+  
     free(raw->data);
     free(raw);
     printf("appendDynamicRet:: %d\n", appendDynamicRet);
@@ -167,9 +170,7 @@ int main(void) {
 
     TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, readTableX);
 
-    printf("tuid0=0x%lx\n", meta_read.tuid0);
-    printf("size=%lu\n", readTableX->size);
-    printf("data=%s\n", readTableX->data);
+    _TrdPrintMeta(meta_read);
 
     FILE *outtar = fopen("tarout.tar", "wb");
     if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {

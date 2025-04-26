@@ -9,14 +9,15 @@ typedef uint64_t tuid_t;
 //table UID, unique for each different type
 
 
-const uint64_t TRD_DYNSEC_START_TOK = 0x13d6f63458f6b9f4;
-const uint64_t TRD_DYNSEC_END_TOK =   0x4dfbf705853ce8e2;
+static const uint64_t TRD_DYNSEC_START_TOK = 0x13d6f63458f6b9f4;
+static const uint64_t TRD_DYNSEC_END_TOK =   0x4dfbf705853ce8e2;
 
 typedef struct {
     tuid_t tuid0;
-    uint32_t crc32;
     uint16_t revision;
     uint64_t dynTblLen;
+    uint32_t crc32;
+    //===void* data===
     tuid_t tuid1;
 }__STRUCT_PACK TRD_DYNTBL_META;
 
@@ -48,6 +49,8 @@ trderr_t TRD_FinitDynamicTables(_TRD_PKGI* pkg ,TRD_SECTION_DESCRIPTOR* secdesc)
 
 trderr_t TRD_ReadDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc, TRD_DYNTBL_META* meta,tuid_t tuid, trd_dyntbl_t dtbl);
 trderr_t _TRD_DtblAddEntry(tuid_t tuid);
+trderr_t _TRD_DtblDelEntry(tuid_t tuid);
 //returns index on success and -1 on failure
 int TRD_DtblOffsetLookup(tuid_t tuid);
 void _TrdPrintTable();
+void _TrdPrintMeta(TRD_DYNTBL_META meta);

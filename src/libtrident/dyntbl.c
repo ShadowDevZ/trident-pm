@@ -1,6 +1,7 @@
 #include "dyntbl.h"
 #include "trderr.h"
 #include "vec/vec.h"
+#include "checksum.h"
 
 trderr_t __TRD_DynamicTables(_TRD_PKGI* pkg, bool init,TRD_SECTION_DESCRIPTOR* secdesc) {
     if (secdesc == NULL || pkg == NULL)
@@ -85,10 +86,14 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     //todo find the correct table seek offse4t and write it
     if (trd_fwrite(&meta.tuid0, sizeof(meta.tuid0), 1, pkg) != 1)
         return TRDE_IO_FAIL;
+
     if (trd_fwrite(&meta.revision, sizeof(meta.revision), 1, pkg) != 1)
         return TRDE_IO_FAIL;
     if (trd_fwrite(&meta.dynTblLen, sizeof(meta.dynTblLen), 1, pkg) != 1)
         return TRDE_IO_FAIL;
+    
+    
+    CRC32 crc = UpdateTableChecksum(0, &meta, NULL, 0);
     
     
     switch (meta.tuid0)
@@ -97,6 +102,10 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     //todo call specific function to write the file instead
         TRD_RAWBIN_TBL* rw = (TRD_RAWBIN_TBL*)dtbl;
         printf("RAW_TBL_DATA_SIZE=%lu, RAW_TBL_DATA_LEN=%lu\n", rw->size, meta.dynTblLen);
+
+       // TASSERT(rw->size+sizeof(TRD_RAWBIN_TBL), meta.dynTblLen, "Metadata size does not match the binary size");
+        crc = UpdateTableChecksum(crc, NULL, rw->data, rw->size);
+
         if (trd_fwrite(&rw->size, sizeof(rw->size), 1, pkg) != 1) {
             return TRDE_IO_FAIL;
         }
@@ -107,10 +116,18 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     
     default:
         if (trd_fwrite(&dtbl, meta.dynTblLen, 1, pkg) != 1)
-            return TRDE_IO_FAIL;        
+            return TRDE_IO_FAIL;
+        crc = UpdateTableChecksum(crc, NULL, dtbl, meta.dynTblLen);
         break;
     }
+    meta.crc32 = crc;
     
+
+    if (trd_fwrite(&meta.crc32, sizeof(meta.crc32), 1, pkg) != 1)
+        return TRDE_IO_FAIL;
+    if (meta.tuid0 == 0x1111) {
+        printf("ORIGNAAAAAAAAAAAAAA: %x\n", meta.crc32);
+    }
     //dynamic table end
     
     if (trd_fwrite(&meta.tuid1, sizeof(meta.tuid1), 1, pkg) != 1)
@@ -165,6 +182,7 @@ trd_dyntbl_t dtbl) {
     if (fread(&metaRead.tuid0, sizeof(metaRead.tuid0), 1, pkg->pkgHandle) != 1) {
        goto fix_seek;
     }
+   
     if (fread(&metaRead.revision, sizeof(metaRead.revision), 1, pkg->pkgHandle) != 1) {
        goto fix_seek;
     }
@@ -172,7 +190,7 @@ trd_dyntbl_t dtbl) {
        goto fix_seek;
     }
     //dyntbl start
-
+    CRC32 crc = UpdateTableChecksum(0, &metaRead, NULL, 0);
     switch (metaRead.tuid0)
     {
     case 0x1111:
@@ -189,11 +207,7 @@ trd_dyntbl_t dtbl) {
              
             goto fix_seek;
         }
-    
-       
-//data still doesnt work to be read
-
-    
+        
    
        if (fread(rw->data, rw->size, 1, pkg->pkgHandle) != 1) {
           
@@ -204,8 +218,8 @@ trd_dyntbl_t dtbl) {
        printf("RAW_TAR_SIZE=%lu\n", rw->size);
        
        printf("RAW_TAR_DATA=%s\n", rw->data);
-
-     
+       crc = UpdateTableChecksum(crc, NULL, rw->data, rw->size);
+       
         
         break;
          
@@ -213,12 +227,22 @@ trd_dyntbl_t dtbl) {
     default:
         if (fread(&dtbl, metaRead.dynTblLen, 1, pkg->pkgHandle) != 1)
             goto fix_seek;       
+            crc = UpdateTableChecksum(crc, NULL, dtbl, metaRead.dynTblLen);
         break;
     }
     
     
 
-
+    if (fread(&metaRead.crc32, sizeof(metaRead.crc32), 1, pkg->pkgHandle) != 1) {
+        goto fix_seek;
+    }
+    
+   
+        printf("   crcOrignal: %x", crc);
+        printf("   crcRead: %x", metaRead.crc32);
+        TASSERT(crc, metaRead.crc32, "CRC32 missmatch");
+    
+     
     
 
     //dyntbl end
@@ -261,6 +285,16 @@ trderr_t _TRD_DtblAddEntry(tuid_t tuid) {
     vec_push(&g_dtblLookup, tuid);
     return TRDE_SUCCESS;
 }
+trderr_t _TRD_DtblDelEntry(tuid_t tuid) {
+    int i;
+    vec_find(&g_dtblLookup, tuid, i);
+    if (i == -1)
+        return TRDE_NULL;
+
+
+    vec_remove(&g_dtblLookup, tuid);
+    return TRDE_SUCCESS;
+}
 
 int TRD_DtblOffsetLookup(tuid_t tuid) {
     int i;
@@ -271,6 +305,15 @@ int TRD_DtblOffsetLookup(tuid_t tuid) {
 void _TrdPrintTable() {
     int i; tuid_t val;
     vec_foreach(&g_dtblLookup, val, i) {
-    printf("%x : %lx\n", i, val);
+    printf("LOOKUP_TUID ID:%x : TUID:%lx\n", i, val);
 }   
+}
+void _TrdPrintMeta(TRD_DYNTBL_META meta) {
+    printf("\n===META_DUMP===\n");
+    printf(" ::tuid0=0x%lx\n", meta.tuid0);
+    printf(" ::crc32=0x%08x\n", meta.crc32);
+    printf(" ::revision=%d\n", meta.revision);
+    printf(" ::length=%lu\n", meta.dynTblLen);
+    printf(" ::tuid1=0x%lx", meta.tuid1);
+    printf("\n===META_DUMP===\n");
 }
