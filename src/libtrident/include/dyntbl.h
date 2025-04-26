@@ -14,6 +14,7 @@ const uint64_t TRD_DYNSEC_END_TOK =   0x4dfbf705853ce8e2;
 
 typedef struct {
     tuid_t tuid0;
+    uint32_t crc32;
     uint16_t revision;
     uint64_t dynTblLen;
     tuid_t tuid1;

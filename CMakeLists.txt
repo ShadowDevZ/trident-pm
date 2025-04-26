@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(trident-pm)
 
 find_package(LibXml2 REQUIRED)
+find_package(ZLIB REQUIRED)
 
 set(TRDLIB "libtrdpm")
 set(TRDPM "trpm")
@@ -29,7 +30,8 @@ if (NOT TRD_BUILD_LIBONLY)
     add_executable(${TRDBLD} ${TRD_IMG_BUILDER} ${LIBS_EXTERNAL})
     target_link_libraries(${TRDPM} PRIVATE ${TRDLIB} )
     target_include_directories(${TRDBLD} PRIVATE ${LIBXML2_INCLUDE_DIRS})
-    target_link_libraries(${TRDBLD} PRIVATE ${TRDLIB} ${LIBXML2_LIBRARIES})
+    target_link_libraries(${TRDBLD} PRIVATE ${TRDLIB} ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
+   
 endif()
 
 

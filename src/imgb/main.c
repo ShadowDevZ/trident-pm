@@ -1,212 +1,194 @@
-#include "stdio.h"
+#include <stdio.h>
+#include <string.h>
 #include "builder.h"
 #include "libtrident.h"
-#include <string.h>
 #include "buildflg.h"
 #include "sections.h"
 #include "dyntbl.h"
-#include <time.h>
 
-int main() {
-    int ixx = 3;
-    
-    printf("Trident Package Builder %s\n", TRD_BUILDER_VERSION);
-    _TRD_PKGI pkgi = {0};
-    TRPD_PKG_VERSION fver = {1,0,1};
+int main(void) {
    
 
-     uint16_t tables = 10;
-     TRD_SECTION_DESCRIPTOR tsd = {0};
-     tsd.tableFlags = 0xDEADBEEF;
-    
+    printf("Trident Package Builder %s\n", TRD_BUILDER_VERSION);
+
+    _TRD_PKGI pkgi = {0};
+    TRPD_PKG_VERSION fver = {1, 0, 1};
+
+    uint16_t tables = 10;
+    TRD_SECTION_DESCRIPTOR tsd = {0};
+    tsd.tableFlags = 0xDEADBEEF;
+
     tsd.offsets = TRD_OffsetTblAlloc(tables, NULL);
     tsd.ids = TRD_IdTblAlloc(tables, NULL);
+
     if (tsd.offsets == NULL || tsd.ids == NULL) {
-        printf("@!!!!MALLOC ERROR DEBUG\n");
+        printf("@!!!! MALLOC ERROR DEBUG\n");
         return 1;
     }
-    
+
     trderr_t openRet = TRD_OpenPackage("package.tpx", &pkgi);
     TSASSERT(openRet, "Failed to open package");
 
-
-     TRD_WriteHeader(&pkgi, TRD_CT_LZ4, TRD_BF_AP_AMD64| TRD_BF_PLATF_LINUX\
-    ,TRD_VersionToFormat(fver.Major,fver.Minor, \
-    fver.Revision));
-   
-   
+    TRD_WriteHeader(
+        &pkgi,
+        TRD_CT_LZ4,
+        TRD_BF_AP_AMD64 | TRD_BF_PLATF_LINUX,
+        TRD_VersionToFormat(fver.Major, fver.Minor, fver.Revision)
+    );
 
     trderr_t rcheck = TRD_ReadHeader(&pkgi);
     TSASSERT(rcheck, "Failed to read header");
- 
-   
-    
-   
+
     printf("created package test\n");
 
     trderr_t hdrStatus = TRD_VerifyHeader(&pkgi);
-    TSASSERT(hdrStatus, "Checksum missmatch");
+    TSASSERT(hdrStatus, "Checksum mismatch");
     printf("checksum verified\n");
-    
+
     TRD_SetLastError(TRDE_SUCCESS);
     trderr_t le = TRD_GetLastError();
-    printf("Status: %u[%s]\n", le, le == TRDE_SUCCESS ? "OK":"FAIL");
-    srand(time(NULL));
-    for (int i=0; i < tables; ++i) {
+    printf("Status: %u [%s]\n", le, le == TRDE_SUCCESS ? "OK" : "FAIL");
+
+    
+    for (int i = 0; i < tables; ++i) {
         tsd.offsets->tableSeekOffset[i] = 0x999;
     }
-  
-    trderr_t a = TRD_GenerateSectionHeader(&pkgi,&tsd, tables);
-    printf("Generated header status ::%d\n\n",a);
 
-    
+    trderr_t a = TRD_GenerateSectionHeader(&pkgi, &tsd, tables);
+    printf("Generated header status :: %d\n\n", a);
 
-   
     TRD_InitDynamicTables(&pkgi, &tsd);
-    
+
     uint64_t allocSize = sizeof(TRD_DYNTBL_TEST);
-    TRD_DYNTBL_TEST* tst = malloc(allocSize);
+    TRD_DYNTBL_TEST *tst = malloc(allocSize);
+    TEASSERT(tst, NULL, "Dyntbl test failed to allocate memory");
+
     tst->test0 = 1337;
     tst->test1 = 69;
-    TEASSERT(tst, NULL, "Dyntbl test failed to allocate memory");
+
     TRD_DYNTBL_META meta_test = {
         .tuid0 = (tuid_t)0x1337,
+        .crc32 = 1222,
         .revision = (tuid_t)0xfed5,
         .tuid1 = (tuid_t)0x1337,
         .dynTblLen = (uint64_t)allocSize
     };
-   
 
-    trd_err_t offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
-    printf("Reabback header status ::%d\n\n", offsErr);
-    printf("Table count: %d\nTable flags 0x%X\n", tsd.offsets->tableCount, tsd.tableFlags);
-    printf("table dump: \n");
-    
+    trderr_t offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
+    printf("Readback header status :: %d\n\n", offsErr);
+    printf("Table count: %d\nTable flags: 0x%X\n", tsd.offsets->tableCount, tsd.tableFlags);
 
-    
-    trderr_t gg =  TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);
-    printf("before %lx\n", tsd.offsets->tableSeekOffset[0]);
-    printf("gg=%d\n", gg);
+    printf("table dump:\n");
+    trderr_t dynTblRet = TRD_AppendDynamicTable(&pkgi, &tsd, meta_test, tst);
+    printf("TSD before mod=0x%lx\n", tsd.offsets->tableSeekOffset[0]);
+    printf("dynTblRet = %d\n", dynTblRet);
+
     offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
-    for (int i=0;i < tsd.offsets->tableCount; ++i) {
-        printf("\tID%lx:: SEEK%i_%lx\n",tsd.ids->tableSeekIds[i],i, tsd.offsets->tableSeekOffset[i]);
+    for (int i = 0; i < tsd.offsets->tableCount; ++i) {
+        printf("\tID %lx :: SEEK %i_%lx\n", tsd.ids->tableSeekIds[i], i, tsd.offsets->tableSeekOffset[i]);
     }
-   
-    
-    
-    
-    
-    TRD_DYNTBL_TEST* readTable = malloc((meta_test.dynTblLen));
+
+    TRD_DYNTBL_TEST *readTable = malloc(meta_test.dynTblLen);
     TEASSERT(readTable, NULL, "ReadTable test failed to allocate memory");
+
     TRD_ReadDynamicTable(&pkgi, &tsd, &meta_test, 0x1337, readTable);
 
-
-
-    printf("success\n%d.%d\n", tst->test0, tst->test1);
+    printf("TestTableArgs=%d.%d\n", tst->test0, tst->test1);
     free(tst);
     free(readTable);
 
-    
-
-
-    
-
-    char* file = "test.tar";
-    FILE* vvv = fopen(file, "rb");
-    if (!file) {
-        perror("Failed to open file\n");
+    // Read binary file
+    char *file = "test.tar";
+    FILE *fileToCompress = fopen(file, "rb");
+    if (!fileToCompress) {
+        perror("Failed to open file");
         return 1;
-        
     }
-    
-    fseek(vvv,0, SEEK_END);
-    size_t size = ftell(vvv);
+
+    fseek(fileToCompress, 0, SEEK_END);
+    size_t fileToCompressSize = ftell(fileToCompress);
     uint64_t allocSizeX = sizeof(TRD_RAWBIN_TBL);
-    fseek(vvv, 0, SEEK_SET);
+    fseek(fileToCompress, 0, SEEK_SET);
 
-    TRD_RAWBIN_TBL* raw = malloc(allocSizeX);
-    raw->data = (unsigned char*)malloc(size);
-    raw->size = size;
-    if (raw->data == NULL || raw == NULL) {
+    TRD_RAWBIN_TBL *raw = malloc(allocSizeX);
+    raw->data = (unsigned char *)malloc(fileToCompressSize);
+    raw->size = fileToCompressSize;
+
+    if (raw == NULL || raw->data == NULL) {
         perror("malloc()");
-        fclose(vvv);
+        fclose(fileToCompress);
         return 1;
     }
+
     printf("%lu\n", raw->size);
-    if(fread(raw->data, raw->size, 1, vvv) != 1) {
+
+    if (fread(raw->data, raw->size, 1, fileToCompress) != 1) {
         printf("read error\n");
-        fclose(vvv);
+        fclose(fileToCompress);
         free(raw->data);
         free(raw);
         return 1;
     }
-    fclose(vvv);
-//just temporary mess for testinf without any free()
+    fclose(fileToCompress);
 
- TRD_DYNTBL_META meta_vvv = {
+    // Just temporary mess for testing without any free()
+
+    TRD_DYNTBL_META meta_fileToCompress = {
         .tuid0 = (tuid_t)0x1111,
+        .crc32 = 122,
         .revision = (tuid_t)0xbeef,
         .tuid1 = (tuid_t)0x1111,
-        .dynTblLen = (uint64_t)allocSizeX + raw->size
+        .dynTblLen = (uint64_t)(allocSizeX + raw->size)
     };
 
-    int agv = TRD_AppendDynamicTable(&pkgi,  &tsd, meta_vvv, raw);
+    int appendDynamicRet = TRD_AppendDynamicTable(&pkgi, &tsd, meta_fileToCompress, raw);
     free(raw->data);
     free(raw);
-    printf("agv::%d\n", agv);
+    printf("appendDynamicRet:: %d\n", appendDynamicRet);
 
     offsErr = TRD_GetSectionDescriptor(&pkgi, &tsd);
-    for (int i=0;i < tsd.offsets->tableCount; ++i) {
-        printf("\tID%lx:: SEEK%i_%lx\n",tsd.ids->tableSeekIds[i],i, tsd.offsets->tableSeekOffset[i]);
+    for (int i = 0; i < tsd.offsets->tableCount; ++i) {
+        printf("\tID %lx :: SEEK %i_%lx\n", tsd.ids->tableSeekIds[i], i, tsd.offsets->tableSeekOffset[i]);
     }
 
-    TRD_RAWBIN_TBL* readTableX = malloc(allocSizeX);
+    TRD_RAWBIN_TBL *readTableX = malloc(allocSizeX);
     memset(readTableX, 0, sizeof(TRD_RAWBIN_TBL));
-    readTableX->data = (unsigned char*)malloc(size);
+    readTableX->data = (unsigned char *)malloc(fileToCompressSize);
     readTableX->size = 1722;
-    printf("ddd%lu\n", size);
-    
-    
-   
+
+    printf("FileToCompressSize %lu\n", fileToCompressSize);
+
     if (readTableX == NULL || readTableX->data == NULL) {
         printf("@@malloc error\n");
         return TRDE_MALLOC_FAIL;
     }
+
     TRD_DYNTBL_META meta_read = {0};
 
-    
     TRD_ReadDynamicTable(&pkgi, &tsd, &meta_read, 0x1111, readTableX);
-  // printf("s==%lx\n", meta_read.tuid0);
-   printf("s==%lu\n", readTableX->size);
-   printf("d==%s\n", readTableX->data);
-    
-   FILE* outtar = fopen("tarout.tar", "wb");
-   
-   //problem is that we cannot for some reason apass the data to the readTable
-    if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
-         perror("error");
-        return 1;
-   }
-   free(readTableX->data);
-   free(readTableX);
 
-   fclose(outtar);
-   
-   free(tsd.ids);
-   free(tsd.offsets);
+    printf("tuid0=0x%lx\n", meta_read.tuid0);
+    printf("size=%lu\n", readTableX->size);
+    printf("data=%s\n", readTableX->data);
+
+    FILE *outtar = fopen("tarout.tar", "wb");
+    if (fwrite(readTableX->data, readTableX->size, 1, outtar) != 1) {
+        perror("error");
+        return 1;
+    }
+
+    free(readTableX->data);
+    free(readTableX);
+    fclose(outtar);
+
+    free(tsd.ids);
+    free(tsd.offsets);
+
     TRD_FinitDynamicTables(&pkgi, &tsd);
-    
     TSASSERT(TRD_FinishFile(&pkgi), "Corrupted file");
 
-   
     _TrdPrintTable();
-   
     TRD_ClosePackage(&pkgi);
 
-   
-   
-    
-  
-    
     return 0;
 }

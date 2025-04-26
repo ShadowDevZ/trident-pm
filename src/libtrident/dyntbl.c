@@ -96,7 +96,7 @@ trderr_t TRD_AppendDynamicTable(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* secDesc,
     case 0x1111:
     //todo call specific function to write the file instead
         TRD_RAWBIN_TBL* rw = (TRD_RAWBIN_TBL*)dtbl;
-        printf(">>>>>>>>>>>>>>data len: %lu, meta %lu\n", rw->size, meta.dynTblLen);
+        printf("RAW_TBL_DATA_SIZE=%lu, RAW_TBL_DATA_LEN=%lu\n", rw->size, meta.dynTblLen);
         if (trd_fwrite(&rw->size, sizeof(rw->size), 1, pkg) != 1) {
             return TRDE_IO_FAIL;
         }
@@ -201,14 +201,11 @@ trd_dyntbl_t dtbl) {
         }
         
 
-       printf("tars:%lu\n", rw->size);
+       printf("RAW_TAR_SIZE=%lu\n", rw->size);
        
-       printf("tard:%s\n", rw->data);
-     //  rw->data = (unsigned char*)"aaa";
-     //  printf("fff:%s\n", rw->data);
-      
+       printf("RAW_TAR_DATA=%s\n", rw->data);
+
      
-        printf("<<<<data len: %lu, meta_tuid %lx\n", rw->size, metaRead.tuid0);
         
         break;
          
