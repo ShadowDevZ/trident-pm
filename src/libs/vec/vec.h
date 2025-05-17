@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the MIT license. See LICENSE for details.
  */
-
+//todo either use different library for vectors or modify this to use uint64's
  #ifndef VEC_H
  #define VEC_H
  

@@ -225,9 +225,10 @@ trd_dyntbl_t dtbl) {
          
     
     default:
-        if (fread(&dtbl, metaRead.dynTblLen, 1, pkg->pkgHandle) != 1)
+        if (fread(&dtbl, metaRead.dynTblLen, 1, pkg->pkgHandle) != 1) {
             goto fix_seek;       
-            crc = UpdateTableChecksum(crc, NULL, dtbl, metaRead.dynTblLen);
+        }
+         crc = UpdateTableChecksum(crc, NULL, dtbl, metaRead.dynTblLen);
         break;
     }
     

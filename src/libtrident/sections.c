@@ -116,9 +116,15 @@ trderr_t TRD_GetSectionDescriptor(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* tsd) {
         return TRDE_IO_FAIL;
     }
 
+    printf("Readback: ");
     for (int i = 0; i < tableCount; ++i) {
-        printf("Readback [%d]: %lu\n", i, secDesc.offsets->tableSeekOffset[i]);
+        printf("[%d]\t", i);
     }
+    printf("\n\t");
+    for (int i = 0; i < tableCount; ++i) {
+        printf("%lu\t", secDesc.offsets->tableSeekOffset[i]);
+    }
+    printf("\n\n");
 
  
 
@@ -205,10 +211,15 @@ trderr_t TRD_GenerateSectionHeader(_TRD_PKGI* pkg, TRD_SECTION_DESCRIPTOR* desc,
 
     
     
-  
+    printf("Writeback: ");
     for (int i = 0; i < tablesMax; ++i) {
-        printf("Writeback [%d]: %lu\n", i, sd.offsets->tableSeekOffset[i]);
+        printf("[%d]\t", i);
     }
+    printf("\n\t");
+    for (int i = 0; i < tablesMax; ++i) {
+        printf("%lu\t", sd.offsets->tableSeekOffset[i]);
+    }
+    printf("\n");
  
 
 
