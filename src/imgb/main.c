@@ -5,7 +5,7 @@
 #include "buildflg.h"
 #include "sections.h"
 #include "dyntbl.h"
-
+#include "xmlvalidate.h"
 int main(void) {
    
 
@@ -177,7 +177,9 @@ int main(void) {
         perror("error");
         return 1;
     }
-
+    bool bfl = ValidateXML("/home/shadow/Projects/trident-pm/testing/xml/Manifest0.xml",
+        "/home/shadow/Projects/trident-pm/testing/xml/Manifest.xsd");
+    printf(" bFile=%d\n", bfl);
     free(readTableX->data);
     free(readTableX);
     fclose(outtar);

@@ -50,3 +50,4 @@ __attribute__((noreturn)) static inline void __tassert_and_exit(const char* msg)
 #define TASSERT( x,v,m ) { if( (x) != (v) ) __tassert_and_exit( (m) ); }
 #define TEASSERT( x,v,m ) { if( (x) == (v) ) __tassert_and_exit( (m) ); }
 
+bool CheckFile(char* file, const char* rwx);

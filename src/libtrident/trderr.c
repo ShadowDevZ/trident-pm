@@ -1,5 +1,7 @@
 #include "trderr.h"
-
+#include <unistd.h>
+#include <ctype.h>
+#include <string.h>
 trd_err_t __trd_err = TRDE_UNSPECIFIED;
 
 const char* __trd_err_msg[] = {
@@ -51,4 +53,31 @@ const char* TRD_TranslateError(trderr_t err) {
         return __trd_err_msg[TRDE_FAILURE];
     }
     return __trd_err_msg[err];
+}
+//arguments
+//filepath, rwx="rwx" combination, check access, to check only file
+//leave empty
+bool CheckFile(char* file, const char* rwx) {
+    int modeFlags = F_OK;
+    if (strlen(rwx) > 0) {
+    
+        while ((*rwx)) {
+            char c = tolower(*rwx++);
+            
+            if (c == 'r') {
+                modeFlags |= R_OK;
+            }
+            else if (c == 'w') {
+                modeFlags |= W_OK;
+            }
+            else if (c == 'x') {
+                modeFlags |= X_OK;
+            }       
+        }
+    }
+    if(!access(file, modeFlags)) {
+        return true;
+    }
+
+    return false;
 }
