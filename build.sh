@@ -1,5 +1,4 @@
 #! /bin/sh
-
 if [ "$EUID" -eq 0 ]; then
   echo "This script cannot be run as root for safety reasons"; exit 1
 fi
@@ -17,8 +16,9 @@ fi
 #in case it doesnt exist cuz rm force wont trigger error
 mkdir build
 
-cmake -S . -B build 
-make -C build
+cmake -S . -B build -G Ninja 
+cmake --build build 
+#make -C build
 echo
 echo
 ./build/out/bin/trdbld

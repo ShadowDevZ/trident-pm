@@ -6,3 +6,4 @@ The project is highly WIP and is not production ready
 - Libxml2
 - https://github.com/rxi/vec
 - Zlib
+- https://github.com/tezc/sc/blob/master/linked-list/

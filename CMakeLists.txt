@@ -11,7 +11,7 @@ set(TRDBLD "trdbld")
 
 #CMAKE requirements
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always -g -O2 -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)

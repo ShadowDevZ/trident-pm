@@ -5,7 +5,8 @@
 #include "buildflg.h"
 #include "sections.h"
 #include "dyntbl.h"
-#include "xmlvalidate.h"
+#include "xmlparse.h"
+#include "io.h"
 int main(void) {
    
 
@@ -180,6 +181,43 @@ int main(void) {
     bool bfl = ValidateXML("/home/shadow/Projects/trident-pm/testing/xml/Manifest0.xml",
         "/home/shadow/Projects/trident-pm/testing/xml/Manifest.xsd");
     printf(" bFile=%d\n", bfl);
+    if (!bfl) {
+        return 1;
+    }
+     const char* filename = "/home/shadow/Projects/trident-pm/testing/xml/Manifest0.xml";
+     size_t sz = 0;
+     char* txt = ReadFileToBuffer(filename, &sz);
+     if (txt == NULL) {
+        return 1;
+     }
+     printf("%s\n", txt);
+     
+    xmlInitParser();
+   
+
+  //  xmlDoc* doc = xmlReadFile(filename, NULL, 0);
+   xmlDoc* doc = xmlReadMemory(txt, sz, NULL, NULL, 0); 
+   if (doc == NULL) {
+        printf("Failed to parse %s\n", filename);
+        return 1;
+    }
+
+    xmlNode* root = xmlDocGetRootElement(doc);
+    if (!root) {
+        printf("Empty XML document\n");
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+        return 1;
+    }
+
+    ProcessXMLNode(root->children, 0);
+
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    free(txt);
+
+
+
     free(readTableX->data);
     free(readTableX);
     fclose(outtar);

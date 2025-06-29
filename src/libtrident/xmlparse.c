@@ -6,6 +6,7 @@
 #include <libxml/xmlschemas.h>
 #include <stdbool.h>
 #include "trderr.h"
+#include "xmlparse.h"
 bool ValidateXML(char* xml, char* xsd) {
     //xmlInitParser();
     if (!CheckFile(xml, "") || !CheckFile(xsd, "")) {
@@ -51,8 +52,10 @@ bool ValidateXML(char* xml, char* xsd) {
         return false;
     }
     int res = xmlSchemaValidateDoc(validationCtx, xmlDoc);
+    bool status = false;
     if (res == 0) {
         printf("XML is valid against XSD");
+        status = true;
     }
     else if (res > 0) {
         printf("XML is not valid against XSD");
@@ -67,5 +70,64 @@ bool ValidateXML(char* xml, char* xsd) {
     xmlCleanupParser();
     
     
-    return true;
+    return status;
+}
+bool _IsContainerXMLNode(xmlNode* node) {
+    for (xmlNode* child = node->children; child; child = child->next) {
+        if (child->type == XML_ELEMENT_NODE) {
+            return true;
+        }
     }
+    return false;
+}
+//todo use XmlManifestRoot
+void ProcessXMLNode(xmlNode* node, int depth) {
+    for (xmlNode* cNode = node; cNode; cNode = cNode->next) {
+        if (cNode->type != XML_ELEMENT_NODE) continue;
+
+        xmlChar* nodeContent = xmlNodeGetContent(cNode);
+        bool isContainerNode = _IsContainerXMLNode(cNode);
+
+        
+        for (int i = 0; i < depth; ++i)  {
+            printf("  ");
+        }
+        printf("Node: %s\n", cNode->name);
+
+        
+        if (nodeContent && xmlStrlen(nodeContent) > 0 && !isContainerNode) {
+            for (int i = 0; i < depth; ++i)  {
+                printf("  ");
+            }
+            printf("  Value: %s\n", nodeContent);
+        }
+
+        // Print attributes
+        if (cNode->properties) {
+            for (int i = 0; i < depth; ++i) printf("  ");
+            printf("  Attributes:");
+            for (xmlAttr* attr = cNode->properties; attr; attr = attr->next) {
+                xmlChar* prop = xmlGetProp(cNode, attr->name);
+                if (prop) {
+                    printf(" %s=\"%s\"", attr->name, prop);
+                    xmlFree(prop);
+                }
+            }
+            printf("\n");
+        } else {
+            for (int i = 0; i < depth; ++i)  {
+                printf("  ");
+            }
+            printf("  Attributes: N/A\n");
+        }
+
+        xmlFree(nodeContent);
+
+        // Recurse into children
+        ProcessXMLNode(cNode->children, depth + 1);
+
+        
+        printf("\n");
+        
+    }
+}
