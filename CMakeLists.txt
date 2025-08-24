@@ -10,21 +10,27 @@ set(TRDBLD "trdbld")
 
 
 #CMAKE requirements
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always -g -O2 -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always -g -O2 -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 
-file(GLOB_RECURSE LIB_TRD_SRC src/libtrident/*.c)
-file(GLOB_RECURSE APP_TRD_SRC src/app/*.c)
-file(GLOB_RECURSE TRD_IMG_BUILDER src/imgb/*.c)
-file(GLOB_RECURSE LIBS_EXTERNAL src/libs/*.c)
+file(GLOB_RECURSE LIB_TRD_SRC src/libtrident/*.cpp)
+file(GLOB_RECURSE APP_TRD_SRC src/app/*.cpp)
+file(GLOB_RECURSE TRD_IMG_BUILDER src/imgb/*.cpp)
+file(GLOB_RECURSE LIBS_EXTERNAL src/libs/*.cpp)
+
+
 
 add_library(${TRDLIB} SHARED ${LIB_TRD_SRC})
 target_include_directories(${TRDLIB} PUBLIC src/libtrident/include)
-target_include_directories(${TRDLIB} PUBLIC src/libs)
+target_include_directories(${TRDLIB} PUBLIC src/libtrident/err)
+target_include_directories(${TRDLIB} PUBLIC src/libtrident/pkgio)
+target_include_directories(${TRDLIB} PUBLIC src/libtrident)
+
 target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
 if (NOT TRD_BUILD_LIBONLY)
