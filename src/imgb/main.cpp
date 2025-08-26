@@ -5,9 +5,10 @@
 
 int main(void) {
    
-    LibTrident lt(132);
-    lt.OpenPackage("/home/shadow/Projects/trident-pm/package.tpx", IOFLAGS::ACCESS_R);
-    std::printf("empty test %d\n", lt.GetValue());
+    LibTrident lt(LT_INITFL_DEFAULT);
+    lt.OpenPackage("/home/shadow/Projects/trident-pm/test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
+    std::printf("%u\n",lt.e.GetError());
+    std::cout << lt.e.GetErrorAsString() << '\n';
 
     return 0;
 }

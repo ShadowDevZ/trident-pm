@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include "ioflags.h"
 #include <memory>
 #include <fstream>
@@ -16,13 +16,14 @@ typedef int64_t i64;
 
 typedef uint32_t uint;
 typedef unsigned char uchar;
-
+typedef uint32_t IO_OpenFlag;
 
 typedef struct {
-    std::unique_ptr<std::ifstream> hIn;
-    std::unique_ptr<std::ofstream> hFOut;
+    std::string dirPath;
+    std::string name;
+    std::unique_ptr<std::fstream> hFile;
     std::streampos seekOffset;
     std::streamsize fSize;
-    uint fileFlags;
+    IO_OpenFlag fileFlags;
 
 }FileInfo;
