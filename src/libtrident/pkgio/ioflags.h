@@ -2,7 +2,7 @@
 #include "datatypes.h"
 
 
-namespace IOFLAGS {
+namespace LibTrident::IOFLAGS {
 
    
     enum FileFlags : IO_OpenFlag {

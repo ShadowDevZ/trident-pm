@@ -1,5 +1,6 @@
 #include "ioflags.h"
-using namespace IOFLAGS;
+using namespace LibTrident;
+
 std::ios::openmode IOFLAGS::IOFlags2FsBase(IO_OpenFlag flags) {
     std::ios::openmode mode = static_cast<std::ios::openmode>(0);
     if (flags & X_LOCK_FILE || flags & X_NOTIMESTAMP) {

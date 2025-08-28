@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 
-bool LibTrident::OpenPackage(std::string path, IO_OpenFlag openFlags) {
+bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
     std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
     if (openMode == 0) {
         e.SetError(LTSTATUS::BADARG);

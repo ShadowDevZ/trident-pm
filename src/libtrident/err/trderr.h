@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
-namespace LTSTATUS {
+namespace LibTrident::LTSTATUS {
 
 
     typedef uint32_t LTSTATUS;
@@ -19,6 +19,7 @@ namespace LTSTATUS {
             NOTFILE,
             INVFILE,
             CHMOD,
+            COPYOBJ,
             UNDEFINED = -1
     }RSP;
 

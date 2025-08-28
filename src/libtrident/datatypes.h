@@ -17,6 +17,7 @@ typedef int64_t i64;
 typedef uint32_t uint;
 typedef unsigned char uchar;
 typedef uint32_t IO_OpenFlag;
+typedef unsigned char byte;
 
 typedef struct {
     std::string dirPath;

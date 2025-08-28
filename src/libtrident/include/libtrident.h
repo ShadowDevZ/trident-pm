@@ -8,6 +8,9 @@
 #include "pkgio.h"
 #include "ioflags.h"
 #include <sys/stat.h>
+#include "trheader.h"
+namespace LibTrident {
+
 #define __UNMANGLE extern "C"
 
 
@@ -23,11 +26,16 @@
 
 
 
-class LibTrident  {
+class TrPkg  {
 public:
     LTSTATUS::TridentError e;
+   // PackageHeader pkg;
+   
+   
+   // PackageHeader hdr;
+    
 
-    LibTrident(int iFlags) {
+    TrPkg(int iFlags) {
         initFlags = iFlags;
     };
     bool OpenPackage(std::string path, IO_OpenFlag openFlags);
@@ -36,4 +44,5 @@ private:
     int initFlags;
     FileInfo fInfo;
 
+};
 };

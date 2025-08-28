@@ -1,6 +1,8 @@
 #include "trderr.h"
 #include <unordered_map>
 #include <string>
+using namespace LibTrident;
+
 const std::unordered_map<LTSTATUS::LTSTATUS, std::string> ErrorMessages = {
     {LTSTATUS::OK, "Success"},
     {LTSTATUS::FAIL, "The call to the specified function has failed"},
@@ -12,7 +14,8 @@ const std::unordered_map<LTSTATUS::LTSTATUS, std::string> ErrorMessages = {
     {LTSTATUS::UNDEFINED, "Undefined error"},
     {LTSTATUS::NOTDIR, "Filesystem object is not a directory"},
     {LTSTATUS::INVFILE, "Filesystem object does not exist"},
-    {LTSTATUS::CHMOD, "Failed to change permissions"}
+    {LTSTATUS::CHMOD, "Failed to change permissions"},
+    {LTSTATUS::COPYOBJ, "Failed to copy object"}
 };
 
 LTSTATUS::LTSTATUS LTSTATUS::TridentError::GetError() {

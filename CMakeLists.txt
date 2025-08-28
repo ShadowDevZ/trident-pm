@@ -26,10 +26,14 @@ file(GLOB_RECURSE LIBS_EXTERNAL src/libs/*.cpp)
 
 
 add_library(${TRDLIB} SHARED ${LIB_TRD_SRC})
-target_include_directories(${TRDLIB} PUBLIC src/libtrident/include)
-target_include_directories(${TRDLIB} PUBLIC src/libtrident/err)
-target_include_directories(${TRDLIB} PUBLIC src/libtrident/pkgio)
-target_include_directories(${TRDLIB} PUBLIC src/libtrident)
+target_include_directories(${TRDLIB} PUBLIC
+    src/libtrident/include
+    src/libtrident/err
+    src/libtrident/pkgio
+    src/libtrident
+    src/libtrident/header
+)
+
 
 target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
