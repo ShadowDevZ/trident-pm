@@ -1,7 +1,10 @@
 #pragma once
-#include "libtrident.h"
+
 #include "trderr.h"
-namespace LibTrident {
+#include "datatypes.h"
+#include "ccattribs.h"
+
+namespace LibTrident::Header {
 
 PACKED_STRUCT {
     byte magic[8];
@@ -59,10 +62,13 @@ typedef enum {
     IOCTRL_LOCKALL = 1 << 16
 }PKG_IOCTRL;
 
+
+
+
 class PackageHeader {
 public:
     LTSTATUS::TridentError e;
-    bool CreateNewHeader(TRD_HEADER& hdrOut);
+    bool CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
     bool WriteHeader(TRD_HEADER& hdrIn);
     bool ReadHeader(TRD_HEADER& hdrOut);
     bool UpdateHeader(TRD_HEADER& hdrInfo);
@@ -73,7 +79,8 @@ public:
 
   
 private:
-TRD_HEADER cacheHdr;
+//TRD_HEADER cacheHdr;
+std::shared_ptr<TRDFilStreameInfo> streamInfo;
 static bool CheckHeaderSize(TRD_HEADER hdr);
 //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
 

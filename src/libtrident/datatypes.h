@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "ioflags.h"
+
 #include <memory>
 #include <fstream>
 //basic datatypes
@@ -22,9 +22,10 @@ typedef unsigned char byte;
 typedef struct {
     std::string dirPath;
     std::string name;
-    std::unique_ptr<std::fstream> hFile;
+    std::shared_ptr<std::fstream> hFile;
     std::streampos seekOffset;
     std::streamsize fSize;
     IO_OpenFlag fileFlags;
 
-}FileInfo;
+}TRDFilStreameInfo;
+#include "ccattribs.h"

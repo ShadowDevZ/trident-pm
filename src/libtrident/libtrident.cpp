@@ -31,8 +31,8 @@ bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
 
     //the user doesnt need to specify 
     openMode |= std::ios::binary;
-
-    fInfo.hFile = std::make_unique<std::fstream>(path, openMode);
+    
+    fInfo.hFile = std::make_shared<std::fstream>(path, openMode);
     if (!fInfo.hFile || !fInfo.hFile->is_open()) {
         e.SetError(LTSTATUS::FOPEN);
         return false;

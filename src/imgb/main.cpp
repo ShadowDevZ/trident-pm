@@ -3,8 +3,9 @@
 #include <iostream>
 #include "libtrident.h"
 using namespace LibTrident;
+using namespace LibTrident::Header;
 
-void print_header(LibTrident::TRD_HEADER& hdr) {
+void print_header(LibTrident::Header::TRD_HEADER& hdr) {
     dprintf("[HEADER_START]\n");
     dprintf("\tMagic: ");
     for (auto const& it: hdr.magic) {
@@ -30,9 +31,9 @@ int main(void) {
     lt.OpenPackage("/home/shadow/Projects/trident-pm/test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
     std::printf("%u\n",lt.e.GetError());
     std::cout << lt.e.GetErrorAsString() << '\n';
-    LibTrident::TRD_HEADER h;
-    LibTrident::PackageHeader x;
-    x.CreateNewHeader(h);
+    LibTrident::Header::TRD_HEADER h;
+    LibTrident::Header::PackageHeader x;
+    x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE);
     
     print_header(h);
 

@@ -1,7 +1,7 @@
 #include "trheader.h"
 #include <sstream>
 using namespace LibTrident;
-
+using namespace LibTrident::Header;
 
 #define LT_HDR_SZB_01A 32
 //01.0.0
@@ -11,9 +11,12 @@ bool PackageHeader::Sync(TRD_HEADER& out) {
     return true;
 }
 bool PackageHeader::CheckHeaderSize(TRD_HEADER hdr) {
+    if (sizeof(hdr) != LT_HDR_SZB_01A) {
+        return false;
+    }
     return true;
 }
-bool PackageHeader::CreateNewHeader(TRD_HEADER& hdrOut) {
+bool PackageHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType) {
     TRD_HEADER hdr;
     std::copy(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic));
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic))) {
@@ -25,9 +28,9 @@ bool PackageHeader::CreateNewHeader(TRD_HEADER& hdrOut) {
     if (hdr.fmtVersion == 0) {
         return false;
     }
-    hdr.compression = COMMPRALG_NONE;
-    hdr.buildFlags = BF_DEBUG | BF_PLATF_LINUX;
-    hdr.architecture = ARCHT_AM64;
+    hdr.compression = comprType;
+    hdr.buildFlags = buildFlgs;
+    hdr.architecture = archType;
     hdr.hdrChksum = 0xBEEF;
     
     hdr.fileLen = UINT64_MAX;
