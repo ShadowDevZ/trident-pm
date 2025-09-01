@@ -13,6 +13,7 @@ std::ios::openmode IOFLAGS::IOFlags2FsBase(IO_OpenFlag flags) {
     if (flags & SEEKPOS_END) mode |= std::ios::ate;
     if (flags & BINFMT) mode |= std::ios::binary;
    
+   
     
     return mode;
 

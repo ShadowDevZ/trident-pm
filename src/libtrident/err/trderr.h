@@ -20,7 +20,9 @@ namespace LibTrident::LTSTATUS {
             INVFILE,
             CHMOD,
             COPYOBJ,
-            UNDEFINED = -1
+            FSEEK,
+            UNDEFINED = -1,
+            
     }RSP;
 
 
@@ -31,6 +33,7 @@ public:
     LTSTATUS::LTSTATUS GetError();
     std::string GetErrorAsString();
     void SetError(LTSTATUS::LTSTATUS code);
+    void Success();
     static std::string TranslateError(LTSTATUS::LTSTATUS code);
 };
 

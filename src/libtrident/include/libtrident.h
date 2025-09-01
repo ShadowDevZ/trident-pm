@@ -4,12 +4,11 @@
 #include <string>
 
 
-
+#include "trheader.h"
 #include "trderr.h"
 #include "pkgio.h"
 #include "ioflags.h"
-#include <sys/stat.h>
-#include "trheader.h"
+#include "fstreaminfo.h"
 namespace LibTrident {
 
 
@@ -17,24 +16,29 @@ namespace LibTrident {
 
 class TrPkg  {
 public:
-    //works 
+    
     LTSTATUS::TridentError e;
-    //doesnt work
-    LibTrident::Header::PackageHeader hdr;
-   // PackageHeader pkg;
-   
+    
+    //LibTrident::Header::PackageHeader hdr;
+    std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
+    
+    
+    // PackageHeader pkg;
+   TrPkg() : fstrInfo(std::make_shared<LibTrident::FstreamInfo::TrdFstreamInfo>()) {};
+   //std::shared_ptr<TRDFilStreameInfo> GetFileStreamInfo() {
+   //     return fInfo;
+   //     
+  // }
    
    // PackageHeader hdr;
     
 
-    TrPkg(int iFlags) {
-        initFlags = iFlags;
-    };
+   
     bool OpenPackage(std::string path, IO_OpenFlag openFlags);
 
-private:
-    int initFlags;
-    TRDFilStreameInfo fInfo;
+//private:
+    
+  // std::shared_ptr<TRDFilStreameInfo> fInfo;
 
 };
 };

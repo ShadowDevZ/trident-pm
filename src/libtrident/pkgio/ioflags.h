@@ -7,7 +7,7 @@ namespace LibTrident::IOFLAGS {
    
     enum FileFlags : IO_OpenFlag {
         CREATE_NEW       = 1 << 1,
-        OPEN_EXISTING    = 1 << 2,
+     //   OPEN_EXISTING    = 1 << 2,
         ACCESS_R         = 1 << 3,
         ACCESS_W         = 1 << 4,
         X_LOCK_FILE       = 1 << 5,

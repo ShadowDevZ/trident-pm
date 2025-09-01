@@ -9,7 +9,7 @@
 #define _LIBTRIDENT_DEBUG 1
 
 #ifdef _LIBTRIDENT_DEBUG
-#define dprintf(...) fprintf( stderr, __VA_ARGS__ )
+#define dbgprintf(...) fprintf( stderr, __VA_ARGS__ )
 #else
-#define dprintf(...) do{ } while ( 0 )
+#define dbgprintf(...) do{ } while ( 0 )
 #endif

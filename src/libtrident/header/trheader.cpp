@@ -10,6 +10,7 @@ using namespace LibTrident::Header;
 bool PackageHeader::Sync(TRD_HEADER& out) {
     return true;
 }
+
 bool PackageHeader::CheckHeaderSize(TRD_HEADER hdr) {
     if (sizeof(hdr) != LT_HDR_SZB_01A) {
         return false;

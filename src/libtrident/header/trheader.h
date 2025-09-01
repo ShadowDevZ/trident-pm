@@ -3,7 +3,7 @@
 #include "trderr.h"
 #include "datatypes.h"
 #include "ccattribs.h"
-
+#include "fstreaminfo.h"
 namespace LibTrident::Header {
 
 PACKED_STRUCT {
@@ -65,8 +65,15 @@ typedef enum {
 
 
 
-class PackageHeader {
+class PackageHeader  {
+private:
+    std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
 public:
+    PackageHeader(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo)
+        : fstrInfo(fStreamInfo) // copy shared_ptr
+    {}
+    
+
     LTSTATUS::TridentError e;
     bool CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
     bool WriteHeader(TRD_HEADER& hdrIn);
@@ -80,7 +87,7 @@ public:
   
 private:
 //TRD_HEADER cacheHdr;
-std::shared_ptr<TRDFilStreameInfo> streamInfo;
+
 static bool CheckHeaderSize(TRD_HEADER hdr);
 //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
 

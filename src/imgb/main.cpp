@@ -6,34 +6,36 @@ using namespace LibTrident;
 using namespace LibTrident::Header;
 
 void print_header(LibTrident::Header::TRD_HEADER& hdr) {
-    dprintf("[HEADER_START]\n");
-    dprintf("\tMagic: ");
+    dbgprintf("[HEADER_START]\n");
+    dbgprintf("\tMagic: ");
     for (auto const& it: hdr.magic) {
-        dprintf("%X ", it);
+        dbgprintf("%X ", it);
     }
-    dprintf("\n");
-    dprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
-    dprintf("\tVersion Format %s\n", 
+    dbgprintf("\n");
+    dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
+    dbgprintf("\tVersion Format %s\n", 
     PackageHeader::HeaderVersionFormatToString(hdr.fmtVersion).c_str());
-    dprintf("\tCompression: %u\n", hdr.compression);
-    dprintf("\tBuild flags %u\n", hdr.buildFlags);
-    dprintf("\tArchitecture %u\n", hdr.architecture);
-    dprintf("\tChecksum 0x%X\n", hdr.hdrChksum);
-    dprintf("\tFile length 0x%lXB\n", hdr.fileLen);
-    dprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
-    dprintf("[HEADER_END]\n");
+    dbgprintf("\tCompression: %u\n", hdr.compression);
+    dbgprintf("\tBuild flags %u\n", hdr.buildFlags);
+    dbgprintf("\tArchitecture %u\n", hdr.architecture);
+    dbgprintf("\tChecksum 0x%X\n", hdr.hdrChksum);
+    dbgprintf("\tFile length 0x%lXB\n", hdr.fileLen);
+    dbgprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
+    dbgprintf("[HEADER_END]\n");
 }
 
 
 int main(void) {
    
-    LibTrident::TrPkg lt(LT_INITFL_DEFAULT);
+    LibTrident::TrPkg lt;
     lt.OpenPackage("/home/shadow/Projects/trident-pm/test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
     std::printf("%u\n",lt.e.GetError());
     std::cout << lt.e.GetErrorAsString() << '\n';
     LibTrident::Header::TRD_HEADER h;
-    LibTrident::Header::PackageHeader x;
+    LibTrident::Header::PackageHeader x(lt.fstrInfo);
     x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE);
+    std::cout << lt.fstrInfo->GetFileStreamInfo()->name;
+  
     
     print_header(h);
 

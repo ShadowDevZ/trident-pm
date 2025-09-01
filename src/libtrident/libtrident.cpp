@@ -3,6 +3,9 @@
 #include "ioflags.h"
 #include <fstream>
 #include <sys/stat.h>
+#include "fileOperations.h"
+using namespace LibTrident;
+
 
 
 bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
@@ -11,46 +14,54 @@ bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
         e.SetError(LTSTATUS::BADARG);
         return false;
     }
-    size_t pos = path.find_last_of("/");
-   std::string tmpDirPath  = path.substr(0, pos);
-    //handle scenarios like /tmp/folder/
-    if(tmpDirPath.back() == '/') {
-        tmpDirPath = path.substr(0, pos - 1);
-    }
-    struct stat dStat;
-    if (stat(tmpDirPath.c_str(), &dStat) != 0) {
-        e.SetError(LTSTATUS::INVFILE);
+    std::string dirPath = Utilities::FileOperations::GetFileDir(path);
+    if (dirPath == "") {
         return false;
+   }
+    //for future use like writing locks in the same directory
+    LTSTATUS::LTSTATUS status = Utilities::FileOperations::FileOrDirExists(dirPath, false);
+    if (status != LTSTATUS::SUCCESS) {
+        return status;
     }
-    if (!S_ISDIR(dStat.st_mode)) {
-        e.SetError(LTSTATUS::NOTDIR);
-        return false;
-    }
-    dprintf("dirstat exists %s\n", tmpDirPath.c_str());
+    
 
 
     //the user doesnt need to specify 
     openMode |= std::ios::binary;
     
-    fInfo.hFile = std::make_shared<std::fstream>(path, openMode);
-    if (!fInfo.hFile || !fInfo.hFile->is_open()) {
+    std::shared_ptr<std::fstream> fsPkg = std::make_shared<std::fstream>(path, openMode);
+    if (!fsPkg || !fsPkg->is_open()) {
         e.SetError(LTSTATUS::FOPEN);
         return false;
     }
+    
+    
+    std::streampos fileSize = Utilities::FileOperations::GetFstreamSize(fsPkg);
+    if (fileSize == -1) {
+        dbgprintf("fsize=-1\n");
+        e.SetError(LTSTATUS::FSEEK);
+        return false;
+    }
+    TRDFilStreameInfo fInfo;
+    
     fInfo.fileFlags = openFlags;
-   
-   // fInfo.fSize = fInfo.hFile->tellg();
+    fInfo.fSize = fileSize;
 
    // fInfo.hFile->seekg(0, std::ios::beg); 
-    fInfo.seekOffset = fInfo.hFile->tellg();
-    dprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffset)); 
-   // dprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
-
+    fInfo.seekOffset = fsPkg->tellg();
+    dbgprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffset)); 
+    dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
    
-   fInfo.dirPath = tmpDirPath;
+    fInfo.hFile = fsPkg;
+    fInfo.dirPath = dirPath;
+    fInfo.name = path;
+    
+    if (!fstrInfo->SetFileStreamInfo(fInfo)) {
+        e.SetError(fstrInfo->e.GetError());
+        return false;
+    }
 
-   fInfo.name = path.substr(pos+1);
-  
-    e.SetError(LTSTATUS::SUCCESS);
+    
+    e.Success();
     return true;
 }

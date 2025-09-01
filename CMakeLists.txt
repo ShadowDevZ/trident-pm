@@ -32,6 +32,7 @@ target_include_directories(${TRDLIB} PUBLIC
     src/libtrident/pkgio
     src/libtrident
     src/libtrident/header
+    src/libtrident/utils
 )
 
 

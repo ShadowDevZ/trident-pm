@@ -15,7 +15,8 @@ const std::unordered_map<LTSTATUS::LTSTATUS, std::string> ErrorMessages = {
     {LTSTATUS::NOTDIR, "Filesystem object is not a directory"},
     {LTSTATUS::INVFILE, "Filesystem object does not exist"},
     {LTSTATUS::CHMOD, "Failed to change permissions"},
-    {LTSTATUS::COPYOBJ, "Failed to copy object"}
+    {LTSTATUS::COPYOBJ, "Failed to copy object"},
+    {LTSTATUS::FSEEK, "Failed to set seek pointer"}
 };
 
 LTSTATUS::LTSTATUS LTSTATUS::TridentError::GetError() {
@@ -23,6 +24,9 @@ LTSTATUS::LTSTATUS LTSTATUS::TridentError::GetError() {
 }
 void LTSTATUS::TridentError::SetError(LTSTATUS::LTSTATUS code) {
     err = code;
+}
+void LTSTATUS::TridentError::Success() {
+    err = SUCCESS;
 }
 std::string LTSTATUS::TridentError::TranslateError(LTSTATUS::LTSTATUS code) {
     auto msg = ErrorMessages.find(code);
