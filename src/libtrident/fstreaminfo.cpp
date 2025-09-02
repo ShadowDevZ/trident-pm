@@ -1,9 +1,19 @@
 #include "fstreaminfo.h"
 #include "fileOperations.h"
-bool LibTrident::FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(std::shared_ptr<TRDFilStreameInfo> info) {
-    return SetFileStreamInfo(*info);
+
+using namespace LibTrident;
+
+bool FstreamInfo::TrdFstreamInfo::CheckFileStreamInfo() {
+    LTSTATUS::LTSTATUS status = ValidateFileStreamInfo(*xfInfo);
+    if (status == LTSTATUS::SUCCESS) {
+        e.Success();
+        return true;
+    }
+    e.SetError(status);
+    return false;
 }
-LibTrident::LTSTATUS::LTSTATUS LibTrident::FstreamInfo::TrdFstreamInfo::ValidateFileStreamInfo(TRDFilStreameInfo& info) {
+
+LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateFileStreamInfo(TRDFilStreameInfo& info) {
    
     LTSTATUS::LTSTATUS dirStatus = Utilities::FileOperations::FileOrDirExists(info.dirPath, false);
     LTSTATUS::LTSTATUS fileStatus = Utilities::FileOperations::FileOrDirExists(info.name, true);
@@ -16,13 +26,13 @@ LibTrident::LTSTATUS::LTSTATUS LibTrident::FstreamInfo::TrdFstreamInfo::Validate
     if (!info.hFile || !info.hFile->is_open()) {
         return LTSTATUS::FOPEN;
     }
-    if (info.fileFlags == 0 || info.seekOffset == -1) {
+    if (info.fileFlags == 0 || info.seekOffsetRead == -1 || info.seekOffsetWrite == -1) {
         return LTSTATUS::ACCESS;
     }
     return LTSTATUS::SUCCESS;
 }
 
-bool LibTrident::FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(TRDFilStreameInfo& info) {
+bool FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(TRDFilStreameInfo& info) {
     
     LTSTATUS::LTSTATUS status = ValidateFileStreamInfo(info);
     if (status != LTSTATUS::SUCCESS) {

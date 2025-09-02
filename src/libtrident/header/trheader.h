@@ -66,12 +66,11 @@ typedef enum {
 
 
 class PackageHeader  {
-private:
-    std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
 public:
-    PackageHeader(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo)
-        : fstrInfo(fStreamInfo) // copy shared_ptr
-    {}
+    PackageHeader(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
+    fstrInfo(fStreamInfo) {}
+    PackageHeader(const PackageHeader& other) : fstrInfo(other.fstrInfo) {}
+    PackageHeader(PackageHeader&& other) : fstrInfo(std::move(other.fstrInfo)) {}
     
 
     LTSTATUS::TridentError e;
@@ -79,16 +78,20 @@ public:
     bool WriteHeader(TRD_HEADER& hdrIn);
     bool ReadHeader(TRD_HEADER& hdrOut);
     bool UpdateHeader(TRD_HEADER& hdrInfo);
+    //Flushes info to the file without closing FD
     bool Sync(TRD_HEADER& hdrOut);
-    bool ValidateHeader(TRD_HEADER& hdrOut);
+    bool ValidateHeader(TRD_HEADER& hdrIn);
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
 
   
 private:
+std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
 //TRD_HEADER cacheHdr;
 
-static bool CheckHeaderSize(TRD_HEADER hdr);
+static bool ICheckHeaderSize(const TRD_HEADER& hdr);
+std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> ICheckAndGetFstreamContent();
+bool IHeaderPresent();
 //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
 
 };

@@ -29,15 +29,19 @@ int main(void) {
    
     LibTrident::TrPkg lt;
     lt.OpenPackage("/home/shadow/Projects/trident-pm/test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
-    std::printf("%u\n",lt.e.GetError());
-    std::cout << lt.e.GetErrorAsString() << '\n';
+    std::cout << "Last Error: " << lt.e << std::endl;
+    
     LibTrident::Header::TRD_HEADER h;
     LibTrident::Header::PackageHeader x(lt.fstrInfo);
+
+
     x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE);
-    std::cout << lt.fstrInfo->GetFileStreamInfo()->name;
-  
+
+   // std::cout << lt.fstrInfo->GetFileStreamInfo()->name;
+    
     
     print_header(h);
+    std::cout << x.WriteHeader(h);
 
 
     return 0;

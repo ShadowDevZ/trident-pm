@@ -8,7 +8,7 @@ using namespace LibTrident;
 
 
 
-bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
+bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFlags) {
     std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
     if (openMode == 0) {
         e.SetError(LTSTATUS::BADARG);
@@ -42,14 +42,15 @@ bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
-    TRDFilStreameInfo fInfo;
+    FstreamInfo::TRDFilStreameInfo fInfo;
     
     fInfo.fileFlags = openFlags;
     fInfo.fSize = fileSize;
 
    // fInfo.hFile->seekg(0, std::ios::beg); 
-    fInfo.seekOffset = fsPkg->tellg();
-    dbgprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffset)); 
+    fInfo.seekOffsetRead = static_cast<std::streampos>(0);
+    fInfo.seekOffsetWrite = static_cast<std::streampos>(0);
+    dbgprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffsetRead)); 
     dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
    
     fInfo.hFile = fsPkg;
@@ -65,3 +66,4 @@ bool LibTrident::TrPkg::OpenPackage(std::string path, IO_OpenFlag openFlags) {
     e.Success();
     return true;
 }
+//ClosePkg, reset context, filestream close fd

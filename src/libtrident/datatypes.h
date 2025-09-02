@@ -19,13 +19,5 @@ typedef unsigned char uchar;
 typedef uint32_t IO_OpenFlag;
 typedef unsigned char byte;
 
-typedef struct {
-    std::string dirPath;
-    std::string name;
-    std::shared_ptr<std::fstream> hFile;
-    std::streampos seekOffset;
-    std::streamsize fSize;
-    IO_OpenFlag fileFlags;
 
-}TRDFilStreameInfo;
 #include "ccattribs.h"

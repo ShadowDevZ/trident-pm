@@ -34,7 +34,7 @@ public:
     
 
    
-    bool OpenPackage(std::string path, IO_OpenFlag openFlags);
+    bool OpenPackage(const std::string& path, IO_OpenFlag openFlags);
 
 //private:
     

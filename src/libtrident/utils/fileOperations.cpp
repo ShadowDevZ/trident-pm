@@ -4,7 +4,7 @@
 #include "ccattribs.h"
 using namespace LibTrident;
 using namespace Utilities;
-std::string FileOperations::GetFileDir(const std::string file) {
+std::string FileOperations::GetFileDir(const std::string& file) {
     size_t pos = file.find_last_of('/');
     if (pos == std::string::npos) {
         return "";

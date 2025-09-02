@@ -6,13 +6,61 @@ using namespace LibTrident::Header;
 #define LT_HDR_SZB_01A 32
 //01.0.0
 #define LT_HDR_VERSION_MIN 1000
+std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> PackageHeader::ICheckAndGetFstreamContent() {
+    if (!fstrInfo->CheckFileStreamInfo()) {
+        e.SetError(fstrInfo->e);
+        
+        
+        return {false, nullptr};
+    }
+    e.Success();
+    return {true, fstrInfo->GetFileStreamInfo()};
+}
+
 
 bool PackageHeader::Sync(TRD_HEADER& out) {
+   
+    return true;
+}
+constexpr int GetHeaderByteSize() {
+    return LT_HDR_SZB_01A;
+}
+
+bool PackageHeader::IHeaderPresent() {
+    return false;
+}
+bool PackageHeader::ValidateHeader(TRD_HEADER& hdrIn) {
+    if (!ICheckHeaderSize(hdrIn)) {
+        e.SetError(LTSTATUS::HDRNP);
+        return false;
+    }
+    //todo check each field including signature
     return true;
 }
 
-bool PackageHeader::CheckHeaderSize(TRD_HEADER hdr) {
-    if (sizeof(hdr) != LT_HDR_SZB_01A) {
+bool PackageHeader::WriteHeader(TRD_HEADER& hdrIn) {
+
+    auto [checkFstream, writeStream] = ICheckAndGetFstreamContent();
+    if (!checkFstream || writeStream == nullptr) {
+        return false;
+    }
+    if (!ValidateHeader(hdrIn)) {
+        return false;
+    }
+    auto hdrContent = reinterpret_cast<const char*>(&hdrIn);
+    writeStream->hFile->write(hdrContent, GetHeaderByteSize());
+    if (!writeStream->hFile) {
+        e.SetError(LTSTATUS::IOWRITE);
+        return false;
+    }
+    
+
+    return true;
+}
+
+
+bool PackageHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
+    if (sizeof(hdr) != GetHeaderByteSize()) {
         return false;
     }
     return true;
