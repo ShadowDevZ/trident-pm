@@ -16,6 +16,8 @@ namespace LibTrident::IOFLAGS {
         SEEKPOS_END      = 1 << 8,
         SEEKPOS_START    = 0,
         BINFMT           = 1 << 9,
+        //INTERNAL ONLY, DO NOT SET UNDER ANY CIRCUMSTANCE
+        _I_IO_INVCLOSED   = 1 << 10,
 
         
         ACCESS_RW        = ACCESS_R | ACCESS_W

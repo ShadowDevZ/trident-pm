@@ -1,7 +1,10 @@
 #include "trheader.h"
 #include <sstream>
+
 using namespace LibTrident;
 using namespace LibTrident::Header;
+
+
 
 #define LT_HDR_SZB_01A 32
 //01.0.0
@@ -18,20 +21,72 @@ std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> PackageHeader::I
 }
 
 
-bool PackageHeader::Sync(TRD_HEADER& out) {
-   
-    return true;
-}
+
 constexpr int GetHeaderByteSize() {
     return LT_HDR_SZB_01A;
 }
 
-bool PackageHeader::IHeaderPresent() {
-    return false;
+
+bool PackageHeader::ReadHeader(TRD_HEADER& hdrOut) {
+    TRD_HEADER hdr = {};
+    
+    hdrOut = hdr;
+    auto [checkFstream, streamPtr] = ICheckAndGetFstreamContent();
+    if (!checkFstream || streamPtr == nullptr) {
+        e.SetError(LTSTATUS::NULL_OBJ);
+        return false;
+    }
+    std::fstream& readStream = *streamPtr->hFile;
+    
+    std::streampos originalPosition = readStream.tellg();
+    readStream.seekg(0, std::ios::beg);
+    if (readStream.fail()) {
+        e.SetError(LTSTATUS::FSEEK);
+        return false;
+    }
+    if (!ICheckHeaderSize(hdr)) {
+        e.SetError(LTSTATUS::HDRCRP);
+        return false;
+    }
+    
+    readStream.read(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+    if (!readStream) {
+        e.SetError(LTSTATUS::IOREAD);
+        return false;
+    }
+
+    readStream.seekg(originalPosition, std::ios::beg);
+    if (readStream.fail()) {
+        e.SetError(LTSTATUS::FSEEK);
+        return false;
+    }
+    if (!ValidateHeader(hdr)) {
+        return false;
+    }
+    e.Success();
+    hdrOut = hdr;
+    return true;
 }
+bool PackageHeader::IsWrittenHeaderValid() {
+    TRD_HEADER hdr = {};
+    bool status = ReadHeader(hdr);
+    if (!status) {
+        return false;
+    }
+    return ValidateHeader(hdr);
+
+}
+
 bool PackageHeader::ValidateHeader(TRD_HEADER& hdrIn) {
     if (!ICheckHeaderSize(hdrIn)) {
         e.SetError(LTSTATUS::HDRNP);
+        return false;
+    }
+    if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdrIn.magic))) {
+        e.SetError(LTSTATUS::HDRCRP);
+        return false;
+    }
+    if (hdrIn.exSignature != HDR_EXTENDED_SIGNATURE) {
         return false;
     }
     //todo check each field including signature
@@ -39,6 +94,10 @@ bool PackageHeader::ValidateHeader(TRD_HEADER& hdrIn) {
 }
 
 bool PackageHeader::WriteHeader(TRD_HEADER& hdrIn) {
+    if (!ICheckHeaderSize(hdrIn)) {
+        e.SetError(LTSTATUS::HDRCRP);
+        return false;
+    }
 
     auto [checkFstream, writeStream] = ICheckAndGetFstreamContent();
     if (!checkFstream || writeStream == nullptr) {

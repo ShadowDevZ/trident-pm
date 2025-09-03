@@ -79,11 +79,12 @@ public:
     bool ReadHeader(TRD_HEADER& hdrOut);
     bool UpdateHeader(TRD_HEADER& hdrInfo);
     //Flushes info to the file without closing FD
-    bool Sync(TRD_HEADER& hdrOut);
+   
     bool ValidateHeader(TRD_HEADER& hdrIn);
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
-
+    bool IsWrittenHeaderValid();
+    
   
 private:
 std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
@@ -91,7 +92,8 @@ std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
 
 static bool ICheckHeaderSize(const TRD_HEADER& hdr);
 std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> ICheckAndGetFstreamContent();
-bool IHeaderPresent();
+
+
 //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
 
 };

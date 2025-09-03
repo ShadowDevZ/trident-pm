@@ -32,16 +32,24 @@ int main(void) {
     std::cout << "Last Error: " << lt.e << std::endl;
     
     LibTrident::Header::TRD_HEADER h;
+    LibTrident::Header::TRD_HEADER hdrReadBack;
     LibTrident::Header::PackageHeader x(lt.fstrInfo);
 
 
-    x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE);
+    
 
    // std::cout << lt.fstrInfo->GetFileStreamInfo()->name;
     
     
-    print_header(h);
-    std::cout << x.WriteHeader(h);
+   std::cout << std::boolalpha;
+   std::cout << "CreateHeader()" <<x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
+   print_header(h);
+   std::cout << "WriteHeader() " << x.WriteHeader(h) << std::endl;
+   std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
+    std::cout << "HeaderPresent() " << x.ReadHeader(hdrReadBack) << std::endl;
+    std::cout << std::noboolalpha;
+    std::cout << x.e.GetErrorAsString() << std::endl;
+    lt.ClosePkg();
 
 
     return 0;

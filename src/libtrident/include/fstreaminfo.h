@@ -27,6 +27,9 @@ public:
         
    }
    bool CheckFileStreamInfo();
+   bool IsOpen();
+   bool CloseStream();
+   static LibTrident::LTSTATUS::LTSTATUS StreamIsOpen(const TRDFilStreameInfo& info);
    static LibTrident::LTSTATUS::LTSTATUS ValidateFileStreamInfo(TRDFilStreameInfo& info);
    bool SetFileStreamInfo(TRDFilStreameInfo& info);
   

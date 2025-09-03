@@ -6,7 +6,13 @@
 #include "fileOperations.h"
 using namespace LibTrident;
 
-
+void LibTrident::TrPkg::ClosePkg() {
+    fstrInfo->CloseStream();
+    std::shared_ptr<FstreamInfo::TRDFilStreameInfo> closeInfo =  fstrInfo->GetFileStreamInfo();
+    closeInfo->dirPath = "";
+    closeInfo->name = "";
+    closeInfo->hFile->close();
+}
 
 bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFlags) {
     std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);

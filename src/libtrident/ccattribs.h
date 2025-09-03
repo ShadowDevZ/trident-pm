@@ -10,6 +10,7 @@
 
 #ifdef _LIBTRIDENT_DEBUG
 #define dbgprintf(...) fprintf( stderr, __VA_ARGS__ )
+
 #else
 #define dbgprintf(...) do{ } while ( 0 )
 #endif

@@ -1,10 +1,18 @@
 #include "trderr.h"
 #include <array>
 #include <string>
+#include <ccattribs.h>
 using namespace LibTrident;
 
 //we cannot use std::string as it occupies heap
-constexpr std::pair<LTSTATUS::LTSTATUS,const char*> _errmsgTbl[] = {
+/*Originally I wanted to use unordered_map, but it uses dynamic allocations and cannot be marked with constexpr
+We have to use this messy workaround, If you are also asking why am i converting this into an std::aray instead
+of straight up declaring it. The answer is that I found out that in C++17 you have to explicitly tell the size of the array even
+if its marked as constexpr. This is fixed inside C++20+ but we are currently stuck to C++17. You can do it without the size but NOT if you
+are embedding struct or using std::pair, also we cannot do this because it makes only 1 element array yay
+//constexpr std::array gErrorMessages {_errmsgTbl};
+*/
+constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
     {LTSTATUS::OK, "Operation was successful"},
     {LTSTATUS::FAIL, "The call to the specified function has failed"},
     {LTSTATUS::MALLOC, "Memory allocation has failed"},
@@ -24,14 +32,8 @@ constexpr std::pair<LTSTATUS::LTSTATUS,const char*> _errmsgTbl[] = {
     {LTSTATUS::IOWRITE, "Failed to write file"}
 };
 
-/*Originally I wanted to use unordered_map, but it uses dynamic allocations and cannot be marked with constexpr
-We have to use this messy workaround, If you are also asking why am i converting this into an std::aray instead
-of straight up declaring it the answer is that I found out that in C++17 you have to explicitly tell the size of the array even
-with constexpr. This is fixed inside C++20+ but we are currently stuck to C++17. You can do it without the size but NOT if you
-are embedding struct or using std::pair
 
-*/
-constexpr std::array gErrorMessages {_errmsgTbl};
+
 
 LTSTATUS::LTSTATUS LTSTATUS::TridentError::GetError() {
     return err;
@@ -46,12 +48,14 @@ void LTSTATUS::TridentError::Success() {
     err = SUCCESS;
 }
 std::string LTSTATUS::TridentError::TranslateError(const LTSTATUS::LTSTATUS code) {
+   
    for (auto&&  x: gErrorMessages)  {
-        if (x->first == code) {
-            std::string errMsg(x->second);
+        if (x.first == code) {
+            std::string errMsg(x.second);
             return errMsg;
         }
    }
+   
    return "Undefined Error";
 }
 std::string LTSTATUS::TridentError::GetErrorAsString() {
