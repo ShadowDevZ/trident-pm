@@ -9,7 +9,7 @@ using namespace LibTrident::Header;
 #define LT_HDR_SZB_01A 32
 //01.0.0
 #define LT_HDR_VERSION_MIN 1000
-std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> PackageHeader::ICheckAndGetFstreamContent() {
+std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> TRDPkgHeader::ICheckAndGetFstreamContent() {
     if (!fstrInfo->CheckFileStreamInfo()) {
         e.SetError(fstrInfo->e);
         
@@ -27,7 +27,7 @@ constexpr int GetHeaderByteSize() {
 }
 
 
-bool PackageHeader::ReadHeader(TRD_HEADER& hdrOut) {
+bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
     TRD_HEADER hdr = {};
     
     hdrOut = hdr;
@@ -67,7 +67,7 @@ bool PackageHeader::ReadHeader(TRD_HEADER& hdrOut) {
     hdrOut = hdr;
     return true;
 }
-bool PackageHeader::IsWrittenHeaderValid() {
+bool TRDPkgHeader::IsWrittenHeaderValid() {
     TRD_HEADER hdr = {};
     bool status = ReadHeader(hdr);
     if (!status) {
@@ -77,7 +77,7 @@ bool PackageHeader::IsWrittenHeaderValid() {
 
 }
 
-bool PackageHeader::ValidateHeader(TRD_HEADER& hdrIn) {
+bool TRDPkgHeader::ValidateHeader(TRD_HEADER& hdrIn) {
     if (!ICheckHeaderSize(hdrIn)) {
         e.SetError(LTSTATUS::HDRNP);
         return false;
@@ -93,7 +93,7 @@ bool PackageHeader::ValidateHeader(TRD_HEADER& hdrIn) {
     return true;
 }
 
-bool PackageHeader::WriteHeader(TRD_HEADER& hdrIn) {
+bool TRDPkgHeader::WriteHeader(TRD_HEADER& hdrIn) {
     if (!ICheckHeaderSize(hdrIn)) {
         e.SetError(LTSTATUS::HDRCRP);
         return false;
@@ -118,13 +118,13 @@ bool PackageHeader::WriteHeader(TRD_HEADER& hdrIn) {
 }
 
 
-bool PackageHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
+bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
     if (sizeof(hdr) != GetHeaderByteSize()) {
         return false;
     }
     return true;
 }
-bool PackageHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType) {
+bool TRDPkgHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType) {
     TRD_HEADER hdr;
     std::copy(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic));
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic))) {
@@ -147,7 +147,7 @@ bool PackageHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archTy
     return true;
 }
 
-u16 PackageHeader::FormatHeaderVersion(u8 major, u8 minor, u8 revision) {
+u16 TRDPkgHeader::FormatHeaderVersion(u8 major, u8 minor, u8 revision) {
     if (major > 99 || minor > 99 || revision > 9
         || major == 0) {
         return 0;
@@ -163,7 +163,7 @@ u16 PackageHeader::FormatHeaderVersion(u8 major, u8 minor, u8 revision) {
     
 
 }
-std::string PackageHeader::HeaderVersionFormatToString(u16 fmt, bool abRevision) {
+std::string TRDPkgHeader::HeaderVersionFormatToString(u16 fmt, bool abRevision) {
     std::string base;
     if (fmt < LT_HDR_VERSION_MIN) {
         return base;

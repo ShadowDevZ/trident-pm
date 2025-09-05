@@ -14,7 +14,7 @@ void print_header(LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("\n");
     dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
     dbgprintf("\tVersion Format %s\n", 
-    PackageHeader::HeaderVersionFormatToString(hdr.fmtVersion).c_str());
+    TRDPkgHeader::HeaderVersionFormatToString(hdr.fmtVersion).c_str());
     dbgprintf("\tCompression: %u\n", hdr.compression);
     dbgprintf("\tBuild flags %u\n", hdr.buildFlags);
     dbgprintf("\tArchitecture %u\n", hdr.architecture);
@@ -33,7 +33,7 @@ int main(void) {
     
     LibTrident::Header::TRD_HEADER h;
     LibTrident::Header::TRD_HEADER hdrReadBack;
-    LibTrident::Header::PackageHeader x(lt.fstrInfo);
+    LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
 
 
     

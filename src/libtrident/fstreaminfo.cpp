@@ -1,7 +1,9 @@
 #include "fstreaminfo.h"
-#include "fileOperations.h"
+//#include "fileOperations.h"
 #include "ioflags.h"
+#include "pkgio.h"
 using namespace LibTrident;
+using namespace PkgIO;
 
 bool FstreamInfo::TrdFstreamInfo::CheckFileStreamInfo() {
     LTSTATUS::LTSTATUS status = ValidateFileStreamInfo(*xfInfo);
@@ -42,8 +44,8 @@ bool FstreamInfo::TrdFstreamInfo::CloseStream() {
 }
 LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateFileStreamInfo(TRDFilStreameInfo& info) {
    
-    LTSTATUS::LTSTATUS dirStatus = Utilities::FileOperations::FileOrDirExists(info.dirPath, false);
-    LTSTATUS::LTSTATUS fileStatus = Utilities::FileOperations::FileOrDirExists(info.name, true);
+    LTSTATUS::LTSTATUS dirStatus = FileOperations::FileOperations::FileOrDirExists(info.dirPath, false);
+    LTSTATUS::LTSTATUS fileStatus = FileOperations::FileOperations::FileOrDirExists(info.name, true);
     if (dirStatus != LTSTATUS::SUCCESS) {
         return LTSTATUS::NOTDIR;
     }

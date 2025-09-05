@@ -65,12 +65,12 @@ typedef enum {
 
 
 
-class PackageHeader  {
+class TRDPkgHeader  {
 public:
-    PackageHeader(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
+    TRDPkgHeader(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
     fstrInfo(fStreamInfo) {}
-    PackageHeader(const PackageHeader& other) : fstrInfo(other.fstrInfo) {}
-    PackageHeader(PackageHeader&& other) : fstrInfo(std::move(other.fstrInfo)) {}
+    TRDPkgHeader(const TRDPkgHeader& other) : fstrInfo(other.fstrInfo) {}
+    TRDPkgHeader(TRDPkgHeader&& other) : fstrInfo(std::move(other.fstrInfo)) {}
     
 
     LTSTATUS::TridentError e;
