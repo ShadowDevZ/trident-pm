@@ -33,6 +33,8 @@ target_include_directories(${TRDLIB} PUBLIC
     src/libtrident
     src/libtrident/header
     src/libtrident/utils
+    src/libtrident/utils/tuid
+    src/libtrident/sdesc
 )
 
 

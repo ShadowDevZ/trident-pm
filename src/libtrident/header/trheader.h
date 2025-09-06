@@ -84,12 +84,14 @@ public:
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     bool IsWrittenHeaderValid();
+    static int GetHeaderByteSize();
     
   
 private:
 std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
 //TRD_HEADER cacheHdr;
-
+static u32 IGenerateHeaderCRC(const TRD_HEADER& hdr);
+static bool ICheckCRC(u32 crc, const TRD_HEADER& hdr);
 static bool ICheckHeaderSize(const TRD_HEADER& hdr);
 std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> ICheckAndGetFstreamContent();
 

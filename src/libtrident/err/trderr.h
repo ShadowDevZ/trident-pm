@@ -25,6 +25,9 @@ namespace LibTrident::LTSTATUS {
             HDRCRP,
             IOREAD,
             IOWRITE,
+            CHKSUM,
+            INVTUID,
+            NOTUID,
             UNDEFINED = -1,
             
     }RSP;

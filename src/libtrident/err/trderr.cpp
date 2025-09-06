@@ -29,7 +29,10 @@ constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
     {LTSTATUS::HDRNP, "Header is missing"},
     {LTSTATUS::HDRCRP, "Header data tags corrupted"},
     {LTSTATUS::IOREAD, "Failed to read file"},
-    {LTSTATUS::IOWRITE, "Failed to write file"}
+    {LTSTATUS::IOWRITE, "Failed to write file"},
+    {LTSTATUS::CHKSUM, "CRC32 checksum has failed"},
+    {LTSTATUS::NOTUID, "TUID token not found"},
+    {LTSTATUS::INVTUID, "Invalid TUID token"}
 };
 
 

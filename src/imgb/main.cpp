@@ -2,6 +2,11 @@
 #include <string.h>
 #include <iostream>
 #include "libtrident.h"
+#include "tuid.h"
+
+#ifdef _LIBTRIDENT_DEBUG
+#include "sdescid.h"
+#endif
 using namespace LibTrident;
 using namespace LibTrident::Header;
 
@@ -34,7 +39,9 @@ int main(void) {
     LibTrident::Header::TRD_HEADER h;
     LibTrident::Header::TRD_HEADER hdrReadBack;
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
-
+#ifdef _LIBTRIDENT_DEBUG
+    TRDSdToken tokenId(lt.fstrInfo);
+#endif
 
     
 
@@ -47,9 +54,19 @@ int main(void) {
    std::cout << "WriteHeader() " << x.WriteHeader(h) << std::endl;
    std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
     std::cout << "HeaderPresent() " << x.ReadHeader(hdrReadBack) << std::endl;
+#ifdef _LIBTRIDENT_DEBUG
+    std::cout << "WriteSDToken(beg)" << tokenId.WriteDescriptorTUID(true) << std::endl;
+    lt.fstrInfo->GetFileStreamInfo()->hFile->seekp(70);
+   // char data[200] = {0};
+   // lt.fstrInfo->GetFileStreamInfo()->hFile->write(data, 200);
+     std::cout << "WriteSDToken(end)" << tokenId.WriteDescriptorTUID(false) << std::endl;
+#endif
     std::cout << std::noboolalpha;
     std::cout << x.e.GetErrorAsString() << std::endl;
+   // std::cout << TRDPkgHeader::GetHeaderByteSize() + 1 + TUID::TUID_MAX_LENGTH + 1;
+    
     lt.ClosePkg();
+   // std::cout << TUID::IsValidTUID("7a153cca-f082-4837-9f8b-10905d006261") << std::endl;
 
 
     return 0;

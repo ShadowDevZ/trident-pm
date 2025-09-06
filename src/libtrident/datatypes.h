@@ -18,6 +18,6 @@ typedef uint32_t uint;
 typedef unsigned char uchar;
 typedef uint32_t IO_OpenFlag;
 typedef unsigned char byte;
-typedef uint64_t rva_t;
+typedef uint64_t foffset_t;
 
 #include "ccattribs.h"

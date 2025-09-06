@@ -15,6 +15,8 @@ PACKED_STRUCT {
 }TRD_SD;
 
 
+constexpr int TRD_SECTIONSD_SIZE = sizeof(TRD_SD);
+
 
 class TRDSecDesc {
 private:
@@ -27,7 +29,7 @@ public:
     TRDSecDesc(const TRDSecDesc& other) : fstrInfo(other.fstrInfo) {}
     TRDSecDesc(TRDSecDesc&& other) : fstrInfo(std::move(other.fstrInfo)) {}
     //creates blank section
-    bool InitializeSD();
+    bool BlankSD();
     bool IsSDPresent();
     
     bool ReadSD(TRD_SD& sd);
@@ -35,12 +37,13 @@ public:
     bool UpdateSD(const TRD_SD& sd);
 
 private:
-bool IWriteRawSD(const TRD_SD& sd);
-bool IReadRawSD(TRD_SD& sd);
-//modifies written information, if present
-bool IModifySD(rva_t rva);
-//gets the starting position of SD table
-bool GetSDAddress(rva_t& rvaOut);
+    bool IWriteRawSD(const TRD_SD& sd);
+    bool IReadRawSD(TRD_SD& sd);
+    //modifies written information, if present
+    bool IModifySD(foffset_t off);
+    //gets the starting position of SD table
+    foffset_t IGetSDAddress();
+  
 
 
 

@@ -20,11 +20,10 @@ namespace LibTrident::PkgIO {
 
     class Descriptor {
         public:
-            virtual bool WriteDescriptorUUID() = 0;
-            virtual bool ReadDescriptorUUID() = 0;
+            //beg=true mean beginning of section, beg=false end of section
+            virtual bool WriteDescriptorTUID(bool beg) = 0;
+            virtual bool ReadDescriptorTUID(bool beg) = 0;
             virtual u32  GenerateCRC() = 0;
-            //checks if the uuid format and length is correct
-            static bool ValidateUUID(std::string uuid);
             //finds first occurence of token in stream using Boyer Moore Horsepool
             static std::streampos FindDescriptorToken(std::string uuid);
     };

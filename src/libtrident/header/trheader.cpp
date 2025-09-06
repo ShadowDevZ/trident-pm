@@ -1,11 +1,13 @@
 #include "trheader.h"
 #include <sstream>
-
+#include <zlib.h>
 using namespace LibTrident;
 using namespace LibTrident::Header;
 
 
-
+//we are intentionally not using sizeof()
+//each different version of header will have different size
+//we want to avoid the approach of the ms's solution with cbSize
 #define LT_HDR_SZB_01A 32
 //01.0.0
 #define LT_HDR_VERSION_MIN 1000
@@ -21,8 +23,8 @@ std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> TRDPkgHeader::IC
 }
 
 
-
-constexpr int GetHeaderByteSize() {
+//in future this might get overloaded with something like int version
+int TRDPkgHeader::GetHeaderByteSize() {
     return LT_HDR_SZB_01A;
 }
 
@@ -83,10 +85,15 @@ bool TRDPkgHeader::ValidateHeader(TRD_HEADER& hdrIn) {
         return false;
     }
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdrIn.magic))) {
-        e.SetError(LTSTATUS::HDRCRP);
+        e.SetError(LTSTATUS::HDRNP);
         return false;
     }
     if (hdrIn.exSignature != HDR_EXTENDED_SIGNATURE) {
+        e.SetError(LTSTATUS::HDRCRP);
+        return false;
+    }
+    if (!ICheckCRC(hdrIn.hdrChksum, hdrIn)) {
+        e.SetError(LTSTATUS::CHKSUM);
         return false;
     }
     //todo check each field including signature
@@ -124,6 +131,24 @@ bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
     }
     return true;
 }
+//
+#define _LOCAL_CRC(crc,x) crc32(((crc)), reinterpret_cast<const Bytef*>(&(x)), sizeof((x)))
+u32 TRDPkgHeader::IGenerateHeaderCRC(const TRD_HEADER& hdr) {
+    u32 crc = crc32(0, Z_NULL, 0);
+    crc = _LOCAL_CRC(crc, hdr.magic);
+    crc = _LOCAL_CRC(crc, hdr.exSignature);
+    crc = _LOCAL_CRC(crc, hdr.fmtVersion);
+    crc = _LOCAL_CRC(crc, hdr.compression);
+    crc = _LOCAL_CRC(crc, hdr.buildFlags);
+    crc = _LOCAL_CRC(crc, hdr.architecture);
+    return crc;
+}
+bool TRDPkgHeader::ICheckCRC(u32 crc, const TRD_HEADER& hdr) {
+    u32 newCrc = IGenerateHeaderCRC(hdr);
+    return newCrc == crc;
+}
+
+
 bool TRDPkgHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType) {
     TRD_HEADER hdr;
     std::copy(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic));
@@ -139,7 +164,7 @@ bool TRDPkgHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archTyp
     hdr.compression = comprType;
     hdr.buildFlags = buildFlgs;
     hdr.architecture = archType;
-    hdr.hdrChksum = 0xBEEF;
+    hdr.hdrChksum = IGenerateHeaderCRC(hdr);
     
     hdr.fileLen = UINT64_MAX;
     hdr.ioCtrl = IOCTRL_CLEAR;
