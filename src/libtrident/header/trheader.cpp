@@ -1,6 +1,7 @@
 #include "trheader.h"
 #include <sstream>
 #include <zlib.h>
+#include "pkgio.h"
 using namespace LibTrident;
 using namespace LibTrident::Header;
 
@@ -51,8 +52,9 @@ bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
         return false;
     }
     
-    readStream.read(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
-    if (!readStream) {
+   // readStream.read(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+    bool readStatus = PkgIO::FileOperations::ReadLeStream(readStream, reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+    if (!readStream || !readStatus) {
         e.SetError(LTSTATUS::IOREAD);
         return false;
     }
@@ -106,16 +108,19 @@ bool TRDPkgHeader::WriteHeader(TRD_HEADER& hdrIn) {
         return false;
     }
 
-    auto [checkFstream, writeStream] = ICheckAndGetFstreamContent();
-    if (!checkFstream || writeStream == nullptr) {
+    auto [checkFstream, streamInfo] = ICheckAndGetFstreamContent();
+    if (!checkFstream || streamInfo == nullptr) {
         return false;
     }
     if (!ValidateHeader(hdrIn)) {
         return false;
     }
+
     auto hdrContent = reinterpret_cast<const char*>(&hdrIn);
-    writeStream->hFile->write(hdrContent, GetHeaderByteSize());
-    if (!writeStream->hFile) {
+  //  streamInfo->hFile->write(hdrContent, GetHeaderByteSize());
+    bool writeStatus = PkgIO::FileOperations::WriteLeStream(streamInfo, hdrContent, GetHeaderByteSize(), false);
+   
+    if (!streamInfo->hFile || !writeStatus) {
         e.SetError(LTSTATUS::IOWRITE);
         return false;
     }
@@ -166,7 +171,7 @@ bool TRDPkgHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archTyp
     hdr.architecture = archType;
     hdr.hdrChksum = IGenerateHeaderCRC(hdr);
     
-    hdr.fileLen = UINT64_MAX;
+    hdr.fileLen = 0;
     hdr.ioCtrl = IOCTRL_CLEAR;
     hdrOut = hdr;
     return true;

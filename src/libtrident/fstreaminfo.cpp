@@ -44,18 +44,22 @@ bool FstreamInfo::TrdFstreamInfo::CloseStream() {
 }
 LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateFileStreamInfo(TRDFilStreameInfo& info) {
    
-    LTSTATUS::LTSTATUS dirStatus = FileOperations::FileOperations::FileOrDirExists(info.dirPath, false);
-    LTSTATUS::LTSTATUS fileStatus = FileOperations::FileOperations::FileOrDirExists(info.name, true);
+    LTSTATUS::LTSTATUS dirStatus = FileOperations::FileOrDirExists(info.dirPath, false);
+    LTSTATUS::LTSTATUS fileStatus = FileOperations::FileOrDirExists(info.name, true);
     if (dirStatus != LTSTATUS::SUCCESS) {
+        dbgprintf("Error: ValidateFileStreamInfo() nodir\n");
         return LTSTATUS::NOTDIR;
     }
     if (fileStatus != LTSTATUS::SUCCESS) {
+         dbgprintf("Error: ValidateFileStreamInfo() nofile\n");
         return LTSTATUS::NOTFILE;
     }
     if (StreamIsOpen(info) != LTSTATUS::SUCCESS) {
+         dbgprintf("Error: ValidateFileStreamInfo() fopen\n");
         return LTSTATUS::FOPEN;
     }
     if (info.fileFlags == 0 || info.seekOffsetRead == -1 || info.seekOffsetWrite == -1) {
+        dbgprintf("Error: ValidateFileStreamInfo() access\n");
         return LTSTATUS::ACCESS;
     }
     return LTSTATUS::SUCCESS;

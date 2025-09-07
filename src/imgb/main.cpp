@@ -10,6 +10,15 @@
 using namespace LibTrident;
 using namespace LibTrident::Header;
 
+void PrintBuildTarget() {
+#ifdef _LIBTRIDENT_DEBUG
+std::cout << "Target: Debug\n\n";    
+#else
+std::cout << "Target: Release\n"; 
+#endif
+}
+
+
 void print_header(LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
@@ -28,9 +37,16 @@ void print_header(LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
     dbgprintf("[HEADER_END]\n");
 }
+bool IsLittleEndian () {
 
+    int i=1;
+
+    return (int)*((unsigned char *)&i)==1;
+
+}
 
 int main(void) {
+    PrintBuildTarget();
    
     LibTrident::TrPkg lt;
     lt.OpenPackage("/home/shadow/Projects/trident-pm/test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
@@ -56,6 +72,7 @@ int main(void) {
     std::cout << "HeaderPresent() " << x.ReadHeader(hdrReadBack) << std::endl;
 #ifdef _LIBTRIDENT_DEBUG
     std::cout << "WriteSDToken(beg)" << tokenId.WriteDescriptorTUID(true) << std::endl;
+    //temporary replacement for BlankSD();
     lt.fstrInfo->GetFileStreamInfo()->hFile->seekp(70);
    // char data[200] = {0};
    // lt.fstrInfo->GetFileStreamInfo()->hFile->write(data, 200);
@@ -66,7 +83,8 @@ int main(void) {
    // std::cout << TRDPkgHeader::GetHeaderByteSize() + 1 + TUID::TUID_MAX_LENGTH + 1;
     
     lt.ClosePkg();
-   // std::cout << TUID::IsValidTUID("7a153cca-f082-4837-9f8b-10905d006261") << std::endl;
+    
+    // std::cout << TUID::IsValidTUID("7a153cca-f082-4837-9f8b-10905d006261") << std::endl;
 
 
     return 0;

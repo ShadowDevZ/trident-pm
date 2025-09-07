@@ -12,8 +12,11 @@ set(TRDBLD "trdbld")
 #CMAKE requirements
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always -g -O2 -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value")
+set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always -O2 -Wall -Wextra -Wunreachable-code -Wfloat-equal")
 
+set(CMAKE_CXX_FLAGS_DEBUG "${COMMON_FLGS} -g")
+#undefine macro that exports dbgprintf()
+set(CMAKE_CXX_FLAGS_RELEASE "${COMMON_FLGS} -D__DEBUG_PROJ_TARGET")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
@@ -36,6 +39,7 @@ target_include_directories(${TRDLIB} PUBLIC
     src/libtrident/utils/tuid
     src/libtrident/sdesc
 )
+
 
 
 target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})

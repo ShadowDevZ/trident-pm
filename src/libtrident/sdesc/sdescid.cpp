@@ -2,6 +2,7 @@
 #include "trheader.h"
 #include "fstreaminfo.h"
 #include "tuid.h"
+#include "pkgio.h"
 using namespace LibTrident::Header;
 using namespace LibTrident::FstreamInfo;
 using namespace LibTrident;
@@ -18,7 +19,9 @@ foffset_t TRDSdToken::GetRawSDEnd() {
 //todo
 //we need more error checking to check if the header is actually written
 
-bool TRDSdToken::WriteTUIDAt(std::fstream& stream, std::streampos loc) {  
+bool TRDSdToken::WriteTUIDAt(std::streampos loc) {  
+    std::shared_ptr<FstreamInfo::TRDFilStreameInfo> fstrPtr = fstrInfo->GetFileStreamInfo();
+    std::fstream& stream = *fstrPtr->hFile;
     stream.seekp(loc);
 
     if (!stream) {
@@ -30,8 +33,10 @@ bool TRDSdToken::WriteTUIDAt(std::fstream& stream, std::streampos loc) {
         e.SetError(LTSTATUS::INVTUID);
         return false;
     } 
-    stream.write(static_cast<const char*>(tuid), TUID::TUID_MAX_LENGTH);
-    if (!stream) {
+
+    //stream.write(static_cast<const char*>(tuid), TUID::TUID_MAX_LENGTH);
+    bool writeStatus = PkgIO::FileOperations::WriteLeStream(fstrPtr, static_cast<const char*>(tuid), TUID::TUID_MAX_LENGTH, true);
+    if (!stream || !writeStatus) {
         e.SetError(LTSTATUS::IOWRITE);
         return false;
     }
@@ -40,22 +45,18 @@ bool TRDSdToken::WriteTUIDAt(std::fstream& stream, std::streampos loc) {
 }
 
 bool TRDSdToken::WriteDescriptorTUID(bool beg) {
-    std::fstream& stream = *fstrInfo->GetFileStreamInfo()->hFile;
-    
-    if (!fstrInfo->CheckFileStreamInfo()) {
-        return false;
-    }
     if (beg) {
         std::streampos sdStart = static_cast<std::streampos>(GetRawSD());
-        return WriteTUIDAt(stream, sdStart);
+        return WriteTUIDAt(sdStart);
     }
     else {
         std::streampos sdEnd = static_cast<std::streampos>(GetRawSDEnd());
-        return WriteTUIDAt(stream, sdEnd);
+        return WriteTUIDAt(sdEnd);
     }
     
 }
 bool TRDSdToken::ReadDescriptorTUID(bool beg) {
+    (void)(beg);
     return false;
 }
 u32 TRDSdToken::GenerateCRC() {

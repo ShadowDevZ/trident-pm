@@ -20,12 +20,12 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
         e.SetError(LTSTATUS::BADARG);
         return false;
     }
-    std::string dirPath = FileOperations::FileOperations::GetFileDir(path);
+    std::string dirPath = FileOperations::GetFileDir(path);
     if (dirPath == "") {
         return false;
    }
     //for future use like writing locks in the same directory
-    LTSTATUS::LTSTATUS status = FileOperations::FileOperations::FileOrDirExists(dirPath, false);
+    LTSTATUS::LTSTATUS status = FileOperations::FileOrDirExists(dirPath, false);
     if (status != LTSTATUS::SUCCESS) {
         return status;
     }
@@ -42,7 +42,7 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
     }
     
     
-    std::streampos fileSize = FileOperations::FileOperations::GetFstreamSize(fsPkg);
+    std::streampos fileSize = FileOperations::GetFstreamSize(fsPkg);
     if (fileSize == -1) {
         dbgprintf("fsize=-1\n");
         e.SetError(LTSTATUS::FSEEK);

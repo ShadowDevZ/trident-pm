@@ -6,7 +6,7 @@
 class TRDSdToken : LibTrident::PkgIO::Descriptor {
 private:
     std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
-    bool WriteTUIDAt(std::fstream& stream, std::streampos loc);
+    bool WriteTUIDAt(std::streampos loc);
 
 public:
     LibTrident::LTSTATUS::TridentError e;

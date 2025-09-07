@@ -5,16 +5,54 @@
 #include <string>
 #include <memory>
 #include "trderr.h"
+#include "fstreaminfo.h"
+
+
+
+#ifdef IS_BIG_ENDIAN
+
+#define cpuToBE16(val) (val)
+
+#define beToCPU16(val) (val)
+
+#define cpuToLE16(val) swapEndian16(val)
+
+#define leToCPU16(val) swapEndian16(val)
+
+#else
+
+#define cpuToBE16(val) swapEndian16(val)
+
+#define beToCPU16(val) swapEndian16(val)
+
+#define cpuToLE16(val) (val)
+
+#define leToCPU16(val) (val)
+
+#endif
+
+
+
+
 
 
 //todo add most basic IO function here
 namespace LibTrident::PkgIO {
-   class FileOperations {
-        public:
-            static std::string GetFileDir(const std::string& file);
-            static std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
-            static std::streamsize GetFstreamSize(std::fstream& fs);
-            static LibTrident::LTSTATUS::LTSTATUS FileOrDirExists(const std::string& path, bool file);
+   namespace FileOperations {
+            std::string GetFileDir(const std::string& file);
+            std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
+            std::streamsize GetFstreamSize(std::fstream& fs);
+            LibTrident::LTSTATUS::LTSTATUS FileOrDirExists(const std::string& path, bool file);
+            ///The following 2 functions format the buffer and write it as Little endian
+            //does not increment fSize
+            bool WriteLeStream(std::fstream& stream,const char* data, std::streamsize size);
+            //increments fSize by bytes written by default, if updating already written variable INCREMENT MUST BE FALSE
+            bool WriteLeStream(std::shared_ptr<FstreamInfo::TRDFilStreameInfo> info, const char* data, std::streamsize size,
+                                                                                                        bool increment=true);
+                
+                
+            bool ReadLeStream(std::fstream& stream, char* s, std::streamsize size);
+            bool ReadLeStream(std::shared_ptr<FstreamInfo::TRDFilStreameInfo> info, char* s, std::streamsize size);
     };
    
 

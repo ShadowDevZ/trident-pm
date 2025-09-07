@@ -10,6 +10,7 @@ typedef struct {
     std::shared_ptr<std::fstream> hFile;
     std::streampos seekOffsetRead;
     std::streampos seekOffsetWrite;
+    //does not represent actual file size, but sizeof(whole file - header)
     std::streamsize fSize;
     IO_OpenFlag fileFlags;
 
