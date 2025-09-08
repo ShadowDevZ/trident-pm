@@ -14,7 +14,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always -O2 -Wall -Wextra -Wunreachable-code -Wfloat-equal")
 
-set(CMAKE_CXX_FLAGS_DEBUG "${COMMON_FLGS} -g -fsanitize=address -fsanitize=leak -lasan -D_FORTIFY_SOURCE=2")
+##### COMMENT TO DISABLE SANITIZERS FOR DEBUG BUILD
+set(ASANON_FLAGS "-fsanitize=address")
+set(UBSANON_FLAGS "-fsanitize=undefined")
+set(LSANON_FLAGS "-fsanitize=leak")
+
+# Concatenate strings with spaces
+set(SANITIZER_FLAGS "${ASANON_FLAGS} ${UBSANON_FLAGS} ${LSANON_FLAGS}")
+
+#####
+
+set(CMAKE_CXX_FLAGS_DEBUG "${COMMON_FLGS} -g ${SANITIZER_FLAGS} -D_FORTIFY_SOURCE=2")
 set(CMAKE_CXX_FLAGS_RELEASE "${COMMON_FLGS} -D__DEBUG_PROJ_TARGET")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)

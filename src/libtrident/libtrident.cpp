@@ -12,7 +12,7 @@ bool LibTrident::TrPkg::ClosePkg() {
         return false;
     }
     std::shared_ptr<FstreamInfo::TRDFilStreameInfo> closeInfo =  fstrInfo->GetFileStreamInfo();
-    dbgprintf("\n\n%s\n\n", closeInfo->dirPath.c_str());
+   
     closeInfo->dirPath = "";
     closeInfo->name = "";
     fstrInfo->CloseStream();
