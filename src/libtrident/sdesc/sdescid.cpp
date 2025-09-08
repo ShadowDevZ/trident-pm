@@ -20,7 +20,11 @@ foffset_t TRDSdToken::GetRawSDEnd() {
 //we need more error checking to check if the header is actually written
 
 bool TRDSdToken::WriteTUIDAt(std::streampos loc) {  
+     if (!fstrInfo->CheckFileStreamInfo()) {
+        return false;
+    }
     std::shared_ptr<FstreamInfo::TRDFilStreameInfo> fstrPtr = fstrInfo->GetFileStreamInfo();
+   
     std::fstream& stream = *fstrPtr->hFile;
     stream.seekp(loc);
 

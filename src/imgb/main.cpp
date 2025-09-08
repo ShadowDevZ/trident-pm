@@ -18,7 +18,7 @@ std::cout << "Target: Release\n";
 #endif
 }
 
-
+#ifdef _LIBTRIDENT_DEBUG
 void print_header(LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
@@ -37,21 +37,23 @@ void print_header(LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
     dbgprintf("[HEADER_END]\n");
 }
-bool IsLittleEndian () {
-
-    int i=1;
-
-    return (int)*((unsigned char *)&i)==1;
-
-}
+#endif
 
 int main(void) {
     PrintBuildTarget();
    
     LibTrident::TrPkg lt;
-    lt.OpenPackage("/home/shadow/Projects/trident-pm/test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
-    std::cout << "Last Error: " << lt.e << std::endl;
-    
+    bool openStatus = lt.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
+    std::cout << "Last Error: " << lt.e << " OpenPkg(): " << std::boolalpha << openStatus << std::noboolalpha << std::endl;
+
+//THE REASON WE ARE CHECKING ONLY IN RELEASE IS BECAUSE IF THE PACKAGE FAILED TO OPEN ANY SUBSEQUENT FUNCTION MUST FAIL AND NOT USE IO
+#ifndef _LIBTRIDENT_DEBUG
+    if (!openStatus) {
+        std::cout << "Failed to open package\n";
+        return 1;
+    }
+#endif
+   // return 0;
     LibTrident::Header::TRD_HEADER h;
     LibTrident::Header::TRD_HEADER hdrReadBack;
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
@@ -66,14 +68,19 @@ int main(void) {
     
    std::cout << std::boolalpha;
    std::cout << "CreateHeader()" <<x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
+#ifdef _LIBTRIDENT_DEBUG
    print_header(h);
+#endif
    std::cout << "WriteHeader() " << x.WriteHeader(h) << std::endl;
    std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
     std::cout << "HeaderPresent() " << x.ReadHeader(hdrReadBack) << std::endl;
 #ifdef _LIBTRIDENT_DEBUG
     std::cout << "WriteSDToken(beg)" << tokenId.WriteDescriptorTUID(true) << std::endl;
     //temporary replacement for BlankSD();
-    lt.fstrInfo->GetFileStreamInfo()->hFile->seekp(70);
+    if (lt.fstrInfo->CheckFileStreamInfo()) {
+        lt.fstrInfo->GetFileStreamInfo()->hFile->seekp(70);
+
+    }
    // char data[200] = {0};
    // lt.fstrInfo->GetFileStreamInfo()->hFile->write(data, 200);
      std::cout << "WriteSDToken(end)" << tokenId.WriteDescriptorTUID(false) << std::endl;
@@ -81,11 +88,9 @@ int main(void) {
     std::cout << std::noboolalpha;
     std::cout << x.e.GetErrorAsString() << std::endl;
    // std::cout << TRDPkgHeader::GetHeaderByteSize() + 1 + TUID::TUID_MAX_LENGTH + 1;
-    
+
     lt.ClosePkg();
-    
-    // std::cout << TUID::IsValidTUID("7a153cca-f082-4837-9f8b-10905d006261") << std::endl;
-
-
+    std::cout << "Exit(0)\n";
     return 0;
+    
 }

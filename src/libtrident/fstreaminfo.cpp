@@ -42,7 +42,7 @@ bool FstreamInfo::TrdFstreamInfo::CloseStream() {
     //bool for future use
     return true;
 }
-LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateFileStreamInfo(TRDFilStreameInfo& info) {
+LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateFileStreamInfo(const TRDFilStreameInfo& info) {
    
     LTSTATUS::LTSTATUS dirStatus = FileOperations::FileOrDirExists(info.dirPath, false);
     LTSTATUS::LTSTATUS fileStatus = FileOperations::FileOrDirExists(info.name, true);

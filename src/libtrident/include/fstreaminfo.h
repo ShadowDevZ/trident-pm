@@ -19,19 +19,20 @@ typedef struct {
 class TrdFstreamInfo {
 private:
     std::shared_ptr<TRDFilStreameInfo> xfInfo;
-public:
+    bool IsOpen();
+    public:
     LibTrident::LTSTATUS::TridentError e;
-
+    
     TrdFstreamInfo() : xfInfo(std::make_shared<TRDFilStreameInfo>()) {};
     std::shared_ptr<TRDFilStreameInfo> GetFileStreamInfo() {
         return xfInfo;
         
-   }
-   bool CheckFileStreamInfo();
-   bool IsOpen();
-   bool CloseStream();
+    }
+    bool CheckFileStreamInfo();
+    bool CloseStream();
+    
    static LibTrident::LTSTATUS::LTSTATUS StreamIsOpen(const TRDFilStreameInfo& info);
-   static LibTrident::LTSTATUS::LTSTATUS ValidateFileStreamInfo(TRDFilStreameInfo& info);
+   static LibTrident::LTSTATUS::LTSTATUS ValidateFileStreamInfo(const TRDFilStreameInfo& info);
    bool SetFileStreamInfo(TRDFilStreameInfo& info);
   
    

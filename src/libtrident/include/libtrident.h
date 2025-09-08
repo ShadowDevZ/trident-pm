@@ -25,9 +25,7 @@ public:
     
     // PackageHeader pkg;
    TrPkg() : fstrInfo(std::make_shared<LibTrident::FstreamInfo::TrdFstreamInfo>()) {};
-   ~TrPkg() {
-    ClosePkg();
-   }
+   
    //std::shared_ptr<TRDFilStreameInfo> GetFileStreamInfo() {
    //     return fInfo;
    //     
@@ -38,10 +36,10 @@ public:
 
    
     bool OpenPackage(const std::string& path, IO_OpenFlag openFlags);
-    void ClosePkg();
+    bool ClosePkg();
 
 //private:
-    
+ 
   // std::shared_ptr<TRDFilStreameInfo> fInfo;
 
 };

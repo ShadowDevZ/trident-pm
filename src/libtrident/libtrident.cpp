@@ -6,13 +6,21 @@
 using namespace LibTrident;
 using namespace PkgIO;
 
-void LibTrident::TrPkg::ClosePkg() {
-    fstrInfo->CloseStream();
+bool LibTrident::TrPkg::ClosePkg() {
+    if (!fstrInfo->CheckFileStreamInfo()) {
+        dbgprintf("Error closing stream\n");
+        return false;
+    }
     std::shared_ptr<FstreamInfo::TRDFilStreameInfo> closeInfo =  fstrInfo->GetFileStreamInfo();
+    dbgprintf("\n\n%s\n\n", closeInfo->dirPath.c_str());
     closeInfo->dirPath = "";
     closeInfo->name = "";
+    fstrInfo->CloseStream();
     closeInfo->hFile->close();
+     dbgprintf("Stream closed\n");
+    return true;
 }
+
 
 bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFlags) {
     std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
@@ -21,12 +29,15 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
         return false;
     }
     std::string dirPath = FileOperations::GetFileDir(path);
+    
     if (dirPath == "") {
+        e.SetError(LTSTATUS::NOTDIR);
         return false;
    }
     //for future use like writing locks in the same directory
     LTSTATUS::LTSTATUS status = FileOperations::FileOrDirExists(dirPath, false);
     if (status != LTSTATUS::SUCCESS) {
+        e.SetError(LTSTATUS::NOTDIR);
         return status;
     }
     
@@ -61,6 +72,7 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
    
     fInfo.hFile = fsPkg;
     fInfo.dirPath = dirPath;
+    
     fInfo.name = path;
     
     if (!fstrInfo->SetFileStreamInfo(fInfo)) {
