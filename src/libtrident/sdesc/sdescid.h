@@ -5,15 +5,15 @@
 
 class TRDSdToken : LibTrident::PkgIO::Descriptor {
 private:
-    std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
+    std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
     bool WriteTUIDAt(std::streampos loc);
 
 public:
     LibTrident::LTSTATUS::TridentError e;
     TRDSdToken(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
-    fstrInfo(fStreamInfo) {}
-    TRDSdToken(const TRDSdToken& other) : fstrInfo(other.fstrInfo) {}
-    TRDSdToken(TRDSdToken&& other) : fstrInfo(std::move(other.fstrInfo)) {}
+    wFstr(fStreamInfo) {}
+    TRDSdToken(const TRDSdToken& other) : wFstr(other.wFstr) {}
+    TRDSdToken(TRDSdToken&& other) : wFstr(std::move(other.wFstr)) {}
 
     static foffset_t GetRawSD();
     static foffset_t GetRawSDEnd(); 

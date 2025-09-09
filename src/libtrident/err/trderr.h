@@ -28,6 +28,7 @@ namespace LibTrident::LTSTATUS {
             CHKSUM,
             INVTUID,
             NOTUID,
+            IREF_EXPIRED,
             UNDEFINED = -1,
             
     }RSP;

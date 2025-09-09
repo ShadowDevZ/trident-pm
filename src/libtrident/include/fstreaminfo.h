@@ -18,24 +18,27 @@ typedef struct {
 
 class TrdFstreamInfo {
 private:
-    std::shared_ptr<TRDFilStreameInfo> xfInfo;
+    TRDFilStreameInfo xfInfo;
     bool IsOpen();
-    public:
+public:
     LibTrident::LTSTATUS::TridentError e;
     
-    TrdFstreamInfo() : xfInfo(std::make_shared<TRDFilStreameInfo>()) {};
-    std::shared_ptr<TRDFilStreameInfo> GetFileStreamInfo() {
+   // TrdFstreamInfo() : xfInfo(std::make_shared<TRDFilStreameInfo>()) {};
+   // TrdFstreamInfo() {
+    //    xfInfo.hFile = std::make_unique<std::fstream>();
+   // }
+    TRDFilStreameInfo& GetFileStreamInfo() {
         return xfInfo;
         
     }
+    bool SetFileStreamInfo(const TRDFilStreameInfo& info);
     bool CheckFileStreamInfo();
     bool CloseStream();
     
-   static LibTrident::LTSTATUS::LTSTATUS StreamIsOpen(const TRDFilStreameInfo& info);
-   static LibTrident::LTSTATUS::LTSTATUS ValidateFileStreamInfo(const TRDFilStreameInfo& info);
-   bool SetFileStreamInfo(TRDFilStreameInfo& info);
-  
-   
+   static LibTrident::LTSTATUS::LTSTATUS StreamRemoteIsOpen(const TRDFilStreameInfo& info);
+   static LTSTATUS::LTSTATUS CloseRemoteStream(TRDFilStreameInfo& info);
+   static std::pair<bool, std::shared_ptr<FstreamInfo::TrdFstreamInfo>> GetFstreamContent(std::weak_ptr<FstreamInfo::TrdFstreamInfo> weakFstr);
+   static LibTrident::LTSTATUS::LTSTATUS ValidateRemoteFileStreamInfo(const TRDFilStreameInfo& info);
 };
 
 };

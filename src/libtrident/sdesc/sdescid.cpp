@@ -20,15 +20,22 @@ foffset_t TRDSdToken::GetRawSDEnd() {
 //we need more error checking to check if the header is actually written
 
 bool TRDSdToken::WriteTUIDAt(std::streampos loc) {  
-     if (!fstrInfo->CheckFileStreamInfo()) {
+
+    auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!checkWeakRef) {
+        e.SetError(LTSTATUS::IREF_EXPIRED);
         return false;
     }
-    std::shared_ptr<FstreamInfo::TRDFilStreameInfo> fstrPtr = fstrInfo->GetFileStreamInfo();
-   
-    std::fstream& stream = *fstrPtr->hFile;
-    stream.seekp(loc);
+    if (!sharedPtr->CheckFileStreamInfo()) {
+        e.SetError(LTSTATUS::NULL_OBJ);
+        return false;
+    }
+    auto& fstrInfo = sharedPtr->GetFileStreamInfo();
+    auto& fstrStream = fstrInfo.hFile;
+    
+    fstrStream->seekp(loc);
 
-    if (!stream) {
+    if (!fstrStream) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
@@ -39,8 +46,8 @@ bool TRDSdToken::WriteTUIDAt(std::streampos loc) {
     } 
 
     //stream.write(static_cast<const char*>(tuid), TUID::TUID_MAX_LENGTH);
-    bool writeStatus = PkgIO::FileOperations::WriteLeStream(fstrPtr, static_cast<const char*>(tuid), TUID::TUID_MAX_LENGTH, true);
-    if (!stream || !writeStatus) {
+    bool writeStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, static_cast<const char*>(tuid), TUID::TUID_MAX_LENGTH, true);
+    if (!fstrStream|| !writeStatus) {
         e.SetError(LTSTATUS::IOWRITE);
         return false;
     }

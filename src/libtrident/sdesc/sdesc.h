@@ -20,14 +20,14 @@ constexpr int TRD_SECTIONSD_SIZE = sizeof(TRD_SD);
 
 class TRDSecDesc {
 private:
-    std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstrInfo;
+    std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> weakFstr;
 
 public:
     LTSTATUS::TridentError e;
     TRDSecDesc(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
-    fstrInfo(fStreamInfo) {}
-    TRDSecDesc(const TRDSecDesc& other) : fstrInfo(other.fstrInfo) {}
-    TRDSecDesc(TRDSecDesc&& other) : fstrInfo(std::move(other.fstrInfo)) {}
+    weakFstr(fStreamInfo) {}
+    TRDSecDesc(const TRDSecDesc& other) : weakFstr(other.weakFstr) {}
+    TRDSecDesc(TRDSecDesc&& other) : weakFstr(std::move(other.weakFstr)) {}
     //creates blank section
     bool BlankSD();
     bool IsSDPresent();

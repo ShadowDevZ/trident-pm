@@ -78,7 +78,7 @@ int main(void) {
     std::cout << "WriteSDToken(beg)" << tokenId.WriteDescriptorTUID(true) << std::endl;
     //temporary replacement for BlankSD();
     if (lt.fstrInfo->CheckFileStreamInfo()) {
-        lt.fstrInfo->GetFileStreamInfo()->hFile->seekp(70);
+        lt.fstrInfo->GetFileStreamInfo().hFile->seekp(70);
 
     }
    // char data[200] = {0};

@@ -11,13 +11,13 @@ bool LibTrident::TrPkg::ClosePkg() {
         dbgprintf("Error closing stream\n");
         return false;
     }
-    std::shared_ptr<FstreamInfo::TRDFilStreameInfo> closeInfo =  fstrInfo->GetFileStreamInfo();
+    FstreamInfo::TRDFilStreameInfo& closeInfo =  fstrInfo->GetFileStreamInfo();
    
-    closeInfo->dirPath = "";
-    closeInfo->name = "";
+    closeInfo.dirPath = "";
+    closeInfo.name = "";
     fstrInfo->CloseStream();
-    closeInfo->hFile->close();
-     dbgprintf("Stream closed\n");
+    closeInfo.hFile->close();
+    dbgprintf("Stream closed\n");
     return true;
 }
 

@@ -12,16 +12,13 @@ using namespace LibTrident::Header;
 #define LT_HDR_SZB_01A 32
 //01.0.0
 #define LT_HDR_VERSION_MIN 1000
-std::pair<bool,std::shared_ptr<FstreamInfo::TRDFilStreameInfo>> TRDPkgHeader::ICheckAndGetFstreamContent() {
-    if (!fstrInfo->CheckFileStreamInfo()) {
-        e.SetError(fstrInfo->e);
-        
-        
-        return {false, nullptr};
-    }
-    e.Success();
-    return {true, fstrInfo->GetFileStreamInfo()};
-}
+
+
+
+
+
+
+
 
 
 //in future this might get overloaded with something like int version
@@ -34,16 +31,21 @@ bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
     TRD_HEADER hdr = {};
     
     hdrOut = hdr;
-    auto [checkFstream, streamPtr] = ICheckAndGetFstreamContent();
-    if (!checkFstream || streamPtr == nullptr) {
+    auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!checkWeakRef) {
+        e.SetError(LTSTATUS::IREF_EXPIRED);
+        return false;
+    }
+    if (!sharedPtr->CheckFileStreamInfo()) {
         e.SetError(LTSTATUS::NULL_OBJ);
         return false;
     }
-    std::fstream& readStream = *streamPtr->hFile;
+    auto& fstrInfo = sharedPtr->GetFileStreamInfo();
+    auto& fstrStream = fstrInfo.hFile;
     
-    std::streampos originalPosition = readStream.tellg();
-    readStream.seekg(0, std::ios::beg);
-    if (readStream.fail()) {
+    std::streampos originalPosition = fstrStream->tellg();
+    fstrStream->seekg(0, std::ios::beg);
+    if (!fstrStream) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
@@ -53,14 +55,14 @@ bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
     }
     
    // readStream.read(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
-    bool readStatus = PkgIO::FileOperations::ReadLeStream(readStream, reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
-    if (!readStream || !readStatus) {
+    bool readStatus = PkgIO::FileOperations::ReadLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+    if (!fstrStream|| !readStatus) {
         e.SetError(LTSTATUS::IOREAD);
         return false;
     }
 
-    readStream.seekg(originalPosition, std::ios::beg);
-    if (readStream.fail()) {
+    fstrStream->seekg(originalPosition, std::ios::beg);
+    if (!fstrStream) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
@@ -81,7 +83,7 @@ bool TRDPkgHeader::IsWrittenHeaderValid() {
 
 }
 
-bool TRDPkgHeader::ValidateHeader(TRD_HEADER& hdrIn) {
+bool TRDPkgHeader::ValidateHeader(const TRD_HEADER& hdrIn) {
     if (!ICheckHeaderSize(hdrIn)) {
         e.SetError(LTSTATUS::HDRNP);
         return false;
@@ -107,20 +109,27 @@ bool TRDPkgHeader::WriteHeader(TRD_HEADER& hdrIn) {
         e.SetError(LTSTATUS::HDRCRP);
         return false;
     }
-
-    auto [checkFstream, streamInfo] = ICheckAndGetFstreamContent();
-    if (!checkFstream || streamInfo == nullptr) {
-        return false;
-    }
     if (!ValidateHeader(hdrIn)) {
         return false;
     }
+    auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!checkWeakRef) {
+        e.SetError(LTSTATUS::IREF_EXPIRED);
+        return false;
+    }
+    if (!sharedPtr->CheckFileStreamInfo()) {
+        e.SetError(LTSTATUS::NULL_OBJ);
+        return false;
+    }
+    auto& fstrInfo = sharedPtr->GetFileStreamInfo();
+    auto& fstrStream = fstrInfo.hFile;
+
 
     auto hdrContent = reinterpret_cast<const char*>(&hdrIn);
   //  streamInfo->hFile->write(hdrContent, GetHeaderByteSize());
-    bool writeStatus = PkgIO::FileOperations::WriteLeStream(streamInfo, hdrContent, GetHeaderByteSize(), false);
+    bool writeStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, GetHeaderByteSize(), false);
    
-    if (!streamInfo->hFile || !writeStatus) {
+    if (!fstrStream || !writeStatus) {
         e.SetError(LTSTATUS::IOWRITE);
         return false;
     }

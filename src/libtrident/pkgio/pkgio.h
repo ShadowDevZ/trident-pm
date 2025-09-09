@@ -41,18 +41,17 @@ namespace LibTrident::PkgIO {
    namespace FileOperations {
             std::string GetFileDir(const std::string& file);
             std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
-            std::streamsize GetFstreamSize(std::fstream& fs);
             LibTrident::LTSTATUS::LTSTATUS FileOrDirExists(const std::string& path, bool file);
             ///The following 2 functions format the buffer and write it as Little endian
             //does not increment fSize
-            bool WriteLeStream(std::fstream& stream,const char* data, std::streamsize size);
+            bool WriteLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
             //increments fSize by bytes written by default, if updating already written variable INCREMENT MUST BE FALSE
-            bool WriteLeStream(std::shared_ptr<FstreamInfo::TRDFilStreameInfo> info, const char* data, std::streamsize size,
+            bool WriteLeStream(FstreamInfo::TRDFilStreameInfo& info, const char* data, std::streamsize size,
                                                                                                         bool increment=true);
                 
                 
-            bool ReadLeStream(std::fstream& stream, char* s, std::streamsize size);
-            bool ReadLeStream(std::shared_ptr<FstreamInfo::TRDFilStreameInfo> info, char* s, std::streamsize size);
+            bool ReadLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
+            bool ReadLeStream(FstreamInfo::TRDFilStreameInfo& info, char* s, std::streamsize size);
     };
    
 

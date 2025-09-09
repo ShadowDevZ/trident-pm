@@ -32,7 +32,8 @@ constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
     {LTSTATUS::IOWRITE, "Failed to write file"},
     {LTSTATUS::CHKSUM, "CRC32 checksum has failed"},
     {LTSTATUS::NOTUID, "TUID token not found"},
-    {LTSTATUS::INVTUID, "Invalid TUID token"}
+    {LTSTATUS::INVTUID, "Invalid TUID token"},
+    {LTSTATUS::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"}
 };
 
 
