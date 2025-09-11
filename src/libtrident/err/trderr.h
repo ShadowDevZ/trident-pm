@@ -23,11 +23,11 @@ namespace LibTrident::LTSTATUS {
             FSEEK,
             HDRNP,
             HDRCRP,
-            IOREAD,
-            IOWRITE,
+            IOReadHeader,
+            IOWriteHeader,
             CHKSUM,
-            INVTUID,
-            NOTUID,
+            INVSUID,
+            NOSUID,
             IREF_EXPIRED,
             UNDEFINED = -1,
             
@@ -39,15 +39,15 @@ protected:
     LTSTATUS::LTSTATUS err = LTSTATUS::SUCCESS;
 public:
     LTSTATUS::LTSTATUS GetError();
-    std::string GetErrorAsString();
+    const char* GetErrorAsString();
     void SetError(const LTSTATUS::LTSTATUS code);
     void SetError(const LTSTATUS::TridentError& code);
     void Success();
-    
+    bool IsOk();
 
-    static std::string TranslateError(const LTSTATUS::LTSTATUS code);
+    static const char* TranslateError(const LTSTATUS::LTSTATUS code);
     friend std::ostream& operator<<(std::ostream& os, const TridentError& m) {
-        os << m.TranslateError(m.err);
+        os << std::string(m.TranslateError(m.err));
     return os;
 }
 

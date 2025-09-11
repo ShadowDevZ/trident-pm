@@ -25,11 +25,21 @@ using namespace LibTrident::Header;
 int TRDPkgHeader::GetHeaderByteSize() {
     return LT_HDR_SZB_01A;
 }
+bool TRDPkgHeader::ReadHeader() {
+    TRD_HEADER hdr;
+    bool status = ReadHeaderBack(hdr);
+    if (status && ValidateHeader(hdr) == LTSTATUS::SUCCESS) {
+        hdrInteral = hdr;
+        return true;
+    }
+   
+    return false;
+}
 
 
-bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
-    TRD_HEADER hdr = {};
-    
+
+bool TRDPkgHeader::ReadHeaderBack(TRD_HEADER& hdrOut) {
+    TRD_HEADER hdr { };
     hdrOut = hdr;
     auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
     if (!checkWeakRef) {
@@ -40,24 +50,25 @@ bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
         e.SetError(LTSTATUS::NULL_OBJ);
         return false;
     }
-    auto& fstrInfo = sharedPtr->GetFileStreamInfo();
+    auto& fstrInfo = sharedPtr->GetFstreamObject();
     auto& fstrStream = fstrInfo.hFile;
     
     std::streampos originalPosition = fstrStream->tellg();
-    fstrStream->seekg(0, std::ios::beg);
+    fstrStream->seekg(HDR_START_OFFSET, std::ios::beg);
     if (!fstrStream) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
-    if (!ICheckHeaderSize(hdr)) {
+    if (!ICheckHeaderSize(hdrInteral)) {
         e.SetError(LTSTATUS::HDRCRP);
         return false;
     }
     
-   // readStream.read(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
-    bool readStatus = PkgIO::FileOperations::ReadLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
-    if (!fstrStream|| !readStatus) {
-        e.SetError(LTSTATUS::IOREAD);
+   // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+
+    bool ReadHeaderStatus = PkgIO::FileOperations::ReadHeaderLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+    if (!fstrStream|| !ReadHeaderStatus) {
+        e.SetError(LTSTATUS::IOReadHeader);
         return false;
     }
 
@@ -66,50 +77,68 @@ bool TRDPkgHeader::ReadHeader(TRD_HEADER& hdrOut) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
-    if (!ValidateHeader(hdr)) {
+    if (ValidateHeader(hdr) != LTSTATUS::SUCCESS) {
         return false;
     }
     e.Success();
     hdrOut = hdr;
     return true;
 }
-bool TRDPkgHeader::IsWrittenHeaderValid() {
-    TRD_HEADER hdr = {};
-    bool status = ReadHeader(hdr);
-    if (!status) {
-        return false;
+
+bool TRDPkgHeader::IsValid() {
+    LTSTATUS::LTSTATUS status = ValidateHeader(hdrInteral);
+    e.SetError(status);
+    if (status == LTSTATUS::SUCCESS){
+        return true;
     }
-    return ValidateHeader(hdr);
+    return false;
+}
+
+LTSTATUS::LTSTATUS TRDPkgHeader::IsHeaderPresent(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) {
+    TRDPkgHeader hdr(fStreamInfo);
+    TRD_HEADER h;
+    bool status = hdr.ReadHeaderBack(h);
+    LTSTATUS::LTSTATUS errCode = hdr.e.GetError();
+    if (!status || errCode != LTSTATUS::SUCCESS || hdr.ValidateHeader(h) != LTSTATUS::SUCCESS) {
+        dbgprintf("header not present\n");
+        return errCode;
+    }
+    
+    return LTSTATUS::SUCCESS;
 
 }
 
-bool TRDPkgHeader::ValidateHeader(const TRD_HEADER& hdrIn) {
+
+
+LTSTATUS::LTSTATUS TRDPkgHeader::ValidateHeader(const TRD_HEADER& hdrIn) {
     if (!ICheckHeaderSize(hdrIn)) {
-        e.SetError(LTSTATUS::HDRNP);
-        return false;
+        return LTSTATUS::HDRNP;
     }
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdrIn.magic))) {
-        e.SetError(LTSTATUS::HDRNP);
-        return false;
+        return LTSTATUS::HDRNP;
     }
-    if (hdrIn.exSignature != HDR_EXTENDED_SIGNATURE) {
-        e.SetError(LTSTATUS::HDRCRP);
-        return false;
+    if (hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
+        return LTSTATUS::HDRCRP;
+    }
+    if (hdrIn.fmtVersion == 0) {
+        return LTSTATUS::BADARG;
     }
     if (!ICheckCRC(hdrIn.hdrChksum, hdrIn)) {
-        e.SetError(LTSTATUS::CHKSUM);
-        return false;
+        return LTSTATUS::CHKSUM;
+    }
+    if (hdrIn.fileLen == 0) {
+        return LTSTATUS::BADARG;
     }
     //todo check each field including signature
-    return true;
+    return LTSTATUS::OK;
 }
 
-bool TRDPkgHeader::WriteHeader(TRD_HEADER& hdrIn) {
-    if (!ICheckHeaderSize(hdrIn)) {
+bool TRDPkgHeader::WriteHeader() {
+    if (!ICheckHeaderSize(hdrInteral)) {
         e.SetError(LTSTATUS::HDRCRP);
         return false;
     }
-    if (!ValidateHeader(hdrIn)) {
+    if (!IsValid()) {
         return false;
     }
     auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
@@ -121,16 +150,21 @@ bool TRDPkgHeader::WriteHeader(TRD_HEADER& hdrIn) {
         e.SetError(LTSTATUS::NULL_OBJ);
         return false;
     }
-    auto& fstrInfo = sharedPtr->GetFileStreamInfo();
+    auto& fstrInfo = sharedPtr->GetFstreamObject();
     auto& fstrStream = fstrInfo.hFile;
 
 
-    auto hdrContent = reinterpret_cast<const char*>(&hdrIn);
-  //  streamInfo->hFile->write(hdrContent, GetHeaderByteSize());
-    bool writeStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, GetHeaderByteSize(), false);
+    const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
+  //  streamInfo->hFile->WriteHeader(hdrContent, GetHeaderByteSize());
+    fstrStream->seekp(HDR_START_OFFSET);
+    if (!fstrStream) {
+        e.SetError(LTSTATUS::FSEEK);
+        return false;
+    }
+    bool WriteHeaderStatus = PkgIO::FileOperations::WriteHeaderLeStream(fstrInfo, hdrContent, GetHeaderByteSize(), false);
    
-    if (!fstrStream || !writeStatus) {
-        e.SetError(LTSTATUS::IOWRITE);
+    if (!fstrStream || !WriteHeaderStatus) {
+        e.SetError(LTSTATUS::IOWriteHeader);
         return false;
     }
     
@@ -162,27 +196,36 @@ bool TRDPkgHeader::ICheckCRC(u32 crc, const TRD_HEADER& hdr) {
     return newCrc == crc;
 }
 
-
-bool TRDPkgHeader::CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType) {
+bool TRDPkgHeader::Create(u32 buildFlgs, u8 archType, u8 comprType) {
+    TRD_HDRFIELD_UPDATE update;
+    update.buildFlags = buildFlgs;
+    update.architecture = archType;
+    update.compression = comprType;
+    update.fmtVersion = FormatHeaderVersion(TRD_HDR_VMAJOR, TRD_HDR_VMINOR, TRD_HDR_VREVISION);
+    return Create(update);
+}
+bool TRDPkgHeader::Create(const TRD_HDRFIELD_UPDATE& field) {
     TRD_HEADER hdr;
     std::copy(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic));
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic))) {
         e.SetError(LTSTATUS::COPYOBJ);
         return false;
     }
-    hdr.exSignature = HDR_EXTENDED_SIGNATURE;
-    hdr.fmtVersion = FormatHeaderVersion(HDR_VMAJOR, HDR_VREVISION, HDR_VREVISION);
+    hdr.exSignature = TRD_HDR_EXTENDED_SIGNATURE;
+    hdr.fmtVersion = field.fmtVersion;
     if (hdr.fmtVersion == 0) {
+        e.SetError(LTSTATUS::BADARG);
         return false;
     }
-    hdr.compression = comprType;
-    hdr.buildFlags = buildFlgs;
-    hdr.architecture = archType;
+    hdr.compression = field.compression;
+    hdr.buildFlags = field.buildFlags;
+    hdr.architecture = field.architecture;
     hdr.hdrChksum = IGenerateHeaderCRC(hdr);
     
-    hdr.fileLen = 0;
+    hdr.fileLen = UINT64_MAX;
     hdr.ioCtrl = IOCTRL_CLEAR;
-    hdrOut = hdr;
+
+    hdrInteral = hdr;
     return true;
 }
 
@@ -194,7 +237,7 @@ u16 TRDPkgHeader::FormatHeaderVersion(u8 major, u8 minor, u8 revision) {
     char dst[6];
     std::snprintf(dst, sizeof(dst), "%02u%02u%01u", major, minor, revision);
     u16 r = (u16)std::strtoul(dst, NULL, 10);
-    //the r==0 is there only for readability because strtoul may return 0 on failure
+    //the r==0 is there only for ReadHeaderability because strtoul may return 0 on failure
     if (r == UINT16_MAX || r == 0 || r < LT_HDR_VERSION_MIN) {
         return 0;
     }
@@ -234,3 +277,47 @@ std::string TRDPkgHeader::HeaderVersionFormatToString(u16 fmt, bool abRevision) 
     return ss.str();
 
 }
+ bool TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD_UPDATE& update) {
+    TRD_HEADER hdr = hdrInteral;
+    hdr.architecture = update.architecture;
+    hdr.fmtVersion = update.fmtVersion;
+    hdr.compression = update.compression;
+    hdr.buildFlags = update.buildFlags;
+    hdr.hdrChksum = IGenerateHeaderCRC(hdr);
+
+    LTSTATUS::LTSTATUS err = ValidateHeader(hdr);
+    if (err != LTSTATUS::SUCCESS) {
+        e.SetError(err);
+        return false;
+    } 
+    hdrInteral = hdr;
+    e.Success();
+    
+    return WriteHeader();
+ }
+
+ bool TRDPkgHeader::SetIoctrl(u16 ioctrl, bool autoWrite) {
+    //todo check if valid
+    hdrInteral.ioCtrl = ioctrl;
+    e.Success();
+    
+    bool status = true;
+    if (autoWrite) {
+        status = WriteHeader();
+    }
+    
+    return status;
+}
+
+ bool TRDPkgHeader::SetFileLen(u64 len, bool autoWrite) {
+    //todo check if valid
+    hdrInteral.fileLen = len;
+    e.Success();
+
+    bool status = true;
+    if (autoWrite) {
+        status = WriteHeader();
+    }
+    
+    return status;
+ }

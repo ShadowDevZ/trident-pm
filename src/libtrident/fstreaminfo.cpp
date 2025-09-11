@@ -21,7 +21,7 @@ bool FstreamInfo::TrdFstreamInfo::CheckFileStreamInfo() {
     e.SetError(status);
     return false;
 }
-LibTrident::LTSTATUS::LTSTATUS  FstreamInfo::TrdFstreamInfo::StreamRemoteIsOpen(const TRDFilStreameInfo& info) {
+LibTrident::LTSTATUS::LTSTATUS  FstreamInfo::TrdFstreamInfo::StreamRemoteIsOpen(const TRDFstreamObject& info) {
     if (info.fileFlags & LibTrident::IOFLAGS::_I_IO_INVCLOSED) {
         return LTSTATUS::FOPEN;
     }
@@ -42,7 +42,7 @@ bool FstreamInfo::TrdFstreamInfo::IsOpen() {
     return false;
 }
 
-LTSTATUS::LTSTATUS TrdFstreamInfo::CloseRemoteStream(TRDFilStreameInfo& info) {
+LTSTATUS::LTSTATUS TrdFstreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
     info.fileFlags |= LibTrident::IOFLAGS::_I_IO_INVCLOSED;
     return LTSTATUS::SUCCESS;
 } 
@@ -56,7 +56,7 @@ bool FstreamInfo::TrdFstreamInfo::CloseStream() {
 }
 
 
-LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(const TRDFilStreameInfo& info) {
+LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObject& info) {
    
     LTSTATUS::LTSTATUS dirStatus = FileOperations::FileOrDirExists(info.dirPath, false);
     LTSTATUS::LTSTATUS fileStatus = FileOperations::FileOrDirExists(info.name, true);
@@ -72,14 +72,14 @@ LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(con
          dbgprintf("Error: ValidateRemoteFileStreamInfo() fopen\n");
         return LTSTATUS::FOPEN;
     }
-    if (info.fileFlags == 0 || info.seekOffsetRead == -1 || info.seekOffsetWrite == -1) {
+    if (info.fileFlags == 0 || info.seekOffsetReadHeader == -1 || info.seekOffsetWriteHeader == -1) {
         dbgprintf("Error: ValidateRemoteFileStreamInfo() access\n");
         return LTSTATUS::ACCESS;
     }
     return LTSTATUS::SUCCESS;
 }
 
-bool FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(const TRDFilStreameInfo& info) {
+bool FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
     
     LTSTATUS::LTSTATUS status = ValidateRemoteFileStreamInfo(info);
     if (status != LTSTATUS::SUCCESS) {

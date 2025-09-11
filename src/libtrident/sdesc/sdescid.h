@@ -6,7 +6,7 @@
 class TRDSdToken : LibTrident::PkgIO::Descriptor {
 private:
     std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
-    bool WriteTUIDAt(std::streampos loc);
+    bool WriteHeaderSUIDAt(std::streampos loc);
 
 public:
     LibTrident::LTSTATUS::TridentError e;
@@ -18,7 +18,7 @@ public:
     static foffset_t GetRawSD();
     static foffset_t GetRawSDEnd(); 
     
-    bool WriteDescriptorTUID(bool beg) override;
-    bool ReadDescriptorTUID(bool beg) override;
+    bool WriteHeaderDescriptorSUID(bool beg) override;
+    bool ReadHeaderDescriptorSUID(bool beg) override;
     u32  GenerateCRC() override;
 };

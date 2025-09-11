@@ -6,6 +6,4 @@ The project is highly WIP and is not production ready
 For documentation regarding the TRD format refer to https://github.com/ShadowDevZ/trident-format-spec
 # Used libraries
 - Libxml2
-- https://github.com/rxi/vec
 - Zlib
-- https://github.com/tezc/sc/blob/master/linked-list/

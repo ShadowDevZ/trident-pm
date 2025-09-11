@@ -11,7 +11,7 @@ bool LibTrident::TrPkg::ClosePkg() {
         dbgprintf("Error closing stream\n");
         return false;
     }
-    FstreamInfo::TRDFilStreameInfo& closeInfo =  fstrInfo->GetFileStreamInfo();
+    FstreamInfo::TRDFstreamObject& closeInfo =  fstrInfo->GetFstreamObject();
    
     closeInfo.dirPath = "";
     closeInfo.name = "";
@@ -59,15 +59,15 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
-    FstreamInfo::TRDFilStreameInfo fInfo;
+    FstreamInfo::TRDFstreamObject fInfo;
     
     fInfo.fileFlags = openFlags;
     fInfo.fSize = fileSize;
 
    // fInfo.hFile->seekg(0, std::ios::beg); 
-    fInfo.seekOffsetRead = static_cast<std::streampos>(0);
-    fInfo.seekOffsetWrite = static_cast<std::streampos>(0);
-    dbgprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffsetRead)); 
+    fInfo.seekOffsetReadHeader = static_cast<std::streampos>(0);
+    fInfo.seekOffsetWriteHeader = static_cast<std::streampos>(0);
+    dbgprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffsetReadHeader)); 
     dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
    
     fInfo.hFile = fsPkg;

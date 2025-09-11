@@ -21,6 +21,7 @@ constexpr int TRD_SECTIONSD_SIZE = sizeof(TRD_SD);
 class TRDSecDesc {
 private:
     std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> weakFstr;
+    TRD_SD secDescInternal;
 
 public:
     LTSTATUS::TridentError e;
@@ -28,17 +29,19 @@ public:
     weakFstr(fStreamInfo) {}
     TRDSecDesc(const TRDSecDesc& other) : weakFstr(other.weakFstr) {}
     TRDSecDesc(TRDSecDesc&& other) : weakFstr(std::move(other.weakFstr)) {}
+    
+    
     //creates blank section
     bool BlankSD();
     bool IsSDPresent();
     
-    bool ReadSD(TRD_SD& sd);
+    bool ReadHeaderSD(TRD_SD& sd);
     //updates information written to file
     bool UpdateSD(const TRD_SD& sd);
 
 private:
-    bool IWriteRawSD(const TRD_SD& sd);
-    bool IReadRawSD(TRD_SD& sd);
+    bool IWriteHeaderRawSD(const TRD_SD& sd);
+    bool IReadHeaderRawSD(TRD_SD& sd);
     //modifies written information, if present
     bool IModifySD(foffset_t off);
     //gets the starting position of SD table

@@ -90,9 +90,9 @@ void ReverseByteOrder( char* start, size_t size )
     char* byteEnd = start + size;
     std::reverse(start, byteEnd);
 }
-bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
+bool FileOperations::WriteHeaderLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
     if (!stream->is_open() || !data || size < 1) {
-        dbgprintf("Error: WriteLeStream() Failed\n");
+        dbgprintf("Error: WriteHeaderLeStream() Failed\n");
         return false;
     }
     if (_ICPU_IsLittleEndian()) {
@@ -111,26 +111,26 @@ bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const ch
     if (stream) {
         return true;
     }
-    dbgprintf("Error: WriteLeStream() Failed\n");
+    dbgprintf("Error: WriteHeaderLeStream() Failed\n");
     return !stream;
 }
             
- bool FileOperations::WriteLeStream(FstreamInfo::TRDFilStreameInfo& info, const char* data, std::streamsize size, bool increment) {
+ bool FileOperations::WriteHeaderLeStream(FstreamInfo::TRDFstreamObject& info, const char* data, std::streamsize size, bool increment) {
     if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != LTSTATUS::SUCCESS)  {
-        dbgprintf("Error: WriteLeStream(validate) Failed\n");
+        dbgprintf("Error: WriteHeaderLeStream(validate) Failed\n");
         return false;
     }
    
-    bool st = WriteLeStream(info.hFile, data, size);
+    bool st = WriteHeaderLeStream(info.hFile, data, size);
     if (st && increment) {
         info.fSize += size;
     }
     return st;
 }
 
-bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
+bool FileOperations::ReadHeaderLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
     if (!stream->is_open() || !s || size < 1) {
-        dbgprintf("Error: ReadLeStream() Failed\n");
+        dbgprintf("Error: ReadHeaderLeStream() Failed\n");
         return false;
     }
     char* data = new char[size];
@@ -157,9 +157,9 @@ bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s,
     delete[] data;
     return true;
 }
- bool FileOperations::ReadLeStream(FstreamInfo::TRDFilStreameInfo& info, char* s, std::streamsize size) {
+ bool FileOperations::ReadHeaderLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size) {
     if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != LTSTATUS::SUCCESS) {
         return false;
     }
-    return ReadLeStream(info.hFile, s, size);
+    return ReadHeaderLeStream(info.hFile, s, size);
 }

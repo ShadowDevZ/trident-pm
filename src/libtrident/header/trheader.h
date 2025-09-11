@@ -18,15 +18,25 @@ PACKED_STRUCT {
     u16 ioCtrl;
 
 }TRD_HEADER;
+
+typedef struct {
+    u16 fmtVersion;
+    u8 compression;
+    u32 buildFlags;
+    u8 architecture;
+}TRD_HDRFIELD_UPDATE;
+
 //when printing dont forget to add NULL terminator
 constexpr byte TRD_HDR_MAGIC[] = {
     0x93, 0x54, 0x52, 0x44, 0x21, 0x12, 0x2E, 0x53
 };//\223TRD!\x12.S
-constexpr u16 HDR_EXTENDED_SIGNATURE = 0xbf97;
-constexpr u8 HDR_VMAJOR = 1;
-constexpr u8 HDR_VMINOR = 0;
-constexpr u8 HDR_VREVISION = 0;
+constexpr u16 TRD_HDR_EXTENDED_SIGNATURE = 0xbf97;
+constexpr u8 TRD_HDR_VMAJOR = 1;
+constexpr u8 TRD_HDR_VMINOR = 0;
+constexpr u8 TRD_HDR_VREVISION = 0;
 
+
+constexpr u32 HDR_START_OFFSET = 0;
 typedef enum {
     COMMPRALG_NONE,
     COMPRALG_LZ4,
@@ -38,9 +48,6 @@ typedef enum {
     BF_PLATF_LINUX = 1 << 1,
     BF_PLATF_NT = 1 << 2,
     BF_DEBUG = 1 << 3,
-   
-
-
 }BUILD_FLAGS;
 
 typedef enum {
@@ -52,8 +59,8 @@ typedef enum {
 
 typedef enum {
     IOCTRL_CLEAR = 0,
-    IOCTRL_READLKALL = 1 << 1,
-    IOCTRL_WRITELKKALL = 1 << 2,
+    IOCTRL_ReadHeaderLKALL = 1 << 1,
+    IOCTRL_WriteHeaderLKKALL = 1 << 2,
     IOCTRL_DSEC_RLOCK = 1 << 3,
     IOCTRL_DESC_WLOCK = 1 << 4,
     IOCTRL_TREG_RLOCK = 1 << 5,
@@ -74,26 +81,40 @@ public:
     
 
     LTSTATUS::TridentError e;
-    bool CreateNewHeader(TRD_HEADER& hdrOut, u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
-    bool WriteHeader(TRD_HEADER& hdrIn);
-    bool ReadHeader(TRD_HEADER& hdrOut);
-    bool UpdateHeader(TRD_HEADER& hdrInfo);
-    //Flushes info to the file without closing FD
+ 
+
+    const TRD_HEADER& GetInternal() const { 
+        return hdrInteral;
+    }
+    bool Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
+    bool Create(const TRD_HDRFIELD_UPDATE& field);
+    bool WriteHeader();
+    bool ReadHeader();
+    bool ReadHeaderBack(TRD_HEADER& hdrOut);
+
+    
+    bool UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
+    bool SetIoctrl(u16 ioctrl, bool autoWrite=true);
+    bool SetFileLen(u64 len, bool autoWrite=true);
    
-    bool ValidateHeader(const TRD_HEADER& hdrIn);
+    
+    bool IsValid();
+    static LTSTATUS::LTSTATUS ValidateHeader(const TRD_HEADER& hdrIn);
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
-    bool IsWrittenHeaderValid();
+    
+    static LTSTATUS::LTSTATUS IsHeaderPresent(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo);
     static int GetHeaderByteSize();
     
   
 private:
 std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
+TRD_HEADER hdrInteral;
 //TRD_HEADER cacheHdr;
 static u32 IGenerateHeaderCRC(const TRD_HEADER& hdr);
 static bool ICheckCRC(u32 crc, const TRD_HEADER& hdr);
 static bool ICheckHeaderSize(const TRD_HEADER& hdr);
-//std::pair<bool,FstreamInfo::TRDFilStreameInfo&> ICheckAndGetFstreamContent();
+//std::pair<bool,FstreamInfo::TRDFstreamObject&> ICheckAndGetFstreamContent();
 
 
 //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);

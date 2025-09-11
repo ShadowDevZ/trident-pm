@@ -2,7 +2,7 @@
 #include <string.h>
 #include <iostream>
 #include "libtrident.h"
-#include "tuid.h"
+#include "suid.h"
 
 #ifdef _LIBTRIDENT_DEBUG
 #include "sdescid.h"
@@ -19,7 +19,7 @@ std::cout << "Target: Release\n";
 }
 
 #ifdef _LIBTRIDENT_DEBUG
-void print_header(LibTrident::Header::TRD_HEADER& hdr) {
+void print_header(const LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
     for (auto const& it: hdr.magic) {
@@ -54,8 +54,8 @@ int main(void) {
     }
 #endif
    // return 0;
-    LibTrident::Header::TRD_HEADER h;
-    LibTrident::Header::TRD_HEADER hdrReadBack;
+    //LibTrident::Header::TRD_HEADER h;
+    //LibTrident::Header::TRD_HEADER hdrReadHeaderBack;
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
 #ifdef _LIBTRIDENT_DEBUG
     TRDSdToken tokenId(lt.fstrInfo);
@@ -63,28 +63,45 @@ int main(void) {
 
     
 
-   // std::cout << lt.fstrInfo->GetFileStreamInfo()->name;
+   // std::cout << lt.fstrInfo->GetFstreamObject()->name;
     
     
    std::cout << std::boolalpha;
-   std::cout << "CreateHeader()" <<x.CreateNewHeader(h, BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
+   std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
 #ifdef _LIBTRIDENT_DEBUG
-   print_header(h);
+   print_header(x.GetInternal());
 #endif
-   std::cout << "WriteHeader() " << x.WriteHeader(h) << std::endl;
-   std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
-    std::cout << "HeaderPresent() " << x.ReadHeader(hdrReadBack) << std::endl;
+   std::cout << "WriteHeaderHeader() " << x.WriteHeader() << std::endl;
+  // std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
+    std::cout << "ReadHeader() " << x.ReadHeader() << std::endl;
+    std::cout << std::endl;
+    TRD_HDRFIELD_UPDATE updateField;
+    updateField.architecture = ARCHT_AARCH64;
+    updateField.buildFlags = BF_PLATF_NT;
+    updateField.compression = COMPRALG_GZIP;
+    updateField.fmtVersion = TRDPkgHeader::FormatHeaderVersion(3,1,2);
+    std::cout << "UpdateHeader() " << x.UpdateHeader(updateField) << std::endl;
+ 
+    std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
+    print_header(x.GetInternal());   
+    std::cout << std::endl;
+    std::cout << "ModifyLen() " << x.SetFileLen(0xbeefccaa, true) << std::endl;
+    std::cout << "ModifyIOCTRL() " << x.SetIoctrl(IOCTRL_DSEC_RLOCK, true) << std::endl;
+    std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
+    print_header(x.GetInternal());   
+
 #ifdef _LIBTRIDENT_DEBUG
-    std::cout << "WriteSDToken(beg)" << tokenId.WriteDescriptorTUID(true) << std::endl;
+    std::cout << "WriteHeaderSDToken(beg)" << tokenId.WriteHeaderDescriptorSUID(true) << std::endl;
     //temporary replacement for BlankSD();
     if (lt.fstrInfo->CheckFileStreamInfo()) {
-        lt.fstrInfo->GetFileStreamInfo().hFile->seekp(70);
+        lt.fstrInfo->GetFstreamObject().hFile->seekp(70);
 
     }
    // char data[200] = {0};
-   // lt.fstrInfo->GetFileStreamInfo()->hFile->write(data, 200);
-     std::cout << "WriteSDToken(end)" << tokenId.WriteDescriptorTUID(false) << std::endl;
+   // lt.fstrInfo->GetFstreamObject()->hFile->WriteHeader(data, 200);
+     std::cout << "WriteHeaderSDToken(end)" << tokenId.WriteHeaderDescriptorSUID(false) << std::endl;
 #endif
+   
     std::cout << std::noboolalpha;
     std::cout << x.e.GetErrorAsString() << std::endl;
    // std::cout << TRDPkgHeader::GetHeaderByteSize() + 1 + TUID::TUID_MAX_LENGTH + 1;

@@ -28,11 +28,11 @@ constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
     {LTSTATUS::FSEEK, "Failed to set seek pointer"},
     {LTSTATUS::HDRNP, "Header is missing"},
     {LTSTATUS::HDRCRP, "Header data tags corrupted"},
-    {LTSTATUS::IOREAD, "Failed to read file"},
-    {LTSTATUS::IOWRITE, "Failed to write file"},
+    {LTSTATUS::IOReadHeader, "Failed to ReadHeader file"},
+    {LTSTATUS::IOWriteHeader, "Failed to WriteHeader file"},
     {LTSTATUS::CHKSUM, "CRC32 checksum has failed"},
-    {LTSTATUS::NOTUID, "TUID token not found"},
-    {LTSTATUS::INVTUID, "Invalid TUID token"},
+    {LTSTATUS::NOSUID, "SUID token not found"},
+    {LTSTATUS::INVSUID, "Invalid SUID token"},
     {LTSTATUS::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"}
 };
 
@@ -42,6 +42,13 @@ constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
 LTSTATUS::LTSTATUS LTSTATUS::TridentError::GetError() {
     return err;
 }
+bool LTSTATUS::TridentError::IsOk() {
+    if (err == LTSTATUS::SUCCESS) {
+        return true;
+    }
+    return false;
+}
+
 void LTSTATUS::TridentError::SetError(const LTSTATUS::LTSTATUS code) {
     err = code;
 }
@@ -51,17 +58,17 @@ void LTSTATUS::TridentError::SetError(const LTSTATUS::TridentError& code) {
 void LTSTATUS::TridentError::Success() {
     err = SUCCESS;
 }
-std::string LTSTATUS::TridentError::TranslateError(const LTSTATUS::LTSTATUS code) {
+const char* LTSTATUS::TridentError::TranslateError(const LTSTATUS::LTSTATUS code) {
    
    for (auto&&  x: gErrorMessages)  {
         if (x.first == code) {
-            std::string errMsg(x.second);
-            return errMsg;
+            
+            return x.second;
         }
    }
    
    return "Undefined Error";
 }
-std::string LTSTATUS::TridentError::GetErrorAsString() {
+const char* LTSTATUS::TridentError::GetErrorAsString() {
     return TridentError::TranslateError(TridentError::GetError());
 }

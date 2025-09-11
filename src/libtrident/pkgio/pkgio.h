@@ -42,24 +42,24 @@ namespace LibTrident::PkgIO {
             std::string GetFileDir(const std::string& file);
             std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
             LibTrident::LTSTATUS::LTSTATUS FileOrDirExists(const std::string& path, bool file);
-            ///The following 2 functions format the buffer and write it as Little endian
+            ///The following 2 functions format the buffer and WriteHeader it as Little endian
             //does not increment fSize
-            bool WriteLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
-            //increments fSize by bytes written by default, if updating already written variable INCREMENT MUST BE FALSE
-            bool WriteLeStream(FstreamInfo::TRDFilStreameInfo& info, const char* data, std::streamsize size,
+            bool WriteHeaderLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
+            //increments fSize by bytes written by default, if updating alReadHeadery written variable INCREMENT MUST BE FALSE
+            bool WriteHeaderLeStream(FstreamInfo::TRDFstreamObject& info, const char* data, std::streamsize size,
                                                                                                         bool increment=true);
                 
                 
-            bool ReadLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
-            bool ReadLeStream(FstreamInfo::TRDFilStreameInfo& info, char* s, std::streamsize size);
+            bool ReadHeaderLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
+            bool ReadHeaderLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size);
     };
    
 
     class Descriptor {
         public:
             //beg=true mean beginning of section, beg=false end of section
-            virtual bool WriteDescriptorTUID(bool beg) = 0;
-            virtual bool ReadDescriptorTUID(bool beg) = 0;
+            virtual bool WriteHeaderDescriptorSUID(bool beg) = 0;
+            virtual bool ReadHeaderDescriptorSUID(bool beg) = 0;
             virtual u32  GenerateCRC() = 0;
             //finds first occurence of token in stream using Boyer Moore Horsepool
             static std::streampos FindDescriptorToken(std::string uuid);

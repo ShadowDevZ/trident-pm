@@ -35,6 +35,8 @@ file(GLOB_RECURSE APP_TRD_SRC src/app/*.cpp)
 file(GLOB_RECURSE TRD_IMG_BUILDER src/imgb/*.cpp)
 file(GLOB_RECURSE LIBS_EXTERNAL src/libs/*.cpp)
 
+
+
 # --- Library target ---
 add_library(${TRDLIB} SHARED ${LIB_TRD_SRC})
 target_include_directories(${TRDLIB} PUBLIC
@@ -46,6 +48,7 @@ target_include_directories(${TRDLIB} PUBLIC
     src/libtrident/utils
     src/libtrident/utils/tuid
     src/libtrident/sdesc
+    src/libtrident/utils/uid/suid
 )
 ###target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 ###target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
