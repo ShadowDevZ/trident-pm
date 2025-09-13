@@ -3,13 +3,12 @@
 #include <iostream>
 #include "libtrident.h"
 #include "suid.h"
+#include "sdesc.h"
 
-#ifdef _LIBTRIDENT_DEBUG
-#include "sdescid.h"
-#endif
+
 using namespace LibTrident;
 using namespace LibTrident::Header;
-
+using namespace LibTrident::SectionDescriptor;
 void PrintBuildTarget() {
 #ifdef _LIBTRIDENT_DEBUG
 std::cout << "Target: Debug\n\n";    
@@ -17,6 +16,8 @@ std::cout << "Target: Debug\n\n";
 std::cout << "Target: Release\n"; 
 #endif
 }
+#include <vector>
+
 
 #ifdef _LIBTRIDENT_DEBUG
 void print_header(const LibTrident::Header::TRD_HEADER& hdr) {
@@ -53,18 +54,14 @@ int main(void) {
         return 1;
     }
 #endif
-   // return 0;
-    //LibTrident::Header::TRD_HEADER h;
-    //LibTrident::Header::TRD_HEADER hdrReadHeaderBack;
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
 #ifdef _LIBTRIDENT_DEBUG
-    TRDSdToken tokenId(lt.fstrInfo);
+  
 #endif
 
     
 
-   // std::cout << lt.fstrInfo->GetFstreamObject()->name;
-    
+   
     
    std::cout << std::boolalpha;
    std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
@@ -90,22 +87,14 @@ int main(void) {
     std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
     print_header(x.GetInternal());   
 
-#ifdef _LIBTRIDENT_DEBUG
-    std::cout << "WriteHeaderSDToken(beg)" << tokenId.WriteHeaderDescriptorSUID(true) << std::endl;
-    //temporary replacement for BlankSD();
-    if (lt.fstrInfo->CheckFileStreamInfo()) {
-        lt.fstrInfo->GetFstreamObject().hFile->seekp(70);
-
-    }
-   // char data[200] = {0};
-   // lt.fstrInfo->GetFstreamObject()->hFile->WriteHeader(data, 200);
-     std::cout << "WriteHeaderSDToken(end)" << tokenId.WriteHeaderDescriptorSUID(false) << std::endl;
-#endif
+    TRDSecDesc sectionDesc(lt.fstrInfo);
+    std::cout << "WriteBlankSD() " << sectionDesc.WriteBlankSD() << std::endl;
+    
+    
    
     std::cout << std::noboolalpha;
     std::cout << x.e.GetErrorAsString() << std::endl;
-   // std::cout << TRDPkgHeader::GetHeaderByteSize() + 1 + TUID::TUID_MAX_LENGTH + 1;
-
+   
     lt.ClosePkg();
     std::cout << "Exit(0)\n";
     return 0;

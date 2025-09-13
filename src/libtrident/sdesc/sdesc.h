@@ -14,38 +14,65 @@ PACKED_STRUCT {
     u64 _reserved0;
 }TRD_SD;
 
+typedef struct {
+    u32 tblCount;
+    u64 tblDynamicOffset;
+    u64 tblRegistryOffset;
+}TRD_SD_UPDATEFIELD;
 
-constexpr int TRD_SECTIONSD_SIZE = sizeof(TRD_SD);
+
+
 
 
 class TRDSecDesc {
 private:
-    std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> weakFstr;
+    std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
     TRD_SD secDescInternal;
 
 public:
     LTSTATUS::TridentError e;
     TRDSecDesc(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
-    weakFstr(fStreamInfo) {}
-    TRDSecDesc(const TRDSecDesc& other) : weakFstr(other.weakFstr) {}
-    TRDSecDesc(TRDSecDesc&& other) : weakFstr(std::move(other.weakFstr)) {}
+    wFstr(fStreamInfo) {}
+    TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
+    TRDSecDesc(TRDSecDesc&& other) : wFstr(std::move(other.wFstr)) {}
     
+    const TRD_SD& GetInternal() const { 
+        return secDescInternal;
+    }
+    TRD_SD& GetInternal() { 
+        return secDescInternal;
+    }
+   
     
-    //creates blank section
-    bool BlankSD();
-    bool IsSDPresent();
+   //creates blank section
+   //we cant really create it like header because there is 0 initial information to append during sequentional 
+   //initialization as there are 0 tables
     
-    bool ReadHeaderSD(TRD_SD& sd);
-    //updates information written to file
-    bool UpdateSD(const TRD_SD& sd);
+   //Create()
+    bool WriteBlankSD();
 
+    bool IsSDValid();
+    static LTSTATUS::LTSTATUS IsSDPresent();
+    
+    bool ReadSD(TRD_SD& sd);
+    //updates information written to file
+    bool UpdateSD(const TRD_SD_UPDATEFIELD& sd);
+    
+    bool UpdateSDTblCount(u32 tblCount);
+    bool UpdateSDDynOffset(u64 dynOffset);
+    bool UpdateSDRegOffset(u64 tregOffset);
+    
+    
+    bool CreateSDAtOffset(foffset_t offset);
+    static foffset_t GetSDAddress();
+    static foffset_t GetSDEnd();
 private:
-    bool IWriteHeaderRawSD(const TRD_SD& sd);
-    bool IReadHeaderRawSD(TRD_SD& sd);
-    //modifies written information, if present
-    bool IModifySD(foffset_t off);
-    //gets the starting position of SD table
-    foffset_t IGetSDAddress();
+    u32 ICalculateChecksum();
+    //gets the starting position of SD table, private because by default SD table is written right after header
+    //booyer moore horsepool
+    //
+    foffset_t FindSDAddress();
+    
   
 
 

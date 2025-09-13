@@ -2,14 +2,15 @@
 #include <sstream>
 #include <zlib.h>
 #include "pkgio.h"
+
 using namespace LibTrident;
 using namespace LibTrident::Header;
-
+using namespace LibTrident::Consts::HeaderConsts;
 
 //we are intentionally not using sizeof()
 //each different version of header will have different size
 //we want to avoid the approach of the ms's solution with cbSize
-#define LT_HDR_SZB_01A 32
+
 //01.0.0
 #define LT_HDR_VERSION_MIN 1000
 
@@ -22,9 +23,7 @@ using namespace LibTrident::Header;
 
 
 //in future this might get overloaded with something like int version
-int TRDPkgHeader::GetHeaderByteSize() {
-    return LT_HDR_SZB_01A;
-}
+
 bool TRDPkgHeader::ReadHeader() {
     TRD_HEADER hdr;
     bool status = ReadHeaderBack(hdr);
@@ -54,7 +53,7 @@ bool TRDPkgHeader::ReadHeaderBack(TRD_HEADER& hdrOut) {
     auto& fstrStream = fstrInfo.hFile;
     
     std::streampos originalPosition = fstrStream->tellg();
-    fstrStream->seekg(HDR_START_OFFSET, std::ios::beg);
+    fstrStream->seekg(TRD_HDR_START_OFFSET, std::ios::beg);
     if (!fstrStream) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
@@ -66,9 +65,9 @@ bool TRDPkgHeader::ReadHeaderBack(TRD_HEADER& hdrOut) {
     
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
-    bool ReadHeaderStatus = PkgIO::FileOperations::ReadHeaderLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+    bool ReadHeaderStatus = PkgIO::FileOperations::ReadLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), LT_HDR_SZB_01A);
     if (!fstrStream|| !ReadHeaderStatus) {
-        e.SetError(LTSTATUS::IOReadHeader);
+        e.SetError(LTSTATUS::IO_READ);
         return false;
     }
 
@@ -84,7 +83,6 @@ bool TRDPkgHeader::ReadHeaderBack(TRD_HEADER& hdrOut) {
     hdrOut = hdr;
     return true;
 }
-
 bool TRDPkgHeader::IsValid() {
     LTSTATUS::LTSTATUS status = ValidateHeader(hdrInteral);
     e.SetError(status);
@@ -156,15 +154,15 @@ bool TRDPkgHeader::WriteHeader() {
 
     const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
   //  streamInfo->hFile->WriteHeader(hdrContent, GetHeaderByteSize());
-    fstrStream->seekp(HDR_START_OFFSET);
+    fstrStream->seekp(TRD_HDR_START_OFFSET);
     if (!fstrStream) {
         e.SetError(LTSTATUS::FSEEK);
         return false;
     }
-    bool WriteHeaderStatus = PkgIO::FileOperations::WriteHeaderLeStream(fstrInfo, hdrContent, GetHeaderByteSize(), false);
+    bool WriteHeaderStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, LT_HDR_SZB_01A, false);
    
     if (!fstrStream || !WriteHeaderStatus) {
-        e.SetError(LTSTATUS::IOWriteHeader);
+        e.SetError(LTSTATUS::IO_WRITE);
         return false;
     }
     
@@ -174,7 +172,7 @@ bool TRDPkgHeader::WriteHeader() {
 
 
 bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
-    if (sizeof(hdr) != GetHeaderByteSize()) {
+    if (sizeof(hdr) != LT_HDR_SZB_01A) {
         return false;
     }
     return true;

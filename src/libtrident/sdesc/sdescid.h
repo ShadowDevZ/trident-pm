@@ -1,13 +1,13 @@
 //internal, not to be exposed to the end user/dev
-
+#pragma once
 #include "pkgio.h"
 #include "trderr.h"
+#include "trdconsts.h"
+
 
 class TRDSdToken : LibTrident::PkgIO::Descriptor {
 private:
     std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
-    bool WriteHeaderSUIDAt(std::streampos loc);
-
 public:
     LibTrident::LTSTATUS::TridentError e;
     TRDSdToken(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
@@ -15,10 +15,15 @@ public:
     TRDSdToken(const TRDSdToken& other) : wFstr(other.wFstr) {}
     TRDSdToken(TRDSdToken&& other) : wFstr(std::move(other.wFstr)) {}
 
-    static foffset_t GetRawSD();
-    static foffset_t GetRawSDEnd(); 
+    static constexpr foffset_t GetOptRawSDStart() {
+        return LibTrident::Consts::HeaderConsts::LT_HDR_SZB_01A;
+    }
     
-    bool WriteHeaderDescriptorSUID(bool beg) override;
-    bool ReadHeaderDescriptorSUID(bool beg) override;
+    static constexpr foffset_t GetRawSDEnd() {
+        return GetOptRawSDStart() + LibTrident::Consts::SD::TRD_SECTIONSD_SIZE;
+    }
+    
+    bool WriteDescriptorSUID() override;
+    bool ReadDescriptorSUID() override;
     u32  GenerateCRC() override;
 };

@@ -4,6 +4,7 @@
 #include "ccattribs.h"
 #include "ccattribs.h"
 #include <algorithm>
+
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
 using namespace LibTrident::PkgIO::FileOperations;
@@ -52,6 +53,20 @@ fail:
 
   
 }
+bool FileOperations::GetFileStats(const char* file, struct stat64& statOut) {
+    //yes i know on x86 stat is always evaluated to stat64, better be safe then sorry
+    struct stat64 fileStat = { };
+  
+    bool ret = false;
+    if (file && stat64(file, &fileStat) == 0) {
+        
+        ret = true;
+    };
+    //most likely not the best approach, but i dont want to use pointers
+    statOut = fileStat;
+    return ret;
+        
+}
 
 LibTrident::LTSTATUS::LTSTATUS FileOperations::FileOrDirExists(const std::string& path, bool file) {
     
@@ -64,8 +79,8 @@ LibTrident::LTSTATUS::LTSTATUS FileOperations::FileOrDirExists(const std::string
             fullPath = path.substr(0, pos - 1);
     }
 }
-     struct stat dStat;
-    if (stat(fullPath.c_str(), &dStat) != 0) {
+     struct stat64 dStat;
+    if (!GetFileStats(path.c_str(), dStat)) {
       //  e.SetError(LTSTATUS::INVFILE);
         return LTSTATUS::INVFILE;
     }
@@ -90,9 +105,9 @@ void ReverseByteOrder( char* start, size_t size )
     char* byteEnd = start + size;
     std::reverse(start, byteEnd);
 }
-bool FileOperations::WriteHeaderLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
+bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
     if (!stream->is_open() || !data || size < 1) {
-        dbgprintf("Error: WriteHeaderLeStream() Failed\n");
+        dbgprintf("Error: WriteLeStream() Failed\n");
         return false;
     }
     if (_ICPU_IsLittleEndian()) {
@@ -111,26 +126,26 @@ bool FileOperations::WriteHeaderLeStream(std::shared_ptr<std::fstream> stream,co
     if (stream) {
         return true;
     }
-    dbgprintf("Error: WriteHeaderLeStream() Failed\n");
+    dbgprintf("Error: WriteLeStream() Failed\n");
     return !stream;
 }
             
- bool FileOperations::WriteHeaderLeStream(FstreamInfo::TRDFstreamObject& info, const char* data, std::streamsize size, bool increment) {
+ bool FileOperations::WriteLeStream(FstreamInfo::TRDFstreamObject& info, const char* data, std::streamsize size, bool increment) {
     if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != LTSTATUS::SUCCESS)  {
-        dbgprintf("Error: WriteHeaderLeStream(validate) Failed\n");
+        dbgprintf("Error: WriteLeStream(validate) Failed\n");
         return false;
     }
    
-    bool st = WriteHeaderLeStream(info.hFile, data, size);
+    bool st = WriteLeStream(info.hFile, data, size);
     if (st && increment) {
         info.fSize += size;
     }
     return st;
 }
 
-bool FileOperations::ReadHeaderLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
+bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
     if (!stream->is_open() || !s || size < 1) {
-        dbgprintf("Error: ReadHeaderLeStream() Failed\n");
+        dbgprintf("Error: ReadLeStream() Failed\n");
         return false;
     }
     char* data = new char[size];
@@ -157,9 +172,11 @@ bool FileOperations::ReadHeaderLeStream(std::shared_ptr<std::fstream> stream, ch
     delete[] data;
     return true;
 }
- bool FileOperations::ReadHeaderLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size) {
+ bool FileOperations::ReadLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size) {
     if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != LTSTATUS::SUCCESS) {
         return false;
     }
-    return ReadHeaderLeStream(info.hFile, s, size);
+    return ReadLeStream(info.hFile, s, size);
 }
+
+//todo use ReadLeStream()

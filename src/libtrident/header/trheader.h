@@ -4,6 +4,7 @@
 #include "datatypes.h"
 #include "ccattribs.h"
 #include "fstreaminfo.h"
+#include "trdconsts.h"
 namespace LibTrident::Header {
 
 PACKED_STRUCT {
@@ -26,17 +27,7 @@ typedef struct {
     u8 architecture;
 }TRD_HDRFIELD_UPDATE;
 
-//when printing dont forget to add NULL terminator
-constexpr byte TRD_HDR_MAGIC[] = {
-    0x93, 0x54, 0x52, 0x44, 0x21, 0x12, 0x2E, 0x53
-};//\223TRD!\x12.S
-constexpr u16 TRD_HDR_EXTENDED_SIGNATURE = 0xbf97;
-constexpr u8 TRD_HDR_VMAJOR = 1;
-constexpr u8 TRD_HDR_VMINOR = 0;
-constexpr u8 TRD_HDR_VREVISION = 0;
 
-
-constexpr u32 HDR_START_OFFSET = 0;
 typedef enum {
     COMMPRALG_NONE,
     COMPRALG_LZ4,
@@ -71,7 +62,6 @@ typedef enum {
 
 
 
-
 class TRDPkgHeader  {
 public:
     TRDPkgHeader(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
@@ -86,6 +76,10 @@ public:
     const TRD_HEADER& GetInternal() const { 
         return hdrInteral;
     }
+    TRD_HEADER& GetInternal() { 
+        return hdrInteral;
+    }
+
     bool Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
     bool Create(const TRD_HDRFIELD_UPDATE& field);
     bool WriteHeader();
@@ -104,7 +98,7 @@ public:
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     
     static LTSTATUS::LTSTATUS IsHeaderPresent(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo);
-    static int GetHeaderByteSize();
+    
     
   
 private:

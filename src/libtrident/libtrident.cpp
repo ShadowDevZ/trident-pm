@@ -65,16 +65,22 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
     fInfo.fSize = fileSize;
 
    // fInfo.hFile->seekg(0, std::ios::beg); 
-    fInfo.seekOffsetReadHeader = static_cast<std::streampos>(0);
-    fInfo.seekOffsetWriteHeader = static_cast<std::streampos>(0);
-    dbgprintf("Seek offset %lu\n", static_cast<u64>(fInfo.seekOffsetReadHeader)); 
+    
+    dbgprintf("Seek offset %lu\n", static_cast<u64>(fsPkg->tellg())); 
     dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
    
     fInfo.hFile = fsPkg;
     fInfo.dirPath = dirPath;
     
     fInfo.name = path;
-    
+
+    struct stat64 flStat;
+    if (!FileOperations::GetFileStats(path.c_str(), flStat)) {
+        e.SetError(LTSTATUS::FOPEN);
+        return false;
+    }
+    fInfo.fileStat = flStat;
+
     if (!fstrInfo->SetFileStreamInfo(fInfo)) {
         e.SetError(fstrInfo->e.GetError());
         return false;

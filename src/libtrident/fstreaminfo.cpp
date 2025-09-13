@@ -72,7 +72,7 @@ LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(con
          dbgprintf("Error: ValidateRemoteFileStreamInfo() fopen\n");
         return LTSTATUS::FOPEN;
     }
-    if (info.fileFlags == 0 || info.seekOffsetReadHeader == -1 || info.seekOffsetWriteHeader == -1) {
+    if (info.fileFlags == 0) {
         dbgprintf("Error: ValidateRemoteFileStreamInfo() access\n");
         return LTSTATUS::ACCESS;
     }

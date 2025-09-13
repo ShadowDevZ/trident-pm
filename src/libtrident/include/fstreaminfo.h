@@ -2,17 +2,19 @@
 #include "trderr.h"
 #include <memory>
 #include "datatypes.h"
+#include <sys/stat.h>
 namespace LibTrident::FstreamInfo {
 
 typedef struct {
+    //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation
     std::string dirPath;
     std::string name;
     std::shared_ptr<std::fstream> hFile;
-    std::streampos seekOffsetReadHeader;
-    std::streampos seekOffsetWriteHeader;
-    //does not represent actual file size, but sizeof(whole file - header)
+    //does not represent actual file size, but sizeof(whole file - header), not utilized yet
     std::streamsize fSize;
     IO_OpenFlag fileFlags;
+    //for future use, atime
+    struct stat64 fileStat;
 
 }TRDFstreamObject;
 
