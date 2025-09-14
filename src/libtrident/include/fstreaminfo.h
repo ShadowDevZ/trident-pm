@@ -3,6 +3,7 @@
 #include <memory>
 #include "datatypes.h"
 #include <sys/stat.h>
+#include <optional>
 namespace LibTrident::FstreamInfo {
 
 typedef struct {
@@ -42,7 +43,7 @@ public:
     
    static LibTrident::LTSTATUS::LTSTATUS StreamRemoteIsOpen(const TRDFstreamObject& info);
    static LTSTATUS::LTSTATUS CloseRemoteStream(TRDFstreamObject& info);
-   static std::pair<bool, std::shared_ptr<FstreamInfo::TrdFstreamInfo>> GetFstreamContent(std::weak_ptr<FstreamInfo::TrdFstreamInfo> weakFstr);
+   static std::optional<std::shared_ptr<FstreamInfo::TrdFstreamInfo>> GetFstreamContent(std::weak_ptr<FstreamInfo::TrdFstreamInfo> weakFstr);
    static LibTrident::LTSTATUS::LTSTATUS ValidateRemoteFileStreamInfo(const TRDFstreamObject& info);
 };
 

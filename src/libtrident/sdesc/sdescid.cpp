@@ -27,11 +27,12 @@ foffset_t GetSDEnd() {
 
 
 bool TRDSdToken::WriteDescriptorSUID() {
-    auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
-    if (!checkWeakRef) {
+    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!haveCtx.has_value()) {
         e.SetError(LTSTATUS::IREF_EXPIRED);
         return false;
     }
+    auto sharedPtr = haveCtx.value();
     if (!sharedPtr->CheckFileStreamInfo()) {
         e.SetError(LTSTATUS::NULL_OBJ);
         return false;

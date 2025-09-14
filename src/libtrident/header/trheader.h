@@ -84,34 +84,34 @@ public:
     bool Create(const TRD_HDRFIELD_UPDATE& field);
     bool WriteHeader();
     bool ReadHeader();
-    bool ReadHeaderBack(TRD_HEADER& hdrOut);
-
+    
     
     bool UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
-    bool SetIoctrl(u16 ioctrl, bool autoWrite=true);
-    bool SetFileLen(u64 len, bool autoWrite=true);
-   
+    bool UpdateIoctrlProp(u16 ioctrl);
+    bool UpdateFileLenProp(u64 len);
+    
     
     bool IsValid();
-    static LTSTATUS::LTSTATUS ValidateHeader(const TRD_HEADER& hdrIn);
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     
-    static LTSTATUS::LTSTATUS IsHeaderPresent(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo);
+    static LTSTATUS::LTSTATUS IsHeaderPresent(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo);
     
     
-  
-private:
-std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
-TRD_HEADER hdrInteral;
-//TRD_HEADER cacheHdr;
-static u32 IGenerateHeaderCRC(const TRD_HEADER& hdr);
-static bool ICheckCRC(u32 crc, const TRD_HEADER& hdr);
-static bool ICheckHeaderSize(const TRD_HEADER& hdr);
-//std::pair<bool,FstreamInfo::TRDFstreamObject&> ICheckAndGetFstreamContent();
-
-
-//static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
-
+    
+    private:
+    std::optional<TRD_HEADER> IReadHeaderBack();
+    std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
+    TRD_HEADER hdrInteral;
+    //TRD_HEADER cacheHdr;
+   
+    bool ICheckCRC(u32 crc, const TRD_HEADER& hdr);
+    bool ICheckHeaderSize(const TRD_HEADER& hdr);
+    bool IValidateHeader(const TRD_HEADER& hdrIn);
+    //std::pair<bool,FstreamInfo::TRDFstreamObject&> ICheckAndGetFstreamContent();
+    
+    
+    //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
+    
 };
 };

@@ -44,10 +44,7 @@ bool SUID::IsValidSUID(const char* tuid) {
 
 LTSTATUS::LTSTATUS SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
    
-   // auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
-   // if (!checkWeakRef) {
-   //     e.SetError(LTSTATUS::IREF_EXPIRED);
-   //     return false;
+   
     if (loc < 1) {
         return LTSTATUS::BADARG;
     }

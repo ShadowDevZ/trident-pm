@@ -21,14 +21,15 @@ namespace LibTrident::LTSTATUS {
             CHMOD,
             COPYOBJ,
             FSEEK,
-            HDRNP,
-            HDRCRP,
+            FSECNP,
+            FSECCRP,
             IO_READ,
             IO_WRITE,
             CHKSUM,
             INVSUID,
             NOSUID,
             IREF_EXPIRED,
+            RESV_VIOLATION,
             UNDEFINED = -1,
             
     }RSP;

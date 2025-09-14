@@ -5,10 +5,17 @@
 #include "suid.h"
 #include "trdconsts.h"
 #include "fstreaminfo.h"
-#include "memory.h"
+#include <cstring>
+#include "trderr.h"
+#include <zlib.h>
 using namespace LibTrident::SectionDescriptor;
 using namespace LibTrident::Header;
 using namespace LibTrident::UID;
+using namespace LibTrident;
+
+u32 IGenerateChecksum(const TRD_SD& sd);
+
+
 //starting location of SD table without BEG/END token
 
 //difference between these and raw functions is that Raw function point to the start of GUID whilst these point to actual data
@@ -22,33 +29,52 @@ foffset_t TRDSecDesc::GetSDEnd() {
 }
 //todo for normal write lookup the SUID using bmh algo from uid.cpp in future
 bool TRDSecDesc::WriteBlankSD() {
-    auto [checkWeakRef, sharedPtr] = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
-    if (!checkWeakRef) {
+    //just in case there was some garbage before
+    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!haveCtx.has_value()) {
         e.SetError(LTSTATUS::IREF_EXPIRED);
         return false;
     }
-    if (!sharedPtr->CheckFileStreamInfo()) {
-        e.SetError(LTSTATUS::NULL_OBJ);
-        return false;
-    }
-    
-    LTSTATUS::LTSTATUS hdrStatus = TRDPkgHeader::IsHeaderPresent(sharedPtr);
-    if (hdrStatus != LTSTATUS::SUCCESS) {
-        e.SetError(hdrStatus);
-        return false;
-    }
-    auto& fstrInfo = sharedPtr->GetFstreamObject();
-    auto& fstrStream = fstrInfo.hFile;
-    
+    auto sharedPtr = haveCtx.value();
+    //to use std::filln we would have to write iterator
+    std::memset(&secDescInternal, 0, sizeof(secDescInternal));
+    //write SUID prologue
     TRDSdToken sdToken(sharedPtr);
     bool begSuidOk = sdToken.WriteDescriptorSUID();
     e.SetError(sdToken.e.GetError());
     if (!begSuidOk) {
         return false;
     }
-    //reset in case it contains junk from previous operations
-    memset(&secDescInternal, 0, sizeof(secDescInternal));
+    return IWriteSD(true);
+}
 
+ bool TRDSecDesc::IWriteSD(bool blankWrite) {
+    //we do not validate empty TRD_SD
+    if (!blankWrite && !IValidateSDContent(secDescInternal)) {
+        return false;
+    }
+    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!haveCtx.has_value()) {
+        e.SetError(LTSTATUS::IREF_EXPIRED);
+        return false;
+    }
+    auto sharedPtr = haveCtx.value();
+    if (!sharedPtr->CheckFileStreamInfo()) {
+        e.SetError(LTSTATUS::NULL_OBJ);
+        return false;
+    }
+    if (!IRwAccessible(sharedPtr)) {
+        return false;
+    }
+    
+    auto& fstrInfo = sharedPtr->GetFstreamObject();
+    auto& fstrStream = fstrInfo.hFile;
+    fstrStream->seekp(GetSDAddress());
+    if (!fstrStream) {
+        e.SetError(LTSTATUS::FSEEK);
+        return false;
+    }
+    
     const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
     bool leStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, LibTrident::Consts::SD::TRD_SECTIONSD_SIZE, false);
     if (!leStatus || !fstrStream) {
@@ -58,5 +84,90 @@ bool TRDSecDesc::WriteBlankSD() {
 
 
     e.Success();
+    e.Success();
     return true;
+}
+//checks if we have header first
+bool TRDSecDesc::IRwAccessible(){
+    //todo check
+   return IRwAccessible(wFstr);
+}
+bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstr) {
+    //todo check
+    LTSTATUS::LTSTATUS hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
+    if (hdrStatus != LTSTATUS::SUCCESS) {
+        e.SetError(hdrStatus);
+        return false;
+    }
+    //todo find if SUID tag is present
+    e.Success();
+    return true;
+}
+
+bool TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD& sd) {
+    TRD_SD updateSd = secDescInternal;
+    updateSd.tblCount = sd.tblCount;
+    updateSd.tblDynamicOffset = sd.tblDynamicOffset;
+    updateSd.tblRegistryOffset = sd.tblRegistryOffset;
+    updateSd.crc = IGenerateChecksum(updateSd);
+    if (!IValidateSDContent(updateSd)) {
+        return false;
+    }
+    secDescInternal = updateSd;
+    
+    return IWriteSD();
+}
+
+/*
+if we are going to have to perform random access we probably should use mmap() syscall, in that 
+case we probably should also in PkgIO create custom std::ostream clonse for memory mapped file, mimicking the
+seek/tell functions, this will however make it more os dependent and we are going to need multiple os specific function
+prototypes. There is also problem that when we write to the file and size changes we have to again call mmap() because
+the kernel won't update the size automatically resulting in SIGBUS, this becomes problematic. Perhaps in future we could
+utilize header only cross platform library like https://github.com/vimpunk/mio
+*/
+bool TRDSecDesc::IValidateSDContent(const TRD_SD& sd) {
+    if (!IChecksumValid(sd.crc, sd)) {
+        e.SetError(LTSTATUS::CHKSUM);
+    }
+    if (sd._reserved0 != 0) {
+        e.SetError(LTSTATUS::RESV_VIOLATION);
+        return false;
+    }
+    //todo check crc and fields, this will be done when we actually have dynamic section table
+    e.Success();
+    return true;
+}
+u32 IGenerateChecksum(const TRD_SD& sd) {
+    #define _LOCAL_CRC(crc,x) crc32(((crc)), reinterpret_cast<const Bytef*>(&(x)), sizeof((x)))
+    u32 crc = ::crc32(0, Z_NULL, 0);
+    crc = _LOCAL_CRC(crc, sd.tblCount);
+    crc = _LOCAL_CRC(crc, sd.tblDynamicOffset);
+    crc = _LOCAL_CRC(crc, sd.tblRegistryOffset);
+    //do not generate for crc, it doesn't contain valid value yet
+    return crc;
+}
+bool TRDSecDesc::IChecksumValid(u32 crc, const TRD_SD& sd) {
+    u32 genCrc = IGenerateChecksum(sd);
+    if ((genCrc != sd.crc) || (crc == 0)) {
+        e.SetError(LTSTATUS::CHKSUM);
+        return false;
+    } 
+    return true;
+}
+//These functions have to calculate CRC32 unlike the Header UpdateX
+bool TRDSecDesc::UpdateSDTblCount(u32 tblCount) {
+    secDescInternal.tblCount = tblCount;
+    secDescInternal.crc = IGenerateChecksum(secDescInternal);
+    return IWriteSD();
+}
+bool TRDSecDesc::UpdateSDDynOffset(u64 dynOffset) {
+    secDescInternal.tblDynamicOffset = dynOffset;
+    secDescInternal.crc = IGenerateChecksum(secDescInternal);
+    return IWriteSD();
+}
+bool TRDSecDesc::UpdateSDRegOffset(u64 tregOffset) {
+    secDescInternal.tblRegistryOffset = tregOffset;
+    secDescInternal.crc = IGenerateChecksum(secDescInternal);
+    return IWriteSD();
 }

@@ -5,7 +5,7 @@
 #include "suid.h"
 #include "sdesc.h"
 
-
+//TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace LibTrident;
 using namespace LibTrident::Header;
 using namespace LibTrident::SectionDescriptor;
@@ -82,15 +82,21 @@ int main(void) {
     std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
     print_header(x.GetInternal());   
     std::cout << std::endl;
-    std::cout << "ModifyLen() " << x.SetFileLen(0xbeefccaa, true) << std::endl;
-    std::cout << "ModifyIOCTRL() " << x.SetIoctrl(IOCTRL_DSEC_RLOCK, true) << std::endl;
+    std::cout << "ModifyLen() " << x.UpdateFileLenProp(0xbeefccaa) << std::endl;
+    std::cout << "ModifyIOCTRL() " << x.UpdateIoctrlProp(IOCTRL_DSEC_RLOCK) << std::endl;
     std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
     print_header(x.GetInternal());   
 
     TRDSecDesc sectionDesc(lt.fstrInfo);
     std::cout << "WriteBlankSD() " << sectionDesc.WriteBlankSD() << std::endl;
-    
-    
+    TRD_SD_UPDATEFIELD sdUpdate;
+    sdUpdate.tblCount = 0x777;
+    sdUpdate.tblDynamicOffset = 0x1337CAFFEE;
+    sdUpdate.tblRegistryOffset = 0xDEADBEEF;
+    std::cout << "UpdateSD() " << sectionDesc.UpdateSD(sdUpdate) << std::endl;
+    std::cout << "ModifySDCount() " << sectionDesc.UpdateSDTblCount(UINT32_MAX) << std::endl;
+    std::cout << "ModifySDDtbl() " << sectionDesc.UpdateSDDynOffset(UINT64_MAX) << std::endl;
+    std::cout << "ModifySDTreg() " << sectionDesc.UpdateSDRegOffset(UINT64_MAX) << std::endl;
    
     std::cout << std::noboolalpha;
     std::cout << x.e.GetErrorAsString() << std::endl;

@@ -6,10 +6,9 @@
 #include <memory.h>
 using namespace LibTrident;
 //todo move to other source file
-std::vector<u64> UID::FindPatterns(const std::vector<u8> blob, const std::vector<u8>& pattern, u32 maxOccurences) {
-    std::vector<u64> refs = {};
+std::optional<std::vector<u64>> UID::FindStreamUIDS(const std::vector<u8> blob, const std::vector<u8>& pattern, u32 maxOccurences) {
     if (blob.empty() || pattern.empty()) {
-        return refs;
+        return std::nullopt;
         
     }
     if (maxOccurences == 0) {
@@ -19,8 +18,9 @@ std::vector<u64> UID::FindPatterns(const std::vector<u8> blob, const std::vector
     auto algo = std::boyer_moore_horspool_searcher(pattern.begin(), pattern.end());
     auto it = blob.begin();
     u16 occurencesNow = 0;
-
-
+    
+    
+    std::vector<u64> refs = {};
     while (it != blob.end() && occurencesNow != maxOccurences) {
         it = std::search(it, blob.end(), algo);
         if (it != blob.end() && occurencesNow != maxOccurences) {
@@ -32,10 +32,9 @@ std::vector<u64> UID::FindPatterns(const std::vector<u8> blob, const std::vector
     return refs;
     
 }
-u64 UID::FindFirstPattern(const std::vector<u8> blob, const std::vector<u8>& pattern) {
+std::optional<u64> UID::FindFirstUID(const std::vector<u8> blob, const std::vector<u8>& pattern) {
     if (blob.empty() || pattern.empty()) {
-        return UINT64_MAX;
-        
+        return std::nullopt;
     }
     
    auto it = std::search(blob.begin(), blob.end(), 
@@ -44,20 +43,20 @@ u64 UID::FindFirstPattern(const std::vector<u8> blob, const std::vector<u8>& pat
     if (it != blob.end()) {
         return it - blob.begin();
     }
-    return UINT64_MAX;
+    return std::nullopt;
 }
 
-std::pair<bool,std::vector<u8>> UID::GetUIDPattern(const char* str) {
+std::optional<std::vector<u8>> UID::GetUIDPattern(const char* str) {
+    if (!str || !LibTrident::UID::SUID::IsValidSUID(str)) {
+        return std::nullopt;
+    }
     std::vector<u8> pattern = {};
     pattern.reserve(Consts::SUID::SUID_MAX_LENGTH);
-    if (!str || !LibTrident::UID::SUID::IsValidSUID(str)) {
-        return {false, pattern};
-    }
     for (size_t i =0; i < strnlen(str, Consts::SUID::SUID_MAX_LENGTH); ++i) {
         pattern.emplace_back(str[i]);
     }
-    return {true, pattern};
+    return pattern;
 
 }
 //when finding patterns eg. looking for SUID SECDESC string we load the whole file into dynami buffer
-//later on when we add dynamic sections we have to mmap the file to the memory or code chunk parser
+//later on when we add dynamic sections (the DATA table may be tens of GB's) we have to mmap the file to the memory or code chunk parser

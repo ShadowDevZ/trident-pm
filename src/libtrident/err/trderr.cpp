@@ -26,14 +26,15 @@ constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
     {LTSTATUS::CHMOD, "Failed to change permissions"},
     {LTSTATUS::COPYOBJ, "Failed to copy object"},
     {LTSTATUS::FSEEK, "Failed to set seek pointer"},
-    {LTSTATUS::HDRNP, "Header is missing"},
-    {LTSTATUS::HDRCRP, "Header data tags corrupted"},
+    {LTSTATUS::FSECNP, "File section is missing"},
+    {LTSTATUS::FSECCRP, "File section tags are corrupted"},
     {LTSTATUS::IO_READ, "Failed to ReadHeader file"},
     {LTSTATUS::IO_WRITE, "Failed to WriteHeader file"},
     {LTSTATUS::CHKSUM, "CRC32 checksum has failed"},
     {LTSTATUS::NOSUID, "SUID token not found"},
     {LTSTATUS::INVSUID, "Invalid SUID token"},
-    {LTSTATUS::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"}
+    {LTSTATUS::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"},
+    {LTSTATUS::RESV_VIOLATION, "Reserved field not set to 0"}
 };
 
 

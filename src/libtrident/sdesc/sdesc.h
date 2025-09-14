@@ -53,8 +53,8 @@ public:
 
     bool IsSDValid();
     static LTSTATUS::LTSTATUS IsSDPresent();
+    bool ReadSD();
     
-    bool ReadSD(TRD_SD& sd);
     //updates information written to file
     bool UpdateSD(const TRD_SD_UPDATEFIELD& sd);
     
@@ -63,11 +63,16 @@ public:
     bool UpdateSDRegOffset(u64 tregOffset);
     
     
-    bool CreateSDAtOffset(foffset_t offset);
+    
     static foffset_t GetSDAddress();
     static foffset_t GetSDEnd();
 private:
-    u32 ICalculateChecksum();
+    std::optional<TRD_SD> IReadSD();
+    bool IChecksumValid(u32 crc, const TRD_SD& sd);
+    bool IWriteSD(bool blankWrite=false);
+    bool IRwAccessible();
+    bool IRwAccessible(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstr);
+    bool IValidateSDContent(const TRD_SD& sd);
     //gets the starting position of SD table, private because by default SD table is written right after header
     //booyer moore horsepool
     //

@@ -2,6 +2,7 @@
 //#include "fileOperations.h"
 #include "ioflags.h"
 #include "pkgio.h"
+
 using namespace LibTrident;
 using namespace PkgIO;
 using namespace LibTrident::FstreamInfo;
@@ -93,12 +94,13 @@ bool FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(const TRDFstreamObject& info
 }
 
 
-std::pair<bool,std::shared_ptr<FstreamInfo::TrdFstreamInfo>> FstreamInfo::TrdFstreamInfo::GetFstreamContent(std::weak_ptr<FstreamInfo::TrdFstreamInfo> weakFstr) {
+std::optional<std::shared_ptr<FstreamInfo::TrdFstreamInfo>> FstreamInfo::TrdFstreamInfo::GetFstreamContent(std::weak_ptr<FstreamInfo::TrdFstreamInfo> weakFstr) {
    
     auto fstrInfo = weakFstr.lock();
+    
     if (!fstrInfo) {
        
-        return {false, fstrInfo};
+        return std::nullopt;
     }
 /*
     if (!fstrInfo->CheckFileStreamInfo()) {
@@ -106,5 +108,5 @@ std::pair<bool,std::shared_ptr<FstreamInfo::TrdFstreamInfo>> FstreamInfo::TrdFst
         
     }
   */
-    return {true, fstrInfo};
+    return fstrInfo;
 }
