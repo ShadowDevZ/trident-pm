@@ -3,62 +3,55 @@
 #include "ioflags.h"
 #include <fstream>
 #include <sys/stat.h>
+#include <stdexcept>
 using namespace LibTrident;
 using namespace PkgIO;
 
-bool LibTrident::TrPkg::ClosePkg() {
-    if (!fstrInfo->CheckFileStreamInfo()) {
-        dbgprintf("Error closing stream\n");
-        return false;
-    }
+void LibTrident::TrPkg::ClosePkg() {
+    //we do not perform any checks so RAII can take care of it
     FstreamInfo::TRDFstreamObject& closeInfo =  fstrInfo->GetFstreamObject();
-   
     closeInfo.dirPath = "";
     closeInfo.name = "";
+    closeInfo.fileOpened = false;
     fstrInfo->CloseStream();
-    closeInfo.hFile->close();
+    if (closeInfo.hFile && closeInfo.hFile->is_open()) {
+        closeInfo.hFile->close();
+    }
     dbgprintf("Stream closed\n");
-    return true;
 }
 
 
-bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFlags) {
+void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFlag openFlags) {
+    if (fstrInfo->GetFstreamObject().fileOpened) {
+        throw std::runtime_error("Package was already opened using current instance");
+    }
+    
     std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
     if (openMode == 0) {
-        e.SetError(LTSTATUS::BADARG);
-        return false;
+        throw std::invalid_argument("Invalid openflags");
     }
-    std::string dirPath = FileOperations::GetFileDir(path);
+    const std::filesystem::path& absolutePath = std::filesystem::absolute(path);
+    \
+    const std::filesystem::path& parentDir = absolutePath.parent_path();
     
-    if (dirPath == "") {
-        e.SetError(LTSTATUS::NOTDIR);
-        return false;
+    if (!std::filesystem::exists(parentDir)) {
+        throw std::filesystem::filesystem_error("Parent directory does not exist", std::error_code());
    }
-    //for future use like writing locks in the same directory
-    LTSTATUS::LTSTATUS status = FileOperations::FileOrDirExists(dirPath, false);
-    if (status != LTSTATUS::SUCCESS) {
-        e.SetError(LTSTATUS::NOTDIR);
-        return status;
-    }
     
-
-
     //the user doesnt need to specify 
     openMode |= std::ios::binary;
     
     std::shared_ptr<std::fstream> fsPkg = std::make_shared<std::fstream>(path, openMode);
     if (!fsPkg || !fsPkg->is_open()) {
-        e.SetError(LTSTATUS::FOPEN);
-        return false;
+        throw std::filesystem::filesystem_error("Failed to obtain file handle", std::error_code());
     }
     
     
     std::streampos fileSize = FileOperations::GetFstreamSize(fsPkg);
     if (fileSize == -1) {
-        dbgprintf("fsize=-1\n");
-        e.SetError(LTSTATUS::FSEEK);
-        return false;
+        throw std::runtime_error("Failed to determine the file size");
     }
+    //We are creating copy instead of simply moving is because if error occurs the original stream must remain unchanged
     FstreamInfo::TRDFstreamObject fInfo;
     
     fInfo.fileFlags = openFlags;
@@ -70,24 +63,20 @@ bool LibTrident::TrPkg::OpenPackage(const std::string& path, IO_OpenFlag openFla
     dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
    
     fInfo.hFile = fsPkg;
-    fInfo.dirPath = dirPath;
-    
+    fInfo.dirPath = parentDir.generic_u8string();
+    fInfo.fileOpened = true;
     fInfo.name = path;
+    dbgprintf("name: %s\n", fInfo.name.c_str()); 
+    dbgprintf("dir: %s\n", fInfo.dirPath.c_str()); 
 
-    struct stat64 flStat;
-    if (!FileOperations::GetFileStats(path.c_str(), flStat)) {
-        e.SetError(LTSTATUS::FOPEN);
-        return false;
+    if (!FileOperations::GetFileStats(path.c_str(), fInfo.fileStat)) {
+        throw std::runtime_error("Unable to call stat()");
     }
-    fInfo.fileStat = flStat;
+ 
 
     if (!fstrInfo->SetFileStreamInfo(fInfo)) {
-        e.SetError(fstrInfo->e.GetError());
-        return false;
+        throw std::runtime_error("Setting FileStreamInfoObject failed");
     }
 
-    
-    e.Success();
-    return true;
 }
 //ClosePkg, reset context, filestream close fd

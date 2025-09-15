@@ -1,8 +1,10 @@
 #include "trderr.h"
 #include <array>
 #include <string>
+#include <string_view>
 #include <ccattribs.h>
 using namespace LibTrident;
+using namespace LibTrident::Err;
 
 //we cannot use std::string as it occupies heap
 /*Originally I wanted to use unordered_map, but it uses dynamic allocations and cannot be marked with constexpr
@@ -12,64 +14,64 @@ if its marked as constexpr. This is fixed inside C++20+ but we are currently stu
 are embedding struct or using std::pair, also we cannot do this because it makes only 1 element array yay
 //constexpr std::array gErrorMessages {_errmsgTbl};
 */
-constexpr std::pair<LTSTATUS::LTSTATUS,const char*> gErrorMessages [] = {
-    {LTSTATUS::OK, "Operation was successful"},
-    {LTSTATUS::FAIL, "The call to the specified function has failed"},
-    {LTSTATUS::MALLOC, "Memory allocation has failed"},
-    {LTSTATUS::BADARG, "Unknown or incorrect argument has been passed to the function"},
-    {LTSTATUS::ACCESS, "Insufficient privileges to the specified resource, access denied"},
-    {LTSTATUS::NULL_OBJ, "The object was NULL"},
-    {LTSTATUS::FOPEN, "Error opening access handle"},
-    {LTSTATUS::UNDEFINED, "Undefined error"},
-    {LTSTATUS::NOTDIR, "Filesystem object is not a directory"},
-    {LTSTATUS::INVFILE, "Filesystem object does not exist"},
-    {LTSTATUS::CHMOD, "Failed to change permissions"},
-    {LTSTATUS::COPYOBJ, "Failed to copy object"},
-    {LTSTATUS::FSEEK, "Failed to set seek pointer"},
-    {LTSTATUS::FSECNP, "File section is missing"},
-    {LTSTATUS::FSECCRP, "File section tags are corrupted"},
-    {LTSTATUS::IO_READ, "Failed to ReadHeader file"},
-    {LTSTATUS::IO_WRITE, "Failed to WriteHeader file"},
-    {LTSTATUS::CHKSUM, "CRC32 checksum has failed"},
-    {LTSTATUS::NOSUID, "SUID token not found"},
-    {LTSTATUS::INVSUID, "Invalid SUID token"},
-    {LTSTATUS::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"},
-    {LTSTATUS::RESV_VIOLATION, "Reserved field not set to 0"}
+constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
+    {Err::Code::UNDEFINED, "Undefined error"},
+    {Err::Code::OK, "Operation was successful"},
+    {Err::Code::FAIL, "The call to the specified function has failed"},
+    {Err::Code::MALLOC, "Memory allocation has failed"},
+    {Err::Code::BADARG, "Unknown or incorrect argument has been passed to the function"},
+    {Err::Code::ACCESS, "Insufficient privileges to the specified resource, access denied"},
+    {Err::Code::NULL_OBJ, "The object was NULL"},
+    {Err::Code::FOPEN, "Error opening access handle"},
+    {Err::Code::NOTDIR, "Filesystem object is not a directory"},
+    {Err::Code::INVFILE, "Filesystem object does not exist"},
+    {Err::Code::CHMOD, "Failed to change permissions"},
+    {Err::Code::COPYOBJ, "Failed to copy object"},
+    {Err::Code::FSEEK, "Failed to set seek pointer"},
+    {Err::Code::FSECNP, "File section is missing"},
+    {Err::Code::FSECCRP, "File section tags are corrupted"},
+    {Err::Code::IO_READ, "Failed to ReadHeader file"},
+    {Err::Code::IO_WRITE, "Failed to WriteHeader file"},
+    {Err::Code::CHKSUM, "CRC32 checksum has failed"},
+    {Err::Code::NOSUID, "SUID token not found"},
+    {Err::Code::INVSUID, "Invalid SUID token"},
+    {Err::Code::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"},
+    {Err::Code::RESV_VIOLATION, "Reserved field not set to 0"},
+    {Err::Code::ALROPEN, "Object was already opened"}
 };
 
 
 
-
-LTSTATUS::LTSTATUS LTSTATUS::TridentError::GetError() {
+Err::Code Err::TridentError::GetError() {
     return err;
 }
-bool LTSTATUS::TridentError::IsOk() {
-    if (err == LTSTATUS::SUCCESS) {
+bool Err::TridentError::IsOk() {
+    if (err == Err::Code::SUCCESS) {
         return true;
     }
     return false;
 }
 
-void LTSTATUS::TridentError::SetError(const LTSTATUS::LTSTATUS code) {
+void Err::TridentError::SetError(const Err::Code code) {
     err = code;
 }
-void LTSTATUS::TridentError::SetError(const LTSTATUS::TridentError& code) {
+void Err::TridentError::SetError(const Err::TridentError& code) {
     err = code.err;
 }
-void LTSTATUS::TridentError::Success() {
-    err = SUCCESS;
+void Err::TridentError::Success() {
+    err = Err::Code::SUCCESS;
 }
-const char* LTSTATUS::TridentError::TranslateError(const LTSTATUS::LTSTATUS code) {
+const std::string_view& Err::TridentError::TranslateError(const Err::Code code) {
    
-   for (auto&&  x: gErrorMessages)  {
+   for (const auto&  x: gErrorMessages)  {
         if (x.first == code) {
             
             return x.second;
         }
    }
    
-   return "Undefined Error";
+   return gErrorMessages[0].second;
 }
-const char* LTSTATUS::TridentError::GetErrorAsString() {
+const std::string_view& Err::TridentError::GetErrorAsString() {
     return TridentError::TranslateError(TridentError::GetError());
 }

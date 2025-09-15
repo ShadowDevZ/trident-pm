@@ -15,6 +15,7 @@ namespace LibTrident::Consts::HeaderConsts {
 
     constexpr u16 LT_HDR_SZB_01A = 32;
 };
+//this is taken from TRPX docs, better way would of course be to use sizeof
 namespace LibTrident::Consts::SD {
     constexpr u16 TRD_SECTIONSD_SIZE = 32;
 };

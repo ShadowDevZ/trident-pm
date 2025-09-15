@@ -11,79 +11,82 @@ bool FstreamInfo::TrdFstreamInfo::CheckFileStreamInfo() {
     if (!xfInfo.hFile) {
         return false;
     }
-    LTSTATUS::LTSTATUS status = ValidateRemoteFileStreamInfo(xfInfo);
+    Err::Code status = ValidateRemoteFileStreamInfo(xfInfo);
     if (!TrdFstreamInfo::IsOpen()) {
         return false;
     }
-    if (status == LTSTATUS::SUCCESS) {
+    if (status == Err::Code::SUCCESS) {
         e.Success();
         return true;
     }
     e.SetError(status);
     return false;
 }
-LibTrident::LTSTATUS::LTSTATUS  FstreamInfo::TrdFstreamInfo::StreamRemoteIsOpen(const TRDFstreamObject& info) {
+LibTrident::Err::Code  FstreamInfo::TrdFstreamInfo::StreamRemoteIsOpen(const TRDFstreamObject& info) {
     if (info.fileFlags & LibTrident::IOFLAGS::_I_IO_INVCLOSED) {
-        return LTSTATUS::FOPEN;
+        return Err::Code::FOPEN;
     }
-    if (!info.hFile || ! info.hFile->is_open()) {
+    if (!info.hFile || ! info.hFile->is_open() || (!info.fileOpened)) {
     
-        return LTSTATUS::FOPEN;;
+        return Err::Code::FOPEN;;
     }
 
-    return LTSTATUS::SUCCESS;
+    return Err::Code::SUCCESS;
 }
 bool FstreamInfo::TrdFstreamInfo::IsOpen() {
     
-    LTSTATUS::LTSTATUS status = StreamRemoteIsOpen(xfInfo);
+    Err::Code status = StreamRemoteIsOpen(xfInfo);
     e.SetError(status);
-    if (status == LTSTATUS::SUCCESS) {
+    if (status == Err::Code::SUCCESS) {
         return true;
     }
     return false;
 }
 
-LTSTATUS::LTSTATUS TrdFstreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
+Err::Code TrdFstreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
     info.fileFlags |= LibTrident::IOFLAGS::_I_IO_INVCLOSED;
-    return LTSTATUS::SUCCESS;
+    return Err::Code::SUCCESS;
 } 
 bool FstreamInfo::TrdFstreamInfo::CloseStream() {
-    LTSTATUS::LTSTATUS status = CloseRemoteStream(xfInfo);
+    Err::Code status = CloseRemoteStream(xfInfo);
     e.SetError(status);
-    if (status == LTSTATUS::SUCCESS) {
+    if (status == Err::Code::SUCCESS) {
         return true;
     }
     return false;
 }
 
 
-LTSTATUS::LTSTATUS FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObject& info) {
+Err::Code FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObject& info) {
    
-    LTSTATUS::LTSTATUS dirStatus = FileOperations::FileOrDirExists(info.dirPath, false);
-    LTSTATUS::LTSTATUS fileStatus = FileOperations::FileOrDirExists(info.name, true);
-    if (dirStatus != LTSTATUS::SUCCESS) {
+   /// Err::Code dirStatus = FileOperations::FileOrDirExists(info.dirPath, false);
+   // Err::Code fileStatus = FileOperations::FileOrDirExists(info.name, true);
+
+   /*We no longer have to check because we have thrown exception
+    if (!std::filesystem::exists(info.dirPath)) {
         dbgprintf("Error: ValidateRemoteFileStreamInfo() nodir\n");
-        return LTSTATUS::NOTDIR;
+        return Err::Code::NOTDIR;
     }
-    if (fileStatus != LTSTATUS::SUCCESS) {
+    if (!std::filesystem::exists(info.name)) {
          dbgprintf("Error: ValidateRemoteFileStreamInfo() nofile\n");
-        return LTSTATUS::NOTFILE;
+        return Err::Code::NOTFILE;
     }
-    if (StreamRemoteIsOpen(info) != LTSTATUS::SUCCESS) {
+    */
+    if (StreamRemoteIsOpen(info) != Err::Code::SUCCESS) {
          dbgprintf("Error: ValidateRemoteFileStreamInfo() fopen\n");
-        return LTSTATUS::FOPEN;
+        return Err::Code::FOPEN;
     }
     if (info.fileFlags == 0) {
         dbgprintf("Error: ValidateRemoteFileStreamInfo() access\n");
-        return LTSTATUS::ACCESS;
+        return Err::Code::ACCESS;
     }
-    return LTSTATUS::SUCCESS;
+    return Err::Code::SUCCESS;
 }
 
 bool FstreamInfo::TrdFstreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
     
-    LTSTATUS::LTSTATUS status = ValidateRemoteFileStreamInfo(info);
-    if (status != LTSTATUS::SUCCESS) {
+    Err::Code status = ValidateRemoteFileStreamInfo(info);
+    if (status != Err::Code::SUCCESS) {
         e.SetError(status);
         return false;
     }

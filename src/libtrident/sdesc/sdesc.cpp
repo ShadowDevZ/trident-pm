@@ -32,7 +32,7 @@ bool TRDSecDesc::WriteBlankSD() {
     //just in case there was some garbage before
     auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        e.SetError(LTSTATUS::IREF_EXPIRED);
+        e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
     auto sharedPtr = haveCtx.value();
@@ -55,12 +55,12 @@ bool TRDSecDesc::WriteBlankSD() {
     }
     auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        e.SetError(LTSTATUS::IREF_EXPIRED);
+        e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
     auto sharedPtr = haveCtx.value();
     if (!sharedPtr->CheckFileStreamInfo()) {
-        e.SetError(LTSTATUS::NULL_OBJ);
+        e.SetError(Err::Code::NULL_OBJ);
         return false;
     }
     if (!IRwAccessible(sharedPtr)) {
@@ -71,14 +71,14 @@ bool TRDSecDesc::WriteBlankSD() {
     auto& fstrStream = fstrInfo.hFile;
     fstrStream->seekp(GetSDAddress());
     if (!fstrStream) {
-        e.SetError(LTSTATUS::FSEEK);
+        e.SetError(Err::Code::FSEEK);
         return false;
     }
     
     const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
     bool leStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, LibTrident::Consts::SD::TRD_SECTIONSD_SIZE, false);
     if (!leStatus || !fstrStream) {
-        e.SetError(LTSTATUS::IO_WRITE);
+        e.SetError(Err::Code::IO_WRITE);
         return false;
     }
 
@@ -94,8 +94,8 @@ bool TRDSecDesc::IRwAccessible(){
 }
 bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstr) {
     //todo check
-    LTSTATUS::LTSTATUS hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
-    if (hdrStatus != LTSTATUS::SUCCESS) {
+    Err::Code hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
+    if (hdrStatus != Err::Code::SUCCESS) {
         e.SetError(hdrStatus);
         return false;
     }
@@ -128,10 +128,10 @@ utilize header only cross platform library like https://github.com/vimpunk/mio
 */
 bool TRDSecDesc::IValidateSDContent(const TRD_SD& sd) {
     if (!IChecksumValid(sd.crc, sd)) {
-        e.SetError(LTSTATUS::CHKSUM);
+        e.SetError(Err::Code::CHKSUM);
     }
     if (sd._reserved0 != 0) {
-        e.SetError(LTSTATUS::RESV_VIOLATION);
+        e.SetError(Err::Code::RESV_VIOLATION);
         return false;
     }
     //todo check crc and fields, this will be done when we actually have dynamic section table
@@ -150,7 +150,7 @@ u32 IGenerateChecksum(const TRD_SD& sd) {
 bool TRDSecDesc::IChecksumValid(u32 crc, const TRD_SD& sd) {
     u32 genCrc = IGenerateChecksum(sd);
     if ((genCrc != sd.crc) || (crc == 0)) {
-        e.SetError(LTSTATUS::CHKSUM);
+        e.SetError(Err::Code::CHKSUM);
         return false;
     } 
     return true;

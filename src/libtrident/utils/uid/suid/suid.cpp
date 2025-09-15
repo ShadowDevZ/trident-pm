@@ -10,17 +10,18 @@
 #include <algorithm>
 #include <vector>
 #include <functional>
+#include <string_view>
 using namespace LibTrident;
 using namespace LibTrident::UID;
 using namespace LibTrident::Consts::SUID;
 using namespace LibTrident::Header;
 using namespace LibTrident::PkgIO;
-constexpr std::pair<int,const char*> gTuidList [] = {
-    {SUID::SUID_SECDESC,"7a153cca-f082-4837-9f8b-10905d006261"}
+constexpr std::pair<SUID::SUIDS,const std::string_view> gTuidList [] = {
+    {SUID::SUIDS::SECTION_DESCR,"7a153cca-f082-4837-9f8b-10905d006261"}
     
 };
-const char* SUID::GetSUIDString(SUID::SUIDS id) {
-     for (auto&&  x: gTuidList)  {
+const std::string_view SUID::GetSUIDString(SUID::SUIDS id) {
+     for (const auto&  x: gTuidList)  {
         if (x.first == id) {
             
             return x.second;
@@ -30,33 +31,34 @@ const char* SUID::GetSUIDString(SUID::SUIDS id) {
    return "";
 }
 
-bool SUID::IsValidSUID(const char* tuid) {
-    if (strnlen(tuid, LibTrident::Consts::SUID::SUID_MAX_LENGTH) != LibTrident::Consts::SUID::SUID_MAX_LENGTH) {
+bool SUID::IsValidSUID(const std::string_view& suid) {
+    if (suid.length() != LibTrident::Consts::SUID::SUID_MAX_LENGTH) {
         return false;
     }
-    for (auto&& x: gTuidList) {
-        if (!strncmp(tuid, x.second, LibTrident::Consts::SUID::SUID_MAX_LENGTH)) {
+    for (const auto& x: gTuidList) {
+        if (suid == x.second) {
             return true;
         }
     }
     return false;
 }
 
-LTSTATUS::LTSTATUS SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
+Err::Code SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
    
    
     if (loc < 1) {
-        return LTSTATUS::BADARG;
+        return Err::Code::BADARG;
     }
-    const char* suidString = SUID::GetSUIDString(id);
+    const std::string_view& suidString = SUID::GetSUIDString(id);
+    
     if (!SUID::IsValidSUID(suidString)) {
-        return LTSTATUS::BADARG;
+        return Err::Code::BADARG;
     } 
     if (!streamInfo->CheckFileStreamInfo()) {
-        return LTSTATUS::NULL_OBJ;
+        return Err::Code::NULL_OBJ;
     }
-    LTSTATUS::LTSTATUS errCodePresent = TRDPkgHeader::IsHeaderPresent(streamInfo);
-    if (errCodePresent != LTSTATUS::SUCCESS) {
+    Err::Code errCodePresent = TRDPkgHeader::IsHeaderPresent(streamInfo);
+    if (errCodePresent != Err::Code::SUCCESS) {
         return errCodePresent;
     }
     auto& fstrInfo = streamInfo->GetFstreamObject();
@@ -66,13 +68,13 @@ LTSTATUS::LTSTATUS SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo
 
     if (!fstrStream) {
         
-        return LTSTATUS::FSEEK;
+        return Err::Code::FSEEK;
     }
 
     //stream.WriteHeader(static_cast<const char*>(SUID), SUID::SUID_MAX_LENGTH);
-    bool WriteHeaderStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, suidString, LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
+    bool WriteHeaderStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
     if (!fstrStream|| !WriteHeaderStatus) {
-        return LTSTATUS::IO_WRITE;
+        return Err::Code::IO_WRITE;
     }
-    return LTSTATUS::SUCCESS;
+    return Err::Code::SUCCESS;
 } 

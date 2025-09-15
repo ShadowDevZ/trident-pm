@@ -4,6 +4,7 @@
 #include "datatypes.h"
 #include <sys/stat.h>
 #include <optional>
+#include "ioflags.h"
 namespace LibTrident::FstreamInfo {
 
 typedef struct {
@@ -16,20 +17,20 @@ typedef struct {
     IO_OpenFlag fileFlags;
     //for future use, atime
     struct stat64 fileStat;
+    bool fileOpened;
 
 }TRDFstreamObject;
 
 class TrdFstreamInfo {
 private:
     TRDFstreamObject xfInfo;
-    bool IsOpen();
-public:
-    LibTrident::LTSTATUS::TridentError e;
+    public:
+    LibTrident::Err::TridentError e;
     
-   // TrdFstreamInfo() : xfInfo(std::make_shared<TRDFstreamObject>()) {};
-   // TrdFstreamInfo() {
+    // TrdFstreamInfo() : xfInfo(std::make_shared<TRDFstreamObject>()) {};
+    // TrdFstreamInfo() {
     //    xfInfo.hFile = std::make_unique<std::fstream>();
-   // }
+    // }
     TRDFstreamObject& GetFstreamObject() {
         return xfInfo;
         
@@ -38,13 +39,16 @@ public:
         return xfInfo;
     }
     bool SetFileStreamInfo(const TRDFstreamObject& info);
+    //checks if each field is correctly set
     bool CheckFileStreamInfo();
     bool CloseStream();
+    //checks if the stream is only MARKED as open, data may be missing or corrupted
+    bool IsOpen();
     
-   static LibTrident::LTSTATUS::LTSTATUS StreamRemoteIsOpen(const TRDFstreamObject& info);
-   static LTSTATUS::LTSTATUS CloseRemoteStream(TRDFstreamObject& info);
+   static LibTrident::Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info);
+   static LibTrident::Err::Code CloseRemoteStream(TRDFstreamObject& info);
    static std::optional<std::shared_ptr<FstreamInfo::TrdFstreamInfo>> GetFstreamContent(std::weak_ptr<FstreamInfo::TrdFstreamInfo> weakFstr);
-   static LibTrident::LTSTATUS::LTSTATUS ValidateRemoteFileStreamInfo(const TRDFstreamObject& info);
+   static LibTrident::Err::Code ValidateRemoteFileStreamInfo(const TRDFstreamObject& info);
 };
 
 };

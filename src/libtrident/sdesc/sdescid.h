@@ -9,7 +9,7 @@ class TRDSdToken : LibTrident::PkgIO::Descriptor {
 private:
     std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
 public:
-    LibTrident::LTSTATUS::TridentError e;
+    LibTrident::Err::TridentError e;
     TRDSdToken(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSdToken(const TRDSdToken& other) : wFstr(other.wFstr) {}

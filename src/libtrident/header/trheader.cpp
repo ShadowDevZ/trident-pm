@@ -41,14 +41,14 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
    
     auto haveCtx= FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        e.SetError(LTSTATUS::IREF_EXPIRED);
+        e.SetError(Err::Code::IREF_EXPIRED);
         return std::nullopt;
     }
     auto sharedPtr = haveCtx.value();
     
     
     if (!sharedPtr->CheckFileStreamInfo()) {
-        e.SetError(LTSTATUS::NULL_OBJ);
+        e.SetError(Err::Code::NULL_OBJ);
         return std::nullopt;
     }
     auto& fstrInfo = sharedPtr->GetFstreamObject();
@@ -57,11 +57,11 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
     std::streampos originalPosition = fstrStream->tellg();
     fstrStream->seekg(TRD_HDR_START_OFFSET, std::ios::beg);
     if (!fstrStream) {
-        e.SetError(LTSTATUS::FSEEK);
+        e.SetError(Err::Code::FSEEK);
         return std::nullopt;
     }
     if (!ICheckHeaderSize(hdrInteral)) {
-        e.SetError(LTSTATUS::FSECCRP);
+        e.SetError(Err::Code::FSECCRP);
         return std::nullopt;
     }
     
@@ -69,13 +69,13 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
 
     bool ReadHeaderStatus = PkgIO::FileOperations::ReadLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), LT_HDR_SZB_01A);
     if (!fstrStream|| !ReadHeaderStatus) {
-        e.SetError(LTSTATUS::IO_READ);
+        e.SetError(Err::Code::IO_READ);
         return std::nullopt;
     }
 
     fstrStream->seekg(originalPosition, std::ios::beg);
     if (!fstrStream) {
-        e.SetError(LTSTATUS::FSEEK);
+        e.SetError(Err::Code::FSEEK);
         return std::nullopt;
     }
     if (!IValidateHeader(hdr)) {
@@ -86,29 +86,36 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
     return hdr;
 }
 bool TRDPkgHeader::IsValid() {
-   return IValidateHeader(hdrInteral);
+    auto have = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    if (!have.has_value()) {
+        return false;
+    }
+    if (!have.value()->IsOpen()) {
+        return false;
+    }
+    return IValidateHeader(hdrInteral);
 }
 
-LTSTATUS::LTSTATUS TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> streamInfo) {
+Err::Code TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> streamInfo) {
     auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(streamInfo);
     if (!haveCtx.has_value()) {
-        return LTSTATUS::IREF_EXPIRED;
+        return Err::Code::IREF_EXPIRED;
     }
     auto fStreamInfo = haveCtx.value();
 
     TRDPkgHeader hdr(fStreamInfo);
    
     auto optHdr = hdr.IReadHeaderBack();
-    LTSTATUS::LTSTATUS errCode = hdr.e.GetError();
+    Err::Code errCode = hdr.e.GetError();
     if (!optHdr.has_value()) {
         return errCode;
     }
-    if (errCode != LTSTATUS::SUCCESS || !hdr.IValidateHeader(optHdr.value())) {
+    if (errCode != Err::Code::SUCCESS || !hdr.IValidateHeader(optHdr.value())) {
         dbgprintf("header not present\n");
         return errCode;
     }
     
-    return LTSTATUS::SUCCESS;
+    return Err::Code::SUCCESS;
 
 }
 
@@ -116,27 +123,27 @@ LTSTATUS::LTSTATUS TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::Fstre
 
 bool TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn) {
     if (!ICheckHeaderSize(hdrIn)) {
-        e.SetError(LTSTATUS::FSECNP);
+        e.SetError(Err::Code::FSECNP);
         return false;
     }
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdrIn.magic))) {
-        e.SetError(LTSTATUS::FSECNP);
+        e.SetError(Err::Code::FSECNP);
         return false;
     }
     if (hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
-       e.SetError(LTSTATUS::FSECCRP);
+       e.SetError(Err::Code::FSECCRP);
         return false;
     }
     if (hdrIn.fmtVersion == 0) {
-        e.SetError(LTSTATUS::BADARG);
+        e.SetError(Err::Code::BADARG);
         return false;
     }
     if (!ICheckCRC(hdrIn.hdrChksum, hdrIn)) {
-        e.SetError(LTSTATUS::CHKSUM);
+        e.SetError(Err::Code::CHKSUM);
         return false;
     }
     if (hdrIn.fileLen == 0) {
-        e.SetError(LTSTATUS::BADARG);
+        e.SetError(Err::Code::BADARG);
         return false;
     }
     //todo check each field including signature
@@ -146,7 +153,7 @@ bool TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn) {
 
 bool TRDPkgHeader::WriteHeader() {
     if (!ICheckHeaderSize(hdrInteral)) {
-        e.SetError(LTSTATUS::FSECCRP);
+        e.SetError(Err::Code::FSECCRP);
         return false;
     }
     if (!IsValid()) {
@@ -154,12 +161,12 @@ bool TRDPkgHeader::WriteHeader() {
     }
     auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        e.SetError(LTSTATUS::IREF_EXPIRED);
+        e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
     auto sharedPtr = haveCtx.value();
     if (!sharedPtr->CheckFileStreamInfo()) {
-        e.SetError(LTSTATUS::NULL_OBJ);
+        e.SetError(Err::Code::NULL_OBJ);
         return false;
     }
     auto& fstrInfo = sharedPtr->GetFstreamObject();
@@ -170,13 +177,13 @@ bool TRDPkgHeader::WriteHeader() {
   //  streamInfo->hFile->WriteHeader(hdrContent, GetHeaderByteSize());
     fstrStream->seekp(TRD_HDR_START_OFFSET);
     if (!fstrStream) {
-        e.SetError(LTSTATUS::FSEEK);
+        e.SetError(Err::Code::FSEEK);
         return false;
     }
     bool WriteHeaderStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, LT_HDR_SZB_01A, false);
    
     if (!fstrStream || !WriteHeaderStatus) {
-        e.SetError(LTSTATUS::IO_WRITE);
+        e.SetError(Err::Code::IO_WRITE);
         return false;
     }
     
@@ -208,7 +215,7 @@ u32 IGenerateHeaderCRC(const TRD_HEADER& hdr) {
 bool TRDPkgHeader::ICheckCRC(u32 crc, const TRD_HEADER& hdr) {
     u32 genCrc = IGenerateHeaderCRC(hdr);
     if ((genCrc != hdr.hdrChksum) || (crc == 0)) {
-        e.SetError(LTSTATUS::CHKSUM);
+        e.SetError(Err::Code::CHKSUM);
         return false;
     } 
     return true;
@@ -227,22 +234,22 @@ bool TRDPkgHeader::Create(const TRD_HDRFIELD_UPDATE& field) {
     TRD_HEADER hdr;
     std::copy(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic));
     if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic))) {
-        e.SetError(LTSTATUS::COPYOBJ);
+        e.SetError(Err::Code::COPYOBJ);
         return false;
     }
     hdr.exSignature = TRD_HDR_EXTENDED_SIGNATURE;
     hdr.fmtVersion = field.fmtVersion;
     if (hdr.fmtVersion == 0) {
-        e.SetError(LTSTATUS::BADARG);
+        e.SetError(Err::Code::BADARG);
         return false;
     }
-    hdr.compression = field.compression;
-    hdr.buildFlags = field.buildFlags;
-    hdr.architecture = field.architecture;
+    hdr.compression = static_cast<u8>(field.compression);
+    hdr.buildFlags = static_cast<u32>(field.buildFlags);
+    hdr.architecture = static_cast<u8>(field.architecture);
     hdr.hdrChksum = IGenerateHeaderCRC(hdr);
     
     hdr.fileLen = UINT64_MAX;
-    hdr.ioCtrl = IOCTRL_CLEAR;
+    hdr.ioCtrl = 0;
 
     hdrInteral = hdr;
     return true;
@@ -298,10 +305,10 @@ std::string TRDPkgHeader::HeaderVersionFormatToString(u16 fmt, bool abRevision) 
 }
  bool TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD_UPDATE& update) {
     TRD_HEADER hdr = hdrInteral;
-    hdr.architecture = update.architecture;
+    hdr.architecture = static_cast<u8>(update.architecture);
     hdr.fmtVersion = update.fmtVersion;
-    hdr.compression = update.compression;
-    hdr.buildFlags = update.buildFlags;
+    hdr.compression = static_cast<u8>(update.compression);
+    hdr.buildFlags = static_cast<u32>(update.buildFlags);
     hdr.hdrChksum = IGenerateHeaderCRC(hdr);
 
    

@@ -9,6 +9,7 @@
 using namespace LibTrident;
 using namespace LibTrident::Header;
 using namespace LibTrident::SectionDescriptor;
+
 void PrintBuildTarget() {
 #ifdef _LIBTRIDENT_DEBUG
 std::cout << "Target: Debug\n\n";    
@@ -43,17 +44,11 @@ void print_header(const LibTrident::Header::TRD_HEADER& hdr) {
 int main(void) {
     PrintBuildTarget();
    
-    LibTrident::TrPkg lt;
-    bool openStatus = lt.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
-    std::cout << "Last Error: " << lt.e << " OpenPkg(): " << std::boolalpha << openStatus << std::noboolalpha << std::endl;
+    LibTrident::TrPkg lt("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
+    //lt.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
-//THE REASON WE ARE CHECKING ONLY IN RELEASE IS BECAUSE IF THE PACKAGE FAILED TO OPEN ANY SUBSEQUENT FUNCTION MUST FAIL AND NOT USE IO
-#ifndef _LIBTRIDENT_DEBUG
-    if (!openStatus) {
-        std::cout << "Failed to open package\n";
-        return 1;
-    }
-#endif
+
+
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
 #ifdef _LIBTRIDENT_DEBUG
   
@@ -83,7 +78,7 @@ int main(void) {
     print_header(x.GetInternal());   
     std::cout << std::endl;
     std::cout << "ModifyLen() " << x.UpdateFileLenProp(0xbeefccaa) << std::endl;
-    std::cout << "ModifyIOCTRL() " << x.UpdateIoctrlProp(IOCTRL_DSEC_RLOCK) << std::endl;
+    std::cout << "ModifyIOCTRL() " << x.UpdateIoctrlProp(IOCTRL_DESC_WLOCK) << std::endl;
     std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
     print_header(x.GetInternal());   
 
@@ -99,9 +94,10 @@ int main(void) {
     std::cout << "ModifySDTreg() " << sectionDesc.UpdateSDRegOffset(UINT64_MAX) << std::endl;
    
     std::cout << std::noboolalpha;
-    std::cout << x.e.GetErrorAsString() << std::endl;
+    std::cout << x.e << std::endl;
    
-    lt.ClosePkg();
+//ClosePkg() not needed because of RAII
+  //  lt.ClosePkg();
     std::cout << "Exit(0)\n";
     return 0;
     

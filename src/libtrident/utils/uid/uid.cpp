@@ -46,13 +46,13 @@ std::optional<u64> UID::FindFirstUID(const std::vector<u8> blob, const std::vect
     return std::nullopt;
 }
 
-std::optional<std::vector<u8>> UID::GetUIDPattern(const char* str) {
-    if (!str || !LibTrident::UID::SUID::IsValidSUID(str)) {
+std::optional<std::vector<u8>> UID::GetUIDPattern(const std::string_view& str) {
+    if (!LibTrident::UID::SUID::IsValidSUID(str)) {
         return std::nullopt;
     }
     std::vector<u8> pattern = {};
     pattern.reserve(Consts::SUID::SUID_MAX_LENGTH);
-    for (size_t i =0; i < strnlen(str, Consts::SUID::SUID_MAX_LENGTH); ++i) {
+    for (size_t i =0; i < str.length(); ++i) {
         pattern.emplace_back(str[i]);
     }
     return pattern;

@@ -1,14 +1,12 @@
 #pragma once
 #include <cstdint>
 #include <string>
-namespace LibTrident::LTSTATUS {
-
-
-    typedef uint32_t LTSTATUS;
-
-    typedef enum {
-            SUCCESS = 0,
-            OK = 0,
+#include "datatypes.h"
+namespace LibTrident::Err {
+    enum class Code {
+            UNDEFINED = 0,
+            SUCCESS = 1,
+            OK = 1,
             FAIL,
             MALLOC,
             BADARG,
@@ -28,36 +26,32 @@ namespace LibTrident::LTSTATUS {
             CHKSUM,
             INVSUID,
             NOSUID,
+            ALROPEN,
             IREF_EXPIRED,
             RESV_VIOLATION,
-            UNDEFINED = -1,
             
-    }RSP;
+    };
 
 
 class TridentError {
 protected:
-    LTSTATUS::LTSTATUS err = LTSTATUS::SUCCESS;
+    LibTrident::Err::Code err = LibTrident::Err::Code::UNDEFINED;
 public:
-    LTSTATUS::LTSTATUS GetError();
-    const char* GetErrorAsString();
-    void SetError(const LTSTATUS::LTSTATUS code);
-    void SetError(const LTSTATUS::TridentError& code);
+    LibTrident::Err::Code GetError();
+    const std::string_view& GetErrorAsString();
+    void SetError(LibTrident::Err::Code code);
+    void SetError(const LibTrident::Err::TridentError& code);
     void Success();
     bool IsOk();
 
-    static inline const char* TranslateError(const TridentError& code) {
+    static inline const std::string_view& TranslateError(const LibTrident::Err::TridentError& code) {
         return TranslateError(code.err);    
     }
 
-    static const char* TranslateError(const LTSTATUS::LTSTATUS code);
+    static const std::string_view& TranslateError(LibTrident::Err::Code);
     friend std::ostream& operator<<(std::ostream& os, const TridentError& m) {
-        os << std::string(m.TranslateError(m.err));
+        os << m.TranslateError(m.err);
     return os;
+
 }
-
-    
-};
-
-
-};
+};};

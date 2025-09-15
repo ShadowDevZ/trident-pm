@@ -20,6 +20,7 @@ PACKED_STRUCT {
 
 }TRD_HEADER;
 
+
 typedef struct {
     u16 fmtVersion;
     u8 compression;
@@ -70,7 +71,7 @@ public:
     TRDPkgHeader(TRDPkgHeader&& other) : wFstr(std::move(other.wFstr)) {}
     
 
-    LTSTATUS::TridentError e;
+    LibTrident::Err::TridentError e;
  
 
     const TRD_HEADER& GetInternal() const { 
@@ -95,7 +96,7 @@ public:
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     
-    static LTSTATUS::LTSTATUS IsHeaderPresent(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo);
+    static LibTrident::Err::Code IsHeaderPresent(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo);
     
     
     

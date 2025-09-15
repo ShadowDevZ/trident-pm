@@ -30,7 +30,7 @@ private:
     TRD_SD secDescInternal;
 
 public:
-    LTSTATUS::TridentError e;
+    LibTrident::Err::TridentError e;
     TRDSecDesc(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
@@ -52,7 +52,7 @@ public:
     bool WriteBlankSD();
 
     bool IsSDValid();
-    static LTSTATUS::LTSTATUS IsSDPresent();
+    static LibTrident::Err::Code IsSDPresent();
     bool ReadSD();
     
     //updates information written to file

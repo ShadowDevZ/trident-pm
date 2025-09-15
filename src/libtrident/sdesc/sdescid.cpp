@@ -29,20 +29,20 @@ foffset_t GetSDEnd() {
 bool TRDSdToken::WriteDescriptorSUID() {
     auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        e.SetError(LTSTATUS::IREF_EXPIRED);
+        e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
     auto sharedPtr = haveCtx.value();
     if (!sharedPtr->CheckFileStreamInfo()) {
-        e.SetError(LTSTATUS::NULL_OBJ);
+        e.SetError(Err::Code::NULL_OBJ);
         return false;
     }
     std::streampos sdOffset= static_cast<std::streampos>(GetOptRawSDStart());
     
  
-    LTSTATUS::LTSTATUS errSuid = SUID::WriteSUIDAt(sharedPtr, sdOffset, SUID::SUID_SECDESC);
+    Err::Code errSuid = SUID::WriteSUIDAt(sharedPtr, sdOffset, SUID::SUIDS::SECTION_DESCR);
     e.SetError(errSuid);
-    if (errSuid == LTSTATUS::OK) {
+    if (errSuid == Err::Code::OK) {
         return true;
     }
     return false;

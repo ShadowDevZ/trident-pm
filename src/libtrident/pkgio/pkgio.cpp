@@ -16,7 +16,7 @@ bool _ICPU_IsLittleEndian() {
     return (int)*((unsigned char *)&i)==1;
 
 }
-
+/*
 std::string FileOperations::GetFileDir(const std::string& file) {
     size_t pos = file.find_last_of('/');
     if (pos == std::string::npos) {
@@ -24,6 +24,7 @@ std::string FileOperations::GetFileDir(const std::string& file) {
     }
     return file.substr(0, pos);
 }
+*/
 
 std::streamsize FileOperations::GetFstreamSize(std::shared_ptr<std::fstream> fs) {
     if (!fs->is_open()) {
@@ -53,12 +54,12 @@ fail:
 
   
 }
-bool FileOperations::GetFileStats(const char* file, struct stat64& statOut) {
+bool FileOperations::GetFileStats(const std::filesystem::path& file, struct stat64& statOut) {
     //yes i know on x86 stat is always evaluated to stat64, better be safe then sorry
     struct stat64 fileStat = { };
   
     bool ret = false;
-    if (file && stat64(file, &fileStat) == 0) {
+    if (stat64(file.c_str(), &fileStat) == 0) {
         
         ret = true;
     };
@@ -67,7 +68,7 @@ bool FileOperations::GetFileStats(const char* file, struct stat64& statOut) {
     return ret;
         
 }
-
+/*
 LibTrident::LTSTATUS::LTSTATUS FileOperations::FileOrDirExists(const std::string& path, bool file) {
     
     //handle scenarios like /tmp/folder/
@@ -100,6 +101,7 @@ LibTrident::LTSTATUS::LTSTATUS FileOperations::FileOrDirExists(const std::string
 
     return LTSTATUS::SUCCESS;
 }
+*/
 void ReverseByteOrder( char* start, size_t size )
 {
     char* byteEnd = start + size;
@@ -131,7 +133,7 @@ bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const ch
 }
             
  bool FileOperations::WriteLeStream(FstreamInfo::TRDFstreamObject& info, const char* data, std::streamsize size, bool increment) {
-    if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != LTSTATUS::SUCCESS)  {
+    if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != Err::Code::SUCCESS)  {
         dbgprintf("Error: WriteLeStream(validate) Failed\n");
         return false;
     }
@@ -173,7 +175,7 @@ bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s,
     return true;
 }
  bool FileOperations::ReadLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size) {
-    if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != LTSTATUS::SUCCESS) {
+    if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != Err::Code::SUCCESS) {
         return false;
     }
     return ReadLeStream(info.hFile, s, size);

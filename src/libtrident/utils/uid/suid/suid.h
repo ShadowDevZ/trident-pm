@@ -10,13 +10,13 @@ namespace LibTrident::UID {
 namespace SUID {
     //maximum size of TUID, excluding NULL terminator
     
-    typedef enum {
-        SUID_SECDESC
+    enum class SUIDS{
+        SECTION_DESCR
         ///...
-    }SUIDS;
-    const char* GetSUIDString(SUID::SUIDS id);
-    bool IsValidSUID(const char* tuid);
-    LTSTATUS::LTSTATUS WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
+    };
+    const std::string_view GetSUIDString(SUID::SUIDS id);
+    bool IsValidSUID(const std::string_view& suid);
+    LibTrident::Err::Code WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
     std::pair<bool,std::vector<u8>> GetUIDPattern(const char* str);
 
 

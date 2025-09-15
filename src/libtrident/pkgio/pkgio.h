@@ -6,42 +6,17 @@
 #include <memory>
 #include "trderr.h"
 #include "fstreaminfo.h"
-
-
-
-#ifdef IS_BIG_ENDIAN
-
-#define cpuToBE16(val) (val)
-
-#define beToCPU16(val) (val)
-
-#define cpuToLE16(val) swapEndian16(val)
-
-#define leToCPU16(val) swapEndian16(val)
-
-#else
-
-#define cpuToBE16(val) swapEndian16(val)
-
-#define beToCPU16(val) swapEndian16(val)
-
-#define cpuToLE16(val) (val)
-
-#define leToCPU16(val) (val)
-
-#endif
-
-
-
+#include <string_view>
+#include <filesystem>
 
 
 
 //todo add most basic IO function here
 namespace LibTrident::PkgIO {
    namespace FileOperations {
-            std::string GetFileDir(const std::string& file);
+           
             std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
-            LibTrident::LTSTATUS::LTSTATUS FileOrDirExists(const std::string& path, bool file);
+            
             ///The following 2 functions format the buffer and WriteHeader it as Little endian
             //does not increment fSize
             bool WriteLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
@@ -52,7 +27,7 @@ namespace LibTrident::PkgIO {
                 
             bool ReadLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
             bool ReadLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size);
-            bool GetFileStats(const char* file, struct stat64& statOut);
+            bool GetFileStats(const std::filesystem::path& file, struct stat64& statOut);
     };
    
 
