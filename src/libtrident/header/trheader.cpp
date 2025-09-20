@@ -39,7 +39,7 @@ bool TRDPkgHeader::ReadHeader() {
 std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
     TRD_HEADER hdr { };
    
-    auto haveCtx= FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx= TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return std::nullopt;
@@ -51,8 +51,8 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
         e.SetError(Err::Code::NULL_OBJ);
         return std::nullopt;
     }
-    auto& fstrInfo = sharedPtr->GetFstreamObject();
-    auto& fstrStream = fstrInfo.hFile;
+    
+    auto& fstrStream = sharedPtr->GetFstreamObject().hFile;
     
     std::streampos originalPosition = fstrStream->tellg();
     fstrStream->seekg(TRD_HDR_START_OFFSET, std::ios::beg);
@@ -67,7 +67,7 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
     
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
-    bool ReadHeaderStatus = PkgIO::FileOperations::ReadLeStream(fstrInfo, reinterpret_cast<char*>(&hdr), LT_HDR_SZB_01A);
+    bool ReadHeaderStatus = sharedPtr->ReadTStream<TRD_HEADER>(hdr);
     if (!fstrStream|| !ReadHeaderStatus) {
         e.SetError(Err::Code::IO_READ);
         return std::nullopt;
@@ -86,7 +86,7 @@ std::optional<TRD_HEADER> TRDPkgHeader::IReadHeaderBack() {
     return hdr;
 }
 bool TRDPkgHeader::IsValid() {
-    auto have = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    auto have = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
     if (!have.has_value()) {
         return false;
     }
@@ -96,8 +96,8 @@ bool TRDPkgHeader::IsValid() {
     return IValidateHeader(hdrInteral);
 }
 
-Err::Code TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> streamInfo) {
-    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(streamInfo);
+Err::Code TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> streamInfo) {
+    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(streamInfo);
     if (!haveCtx.has_value()) {
         return Err::Code::IREF_EXPIRED;
     }
@@ -159,7 +159,7 @@ bool TRDPkgHeader::WriteHeader() {
     if (!IsValid()) {
         return false;
     }
-    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
@@ -169,18 +169,18 @@ bool TRDPkgHeader::WriteHeader() {
         e.SetError(Err::Code::NULL_OBJ);
         return false;
     }
-    auto& fstrInfo = sharedPtr->GetFstreamObject();
-    auto& fstrStream = fstrInfo.hFile;
+    //auto& fstrInfo = sharedPtr->GetFstreamObject();
+    auto& fstrStream = sharedPtr->GetFstreamObject().hFile;
 
 
-    const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
+   // const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
   //  streamInfo->hFile->WriteHeader(hdrContent, GetHeaderByteSize());
     fstrStream->seekp(TRD_HDR_START_OFFSET);
     if (!fstrStream) {
         e.SetError(Err::Code::FSEEK);
         return false;
     }
-    bool WriteHeaderStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, LT_HDR_SZB_01A, false);
+    bool WriteHeaderStatus = sharedPtr->WriteTStream<TRD_HEADER>(hdrInteral);
    
     if (!fstrStream || !WriteHeaderStatus) {
         e.SetError(Err::Code::IO_WRITE);
@@ -200,7 +200,7 @@ bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
 }
 //I mean we could technically dump here the raw pointer but is it really the best approach for very few fields ?
 //todo probably implement serialize() function to each section which converts all elements to std::vector so we don't have to
-//be repetetive
+//be repetetive, todo template
 u32 IGenerateHeaderCRC(const TRD_HEADER& hdr) {
     #define _LOCAL_CRC(crc,x) crc32(((crc)), reinterpret_cast<const Bytef*>(&(x)), sizeof((x)))
     u32 crc = ::crc32(0, Z_NULL, 0);

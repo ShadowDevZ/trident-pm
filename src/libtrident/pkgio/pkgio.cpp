@@ -8,7 +8,9 @@
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
 using namespace LibTrident::PkgIO::FileOperations;
-
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
+#endif
 bool _ICPU_IsLittleEndian() {
 
     int i=1;
@@ -68,53 +70,23 @@ bool FileOperations::GetFileStats(const std::filesystem::path& file, struct stat
     return ret;
         
 }
-/*
-LibTrident::LTSTATUS::LTSTATUS FileOperations::FileOrDirExists(const std::string& path, bool file) {
-    
-    //handle scenarios like /tmp/folder/
-    std::string fullPath = path;
-    if (!file) {
-        if(fullPath.back() == '/') {
-            size_t pos = path.find_last_of("/");
-            std::string fullPath  = path.substr(0, pos);
-            fullPath = path.substr(0, pos - 1);
-    }
-}
-     struct stat64 dStat;
-    if (!GetFileStats(path.c_str(), dStat)) {
-      //  e.SetError(LTSTATUS::INVFILE);
-        return LTSTATUS::INVFILE;
-    }
-    if (!file) {
-        if (!S_ISDIR(dStat.st_mode)) {
-             dbgprintf("stat(D_%s) fail\n", fullPath.c_str());
-            return LTSTATUS::NOTDIR;
-        }
-    }
-    else {
-        if (!S_ISREG(dStat.st_mode)) {
-            dbgprintf("stat(R_%s) fail\n", fullPath.c_str());
-            return LTSTATUS::NOTFILE;
-        }
-    }
-   
 
-    return LTSTATUS::SUCCESS;
-}
-*/
 void ReverseByteOrder( char* start, size_t size )
 {
     char* byteEnd = start + size;
     std::reverse(start, byteEnd);
 }
-bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
+bool FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
     if (!stream->is_open() || !data || size < 1) {
         dbgprintf("Error: WriteLeStream() Failed\n");
         return false;
     }
+    //THIS WONT WORK ON BIG ENDIAN AT ALL, IT ONLY WORKS FOR TRIVIAL TYPES NOT FOR STRUCTS
+    //WE NEED TO SERIALIZE THE STRUCT BEFORE WRITING IT, OTHERWISE IT PRODUCES GARBAGE
     if (_ICPU_IsLittleEndian()) {
         stream->write(data, size);
     }
+    /* BROKEN
     else {
         char* buffer = new char[size];
         if (!buffer) {
@@ -125,6 +97,7 @@ bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const ch
         stream->write(buffer, size);
         delete[] buffer;
     }
+    */
     if (stream) {
         return true;
     }
@@ -132,20 +105,9 @@ bool FileOperations::WriteLeStream(std::shared_ptr<std::fstream> stream,const ch
     return !stream;
 }
             
- bool FileOperations::WriteLeStream(FstreamInfo::TRDFstreamObject& info, const char* data, std::streamsize size, bool increment) {
-    if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != Err::Code::SUCCESS)  {
-        dbgprintf("Error: WriteLeStream(validate) Failed\n");
-        return false;
-    }
-   
-    bool st = WriteLeStream(info.hFile, data, size);
-    if (st && increment) {
-        info.fSize += size;
-    }
-    return st;
-}
 
-bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
+
+bool FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
     if (!stream->is_open() || !s || size < 1) {
         dbgprintf("Error: ReadLeStream() Failed\n");
         return false;
@@ -158,12 +120,13 @@ bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s,
     if (_ICPU_IsLittleEndian()) {
         stream->read(data, size);
     }
+    /*BROKEN
     else {
         stream->read(data, size);
         ReverseByteOrder(data, size);
         
     }
-
+    */
 
       if (!stream) {
         delete[] data;
@@ -173,12 +136,6 @@ bool FileOperations::ReadLeStream(std::shared_ptr<std::fstream> stream, char* s,
 
     delete[] data;
     return true;
-}
- bool FileOperations::ReadLeStream(FstreamInfo::TRDFstreamObject& info, char* s, std::streamsize size) {
-    if (FstreamInfo::TrdFstreamInfo::ValidateRemoteFileStreamInfo(info) != Err::Code::SUCCESS) {
-        return false;
-    }
-    return ReadLeStream(info.hFile, s, size);
 }
 
 //todo use ReadLeStream()

@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <ccattribs.h>
-#include "fstreaminfo.h"
+#include "tstreaminfo.h"
 #include "trheader.h"
 #include "pkgio.h"
 #include <algorithm>
@@ -43,7 +43,7 @@ bool SUID::IsValidSUID(const std::string_view& suid) {
     return false;
 }
 
-Err::Code SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
+Err::Code SUID::WriteSUIDAt(std::shared_ptr<TstreamInfo::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
    
    
     if (loc < 1) {
@@ -61,8 +61,8 @@ Err::Code SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamI
     if (errCodePresent != Err::Code::SUCCESS) {
         return errCodePresent;
     }
-    auto& fstrInfo = streamInfo->GetFstreamObject();
-    auto& fstrStream = fstrInfo.hFile;
+   // auto& fstrInfo = streamInfo->GetFstreamObject();
+    auto& fstrStream = streamInfo->GetFstreamObject().hFile;
     
     fstrStream->seekp(loc);
 
@@ -72,7 +72,7 @@ Err::Code SUID::WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamI
     }
 
     //stream.WriteHeader(static_cast<const char*>(SUID), SUID::SUID_MAX_LENGTH);
-    bool WriteHeaderStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
+    bool WriteHeaderStatus = streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
     if (!fstrStream|| !WriteHeaderStatus) {
         return Err::Code::IO_WRITE;
     }

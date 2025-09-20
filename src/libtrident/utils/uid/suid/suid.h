@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "datatypes.h"
 #include "trdconsts.h"
-#include "fstreaminfo.h"
+#include "tstreaminfo.h"
 #include "uid.h"
 
 namespace LibTrident::UID {
@@ -16,7 +16,7 @@ namespace SUID {
     };
     const std::string_view GetSUIDString(SUID::SUIDS id);
     bool IsValidSUID(const std::string_view& suid);
-    LibTrident::Err::Code WriteSUIDAt(std::shared_ptr<FstreamInfo::TrdFstreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
+    LibTrident::Err::Code WriteSUIDAt(std::shared_ptr<TstreamInfo::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
     std::pair<bool,std::vector<u8>> GetUIDPattern(const char* str);
 
 

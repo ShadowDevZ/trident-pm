@@ -4,7 +4,7 @@
 #include "pkgio.h"
 #include "suid.h"
 #include "trdconsts.h"
-#include "fstreaminfo.h"
+#include "tstreaminfo.h"
 #include <cstring>
 #include "trderr.h"
 #include <zlib.h>
@@ -30,7 +30,7 @@ foffset_t TRDSecDesc::GetSDEnd() {
 //todo for normal write lookup the SUID using bmh algo from uid.cpp in future
 bool TRDSecDesc::WriteBlankSD() {
     //just in case there was some garbage before
-    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
@@ -53,7 +53,7 @@ bool TRDSecDesc::WriteBlankSD() {
     if (!blankWrite && !IValidateSDContent(secDescInternal)) {
         return false;
     }
-    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
@@ -67,16 +67,16 @@ bool TRDSecDesc::WriteBlankSD() {
         return false;
     }
     
-    auto& fstrInfo = sharedPtr->GetFstreamObject();
-    auto& fstrStream = fstrInfo.hFile;
+   // auto& fstrInfo = sharedPtr->GetFstreamObject();
+    auto& fstrStream = sharedPtr->GetFstreamObject().hFile;
     fstrStream->seekp(GetSDAddress());
     if (!fstrStream) {
         e.SetError(Err::Code::FSEEK);
         return false;
     }
     
-    const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
-    bool leStatus = PkgIO::FileOperations::WriteLeStream(fstrInfo, hdrContent, LibTrident::Consts::SD::TRD_SECTIONSD_SIZE, false);
+    //const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
+    bool leStatus = sharedPtr->WriteTStream<TRD_SD>(secDescInternal);
     if (!leStatus || !fstrStream) {
         e.SetError(Err::Code::IO_WRITE);
         return false;
@@ -92,7 +92,7 @@ bool TRDSecDesc::IRwAccessible(){
     //todo check
    return IRwAccessible(wFstr);
 }
-bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstr) {
+bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> fstr) {
     //todo check
     Err::Code hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
     if (hdrStatus != Err::Code::SUCCESS) {

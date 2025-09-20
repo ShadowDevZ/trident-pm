@@ -2,7 +2,7 @@
 #include "trderr.h"
 #include "datatypes.h"
 #include "ccattribs.h"
-#include "fstreaminfo.h"
+#include "tstreaminfo.h"
 #include "pkgio.h"
 namespace LibTrident::SectionDescriptor {
 
@@ -26,12 +26,12 @@ typedef struct {
 
 class TRDSecDesc {
 private:
-    std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> wFstr;
+    std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> wFstr;
     TRD_SD secDescInternal;
 
 public:
     LibTrident::Err::TridentError e;
-    TRDSecDesc(std::shared_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fStreamInfo) :
+    TRDSecDesc(std::shared_ptr<LibTrident::TstreamInfo::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
     TRDSecDesc(TRDSecDesc&& other) : wFstr(std::move(other.wFstr)) {}
@@ -71,7 +71,7 @@ private:
     bool IChecksumValid(u32 crc, const TRD_SD& sd);
     bool IWriteSD(bool blankWrite=false);
     bool IRwAccessible();
-    bool IRwAccessible(std::weak_ptr<LibTrident::FstreamInfo::TrdFstreamInfo> fstr);
+    bool IRwAccessible(std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> fstr);
     bool IValidateSDContent(const TRD_SD& sd);
     //gets the starting position of SD table, private because by default SD table is written right after header
     //booyer moore horsepool

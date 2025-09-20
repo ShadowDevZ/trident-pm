@@ -1,11 +1,11 @@
 #include "sdescid.h"
 #include "trheader.h"
-#include "fstreaminfo.h"
+#include "tstreaminfo.h"
 #include "suid.h"
 #include "pkgio.h"
 
 using namespace LibTrident::Header;
-using namespace LibTrident::FstreamInfo;
+using namespace LibTrident::TstreamInfo;
 using namespace LibTrident::UID;
 using namespace LibTrident;
 
@@ -27,7 +27,7 @@ foffset_t GetSDEnd() {
 
 
 bool TRDSdToken::WriteDescriptorSUID() {
-    auto haveCtx = FstreamInfo::TrdFstreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
