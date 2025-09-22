@@ -5,8 +5,8 @@
 
 using namespace LibTrident;
 using namespace PkgIO;
-using namespace LibTrident::TstreamInfo;
-bool TstreamInfo::TStreamInfo::CheckFileStreamInfo() {
+using namespace LibTrident::Tstream;
+bool Tstream::TStreamInfo::CheckFileStreamInfo() {
     //check if pointer was allocated usiong OpenPkg()
     if (!xfInfo.hFile) {
         e.SetError(Err::Code::FOPEN);
@@ -42,7 +42,7 @@ Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
 
 
 
-bool TstreamInfo::TStreamInfo::IsOpen() {
+bool Tstream::TStreamInfo::IsOpen() {
     Err::Code status = StreamRemoteIsOpen(xfInfo);
     e.SetError(status);
     if (!e.IsOk()) {
@@ -56,14 +56,14 @@ Err::Code TStreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
     return Err::Code::SUCCESS;
 } 
 */
-bool TstreamInfo::TStreamInfo::CloseStream() {
+bool Tstream::TStreamInfo::CloseStream() {
     xfInfo.fileFlags |= LibTrident::IOFLAGS::_I_IO_INVCLOSED;
     return true;
    
 }
 
 /*
-Err::Code TstreamInfo::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObject& info) {
+Err::Code Tstream::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObject& info) {
    
    /// Err::Code dirStatus = FileOperations::FileOrDirExists(info.dirPath, false);
    // Err::Code fileStatus = FileOperations::FileOrDirExists(info.name, true);
@@ -89,7 +89,7 @@ Err::Code TstreamInfo::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstrea
     return Err::Code::SUCCESS;
 }
 */
-bool TstreamInfo::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
+bool Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
     Err::Code status = StreamRemoteIsOpen(info);
     e.SetError(status);
     if (!e.IsOk()) {
@@ -100,7 +100,7 @@ bool TstreamInfo::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
 }
 
 
-std::optional<std::shared_ptr<TstreamInfo::TStreamInfo>> TstreamInfo::TStreamInfo::GetFstreamContent(std::weak_ptr<TstreamInfo::TStreamInfo> weakFstr) {
+std::optional<std::shared_ptr<Tstream::TStreamInfo>> Tstream::TStreamInfo::GetFstreamContent(std::weak_ptr<Tstream::TStreamInfo> weakFstr) {
    
     auto fstrInfo = weakFstr.lock();
     
@@ -134,4 +134,37 @@ bool TStreamInfo::ReadTStream(char* s, u64 size) {
         return false;
     }
     return FileOperations::ReadLeData(xfInfo.hFile, s, size);
+}
+
+
+bool TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) {
+    if (read) {
+        xfInfo.hFile->seekg(pos, seekd);
+    }
+    else {
+        xfInfo.hFile->seekp(pos, seekd);
+    }
+    if (!xfInfo.hFile) {
+        e.SetError(Err::Code::FSEEK);
+        return false;
+    }
+    e.Success();
+    return true;
+
+
+}
+u64 TStreamInfo::IGetSeekPos(bool read) {
+    u64 pos = -1;
+    if (read) {
+        pos =  xfInfo.hFile->tellg();
+    }
+    else {
+        pos =  xfInfo.hFile->tellp();
+    }
+    if (pos == -1 || !xfInfo.hFile) {
+        e.SetError(Err::Code::FSEEK);
+        return -1;
+    }
+    e.Success();
+    return pos;
 }

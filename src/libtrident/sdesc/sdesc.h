@@ -26,12 +26,12 @@ typedef struct {
 
 class TRDSecDesc {
 private:
-    std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> wFstr;
+    std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
     TRD_SD secDescInternal;
 
 public:
     LibTrident::Err::TridentError e;
-    TRDSecDesc(std::shared_ptr<LibTrident::TstreamInfo::TStreamInfo> fStreamInfo) :
+    TRDSecDesc(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
     TRDSecDesc(TRDSecDesc&& other) : wFstr(std::move(other.wFstr)) {}
@@ -54,6 +54,7 @@ public:
     bool IsSDValid();
     static LibTrident::Err::Code IsSDPresent();
     bool ReadSD();
+    std::optional<TRD_SD> ReadSDBack();
     
     //updates information written to file
     bool UpdateSD(const TRD_SD_UPDATEFIELD& sd);
@@ -71,7 +72,7 @@ private:
     bool IChecksumValid(u32 crc, const TRD_SD& sd);
     bool IWriteSD(bool blankWrite=false);
     bool IRwAccessible();
-    bool IRwAccessible(std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> fstr);
+    bool IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr);
     bool IValidateSDContent(const TRD_SD& sd);
     //gets the starting position of SD table, private because by default SD table is written right after header
     //booyer moore horsepool

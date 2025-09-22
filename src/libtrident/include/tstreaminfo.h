@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <optional>
 #include "ioflags.h"
-namespace LibTrident::TstreamInfo {
+namespace LibTrident::Tstream {
 
 typedef struct {
     //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation
@@ -21,11 +21,16 @@ typedef struct {
 
 }TRDFstreamObject;
 
+
+
 class TStreamInfo{
 private:
+    u64 IGetSeekPos(bool read);
+    bool ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seek=std::ios::beg);
     TRDFstreamObject xfInfo;
 public:
     LibTrident::Err::TridentError e;
+
     
     // TStreamInfo() : xfInfo(std::make_shared<TRDFstreamObject>()) {};
     // TStreamInfo() {
@@ -44,6 +49,21 @@ public:
     bool CloseStream();
     //checks if the stream is only MARKED as open, data may be missing or corrupted
     bool IsOpen();
+    
+    inline bool SetSeekPosW(u64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
+        return ISetSeekPos(true, pos, seekDir);
+    }
+    inline bool SetSeekPosR(u64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
+        return ISetSeekPos(false, pos, seekDir);
+    }
+    inline u64 GetSeekPosW() {
+        return IGetSeekPos(false);
+    }
+    inline u64 GetSeekPosR() {
+        return IGetSeekPos(true);
+    }
+
+    
     
     template <typename T>
     bool WriteTStream(const T& t, u64 size, bool increment=true) {
@@ -72,7 +92,7 @@ public:
     bool ReadTStream(char* s, u64 size);
   // static LibTrident::Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info);
   // static LibTrident::Err::Code CloseRemoteStream(TRDFstreamObject& info);
-   static std::optional<std::shared_ptr<TstreamInfo::TStreamInfo>> GetFstreamContent(std::weak_ptr<TstreamInfo::TStreamInfo> weakFstr);
+   static std::optional<std::shared_ptr<Tstream::TStreamInfo>> GetFstreamContent(std::weak_ptr<Tstream::TStreamInfo> weakFstr);
   // static LibTrident::Err::Code ValidateRemoteFileStreamInfo(const TRDFstreamObject& info);
 };
 

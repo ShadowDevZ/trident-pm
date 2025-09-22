@@ -21,17 +21,17 @@ public:
     LibTrident::Err::TridentError e;
     
     //LibTrident::Header::PackageHeader hdr;
-    std::shared_ptr<LibTrident::TstreamInfo::TStreamInfo> fstrInfo;
+    std::shared_ptr<LibTrident::Tstream::TStreamInfo> fstrInfo;
     
     
     // PackageHeader pkg;
-   TrPkg() : fstrInfo(std::make_shared<LibTrident::TstreamInfo::TStreamInfo>()) {};
+   TrPkg() : fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {};
    ~TrPkg() {
     dbgprintf("~Destructor called\n");
     ClosePkg();
    }
 
-   TrPkg(const std::filesystem::path& path, u16 openFlags) : fstrInfo(std::make_shared<LibTrident::TstreamInfo::TStreamInfo>()) {
+   TrPkg(const std::filesystem::path& path, u16 openFlags) : fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {
     OpenPackage(path, openFlags);
    }
    //std::shared_ptr<TRDFstreamObject> GetFstreamObject() {

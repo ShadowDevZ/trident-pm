@@ -1,0 +1,21 @@
+Ltrident/
+main.cpp static assertions
+trheader.cpp check eacch field individually
+             serialize the fields, template the CRC32
+             ?direct write??
+             validate fields in update
+@@everySD.h
+            inherit from SectionCommon
+tstreaminfo.h
+            check max_path
+            more abstraction like AppendPadding()
+
+pkgio.cpp
+            make generic Little endian conversion and fix the current broken one, template it like GetLeObject<T>
+
+sdesc.cpp
+            implement functions
+            check sd tags and returns
+
+sdescid.cpp
+            read SUID inside stream

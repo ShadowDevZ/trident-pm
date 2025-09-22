@@ -43,7 +43,7 @@ bool SUID::IsValidSUID(const std::string_view& suid) {
     return false;
 }
 
-Err::Code SUID::WriteSUIDAt(std::shared_ptr<TstreamInfo::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
+Err::Code SUID::WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
    
    
     if (loc < 1) {
@@ -62,18 +62,16 @@ Err::Code SUID::WriteSUIDAt(std::shared_ptr<TstreamInfo::TStreamInfo> streamInfo
         return errCodePresent;
     }
    // auto& fstrInfo = streamInfo->GetFstreamObject();
-    auto& fstrStream = streamInfo->GetFstreamObject().hFile;
+   
     
-    fstrStream->seekp(loc);
-
-    if (!fstrStream) {
-        
+    if (!streamInfo->SetSeekPosW(loc)) {
         return Err::Code::FSEEK;
     }
 
+
     //stream.WriteHeader(static_cast<const char*>(SUID), SUID::SUID_MAX_LENGTH);
     bool WriteHeaderStatus = streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
-    if (!fstrStream|| !WriteHeaderStatus) {
+    if (!streamInfo->e.IsOk() || !WriteHeaderStatus) {
         return Err::Code::IO_WRITE;
     }
     return Err::Code::SUCCESS;

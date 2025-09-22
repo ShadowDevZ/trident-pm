@@ -30,16 +30,16 @@ foffset_t TRDSecDesc::GetSDEnd() {
 //todo for normal write lookup the SUID using bmh algo from uid.cpp in future
 bool TRDSecDesc::WriteBlankSD() {
     //just in case there was some garbage before
-    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
-    auto sharedPtr = haveCtx.value();
+    auto sdStream = haveCtx.value();
     //to use std::filln we would have to write iterator
     std::memset(&secDescInternal, 0, sizeof(secDescInternal));
     //write SUID prologue
-    TRDSdToken sdToken(sharedPtr);
+    TRDSdToken sdToken(sdStream);
     bool begSuidOk = sdToken.WriteDescriptorSUID();
     e.SetError(sdToken.e.GetError());
     if (!begSuidOk) {
@@ -53,31 +53,31 @@ bool TRDSecDesc::WriteBlankSD() {
     if (!blankWrite && !IValidateSDContent(secDescInternal)) {
         return false;
     }
-    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
-    auto sharedPtr = haveCtx.value();
-    if (!sharedPtr->CheckFileStreamInfo()) {
+    auto sdStream = haveCtx.value();
+    if (!sdStream->CheckFileStreamInfo()) {
         e.SetError(Err::Code::NULL_OBJ);
         return false;
     }
-    if (!IRwAccessible(sharedPtr)) {
+    if (!IRwAccessible(sdStream)) {
         return false;
     }
     
-   // auto& fstrInfo = sharedPtr->GetFstreamObject();
-    auto& fstrStream = sharedPtr->GetFstreamObject().hFile;
-    fstrStream->seekp(GetSDAddress());
-    if (!fstrStream) {
+   // auto& fstrInfo = sdStream->GetFstreamObject();
+   // auto& fstrStream = sdStream->GetFstreamObject().hFile;
+    
+    if (!sdStream->SetSeekPosW(GetSDAddress())) {
         e.SetError(Err::Code::FSEEK);
         return false;
     }
     
     //const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
-    bool leStatus = sharedPtr->WriteTStream<TRD_SD>(secDescInternal);
-    if (!leStatus || !fstrStream) {
+    bool leStatus = sdStream->WriteTStream<TRD_SD>(secDescInternal);
+    if (!leStatus || !sdStream->e.IsOk()) {
         e.SetError(Err::Code::IO_WRITE);
         return false;
     }
@@ -92,7 +92,7 @@ bool TRDSecDesc::IRwAccessible(){
     //todo check
    return IRwAccessible(wFstr);
 }
-bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> fstr) {
+bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr) {
     //todo check
     Err::Code hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
     if (hdrStatus != Err::Code::SUCCESS) {
@@ -170,4 +170,20 @@ bool TRDSecDesc::UpdateSDRegOffset(u64 tregOffset) {
     secDescInternal.tblRegistryOffset = tregOffset;
     secDescInternal.crc = IGenerateChecksum(secDescInternal);
     return IWriteSD();
+}
+
+std::optional<TRD_SD> TRDSecDesc::ReadSDBack() {
+    return std::nullopt;
+ }
+ bool TRDSecDesc::ReadSD() {
+    return false;
+}
+
+bool TRDSecDesc::IsSDValid() {
+    return false;
+}
+
+
+LibTrident::Err::Code TRDSecDesc::IsSDPresent() {
+    return Err::Code::FNNOTIMPL;
 }

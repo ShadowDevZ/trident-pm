@@ -62,10 +62,10 @@ typedef enum {
 }PKG_IOCTRL;
 
 
-
+//todo each SECTION should inherit from something like SectionCommon, standardize the functions
 class TRDPkgHeader  {
 public:
-    TRDPkgHeader(std::shared_ptr<LibTrident::TstreamInfo::TStreamInfo> fStreamInfo) :
+    TRDPkgHeader(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDPkgHeader(const TRDPkgHeader& other) : wFstr(other.wFstr) {}
     TRDPkgHeader(TRDPkgHeader&& other) : wFstr(std::move(other.wFstr)) {}
@@ -92,24 +92,24 @@ public:
     bool UpdateFileLenProp(u64 len);
     
     
+    std::optional<TRD_HEADER> ReadHeaderBack();
     bool IsValid();
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     
-    static LibTrident::Err::Code IsHeaderPresent(std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> fStreamInfo);
+    static LibTrident::Err::Code IsHeaderPresent(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo);
     
     
     
     private:
-    std::optional<TRD_HEADER> IReadHeaderBack();
-    std::weak_ptr<LibTrident::TstreamInfo::TStreamInfo> wFstr;
+    std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
     TRD_HEADER hdrInteral;
     //TRD_HEADER cacheHdr;
    
     bool ICheckCRC(u32 crc, const TRD_HEADER& hdr);
     bool ICheckHeaderSize(const TRD_HEADER& hdr);
     bool IValidateHeader(const TRD_HEADER& hdrIn);
-    //std::pair<bool,TstreamInfo::TRDFstreamObject&> ICheckAndGetFstreamContent();
+    //std::pair<bool,Tstream::TRDFstreamObject&> ICheckAndGetFstreamContent();
     
     
     //static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);

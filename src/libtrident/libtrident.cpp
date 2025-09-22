@@ -9,7 +9,7 @@ using namespace PkgIO;
 
 void LibTrident::TrPkg::ClosePkg() {
     //we do not perform any checks so RAII can take care of it
-    TstreamInfo::TRDFstreamObject& closeInfo =  fstrInfo->GetFstreamObject();
+    Tstream::TRDFstreamObject& closeInfo =  fstrInfo->GetFstreamObject();
     closeInfo.dirPath = "";
     closeInfo.name = "";
     closeInfo.fileOpened = false;
@@ -52,7 +52,7 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFl
         throw std::runtime_error("Failed to determine the file size");
     }
     //We are creating copy instead of simply moving is because if error occurs the original stream must remain unchanged
-    TstreamInfo::TRDFstreamObject fInfo;
+    Tstream::TRDFstreamObject fInfo;
     
     fInfo.fileFlags = openFlags;
     fInfo.fSize = fileSize;

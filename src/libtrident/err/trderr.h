@@ -29,6 +29,7 @@ namespace LibTrident::Err {
             ALROPEN,
             IREF_EXPIRED,
             RESV_VIOLATION,
+            FNNOTIMPL
             
     };
 

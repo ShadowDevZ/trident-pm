@@ -5,7 +5,7 @@
 #include "pkgio.h"
 
 using namespace LibTrident::Header;
-using namespace LibTrident::TstreamInfo;
+using namespace LibTrident::Tstream;
 using namespace LibTrident::UID;
 using namespace LibTrident;
 
@@ -27,20 +27,20 @@ foffset_t GetSDEnd() {
 
 
 bool TRDSdToken::WriteDescriptorSUID() {
-    auto haveCtx = TstreamInfo::TStreamInfo::GetFstreamContent(wFstr);
+    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
-    auto sharedPtr = haveCtx.value();
-    if (!sharedPtr->CheckFileStreamInfo()) {
+    auto sdStream = haveCtx.value();
+    if (!sdStream->CheckFileStreamInfo()) {
         e.SetError(Err::Code::NULL_OBJ);
         return false;
     }
     std::streampos sdOffset= static_cast<std::streampos>(GetOptRawSDStart());
     
  
-    Err::Code errSuid = SUID::WriteSUIDAt(sharedPtr, sdOffset, SUID::SUIDS::SECTION_DESCR);
+    Err::Code errSuid = SUID::WriteSUIDAt(sdStream, sdOffset, SUID::SUIDS::SECTION_DESCR);
     e.SetError(errSuid);
     if (errSuid == Err::Code::OK) {
         return true;
