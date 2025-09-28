@@ -2,7 +2,7 @@
 //#include "fileOperations.h"
 #include "ioflags.h"
 #include "pkgio.h"
-
+#include <cstring>
 using namespace LibTrident;
 using namespace PkgIO;
 using namespace LibTrident::Tstream;
@@ -153,8 +153,8 @@ bool TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) 
 
 
 }
-u64 TStreamInfo::IGetSeekPos(bool read) {
-    u64 pos = -1;
+i64 TStreamInfo::IGetSeekPos(bool read) {
+    i64 pos = -1;
     if (read) {
         pos =  xfInfo.hFile->tellg();
     }
@@ -167,4 +167,10 @@ u64 TStreamInfo::IGetSeekPos(bool read) {
     }
     e.Success();
     return pos;
+}
+
+bool TStreamInfo::WritePadding(u16 size, int value, bool increment) {
+    char padding[size];
+    std::memset(padding, value, sizeof(padding));
+    return WriteTStream(padding, sizeof(padding), increment);
 }

@@ -24,8 +24,8 @@ using namespace LibTrident::Consts::HeaderConsts;
 
 //in future this might get overloaded with something like int version
 
-bool TRDPkgHeader::ReadHeader() {
-    auto optHdr = ReadHeaderBack();
+bool TRDPkgHeader::Read() {
+    auto optHdr = TRDPkgHeader::ReadBack();
     if (optHdr.has_value() && IValidateHeader(optHdr.value())) {
         hdrInteral = optHdr.value();
         return true;
@@ -36,7 +36,7 @@ bool TRDPkgHeader::ReadHeader() {
 
 
 
-std::optional<TRD_HEADER> TRDPkgHeader::ReadHeaderBack() {
+std::optional<TRD_HEADER> TRDPkgHeader::ReadBack() {
     TRD_HEADER hdr { };
    
     auto haveCtx= Tstream::TStreamInfo::GetFstreamContent(wFstr);
@@ -54,7 +54,7 @@ std::optional<TRD_HEADER> TRDPkgHeader::ReadHeaderBack() {
     
    // auto& fstrStream = hdrStream->GetFstreamObject();
     
-    u64 originalPosition = hdrStream->GetSeekPosR();
+    i64 originalPosition = hdrStream->GetSeekPosR();
 
     if (!hdrStream->e.IsOk() || originalPosition == -1) {
         e.SetError(Err::Code::FSEEK);
@@ -110,7 +110,7 @@ Err::Code TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::Tstream::TStre
 
     TRDPkgHeader hdr(fStreamInfo);
    
-    auto optHdr = hdr.ReadHeaderBack();
+    auto optHdr = hdr.ReadBack();
     Err::Code errCode = hdr.e.GetError();
     if (!optHdr.has_value()) {
         return errCode;
@@ -156,7 +156,7 @@ bool TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn) {
     return true;
 }
 
-bool TRDPkgHeader::WriteHeader() {
+bool TRDPkgHeader::Write() {
     if (!ICheckHeaderSize(hdrInteral)) {
         e.SetError(Err::Code::FSECCRP);
         return false;
@@ -179,7 +179,7 @@ bool TRDPkgHeader::WriteHeader() {
 
 
    // const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
-  //  streamInfo->hFile->WriteHeader(hdrContent, GetHeaderByteSize());
+  //  streamInfo->hFile->Write(hdrContent, GetHeaderByteSize());
     
     if (!hdrStream->SetSeekPosW(TRD_HDR_START_OFFSET)) {
         e.SetError(Err::Code::FSEEK);
@@ -323,19 +323,19 @@ std::string TRDPkgHeader::HeaderVersionFormatToString(u16 fmt, bool abRevision) 
     hdrInteral = hdr;
     e.Success();
     
-    return WriteHeader();
+    return TRDPkgHeader::Write();
  }
 //CHECKSUM IS NOT UPDATED BECAUSE THESE ARE CONSIDERED DYNAMIC HEADER PROPS WHICH ARE NOT USED IN CRC FORMULA 
 //todo write directly
  bool TRDPkgHeader::UpdateIoctrlProp(u16 ioctrl) {
     //todo check if valid
     hdrInteral.ioCtrl = ioctrl;
-    return WriteHeader();
+    return TRDPkgHeader::Write();
 }
 
  bool TRDPkgHeader::UpdateFileLenProp(u64 len) {
     //todo check if valid
     hdrInteral.fileLen = len;
-    return WriteHeader();
+    return TRDPkgHeader::Write();
 
  }

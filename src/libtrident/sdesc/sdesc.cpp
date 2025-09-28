@@ -48,6 +48,7 @@ bool TRDSecDesc::WriteBlankSD() {
     return IWriteSD(true);
 }
 
+
  bool TRDSecDesc::IWriteSD(bool blankWrite) {
     //we do not validate empty TRD_SD
     if (!blankWrite && !IValidateSDContent(secDescInternal)) {
@@ -84,7 +85,6 @@ bool TRDSecDesc::WriteBlankSD() {
 
 
     e.Success();
-    e.Success();
     return true;
 }
 //checks if we have header first
@@ -104,8 +104,9 @@ bool TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> f
     return true;
 }
 
-bool TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD& sd) {
+bool TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD& sd, bool autoWrite) {
     TRD_SD updateSd = secDescInternal;
+
     updateSd.tblCount = sd.tblCount;
     updateSd.tblDynamicOffset = sd.tblDynamicOffset;
     updateSd.tblRegistryOffset = sd.tblRegistryOffset;
@@ -115,7 +116,10 @@ bool TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD& sd) {
     }
     secDescInternal = updateSd;
     
-    return IWriteSD();
+    if (autoWrite) {
+        return IWriteSD();
+    }
+    return true;
 }
 
 /*
@@ -137,6 +141,16 @@ bool TRDSecDesc::IValidateSDContent(const TRD_SD& sd) {
     //todo check crc and fields, this will be done when we actually have dynamic section table
     e.Success();
     return true;
+}
+bool TRDSecDesc::IValidateTblAddr(const TRD_SD& sd) {
+    if (sd.tblCount == 0 || sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0) {
+        //todo actually check each offset
+        e.SetError(Err::Code::COPYOBJ);
+        return false;
+    }
+    e.Success();
+    return true;
+
 }
 u32 IGenerateChecksum(const TRD_SD& sd) {
     #define _LOCAL_CRC(crc,x) crc32(((crc)), reinterpret_cast<const Bytef*>(&(x)), sizeof((x)))
@@ -172,15 +186,83 @@ bool TRDSecDesc::UpdateSDRegOffset(u64 tregOffset) {
     return IWriteSD();
 }
 
-std::optional<TRD_SD> TRDSecDesc::ReadSDBack() {
-    return std::nullopt;
+std::optional<TRD_SD> TRDSecDesc::ReadBack() {
+    TRD_SD sdDesc { };
+   
+    auto haveCtx= Tstream::TStreamInfo::GetFstreamContent(wFstr);
+    if (!haveCtx.has_value()) {
+        e.SetError(Err::Code::IREF_EXPIRED);
+        return std::nullopt;
+    }
+    auto sdStream = haveCtx.value();
+    
+    
+    if (!sdStream->CheckFileStreamInfo()) {
+        e.SetError(Err::Code::NULL_OBJ);
+        return std::nullopt;
+    }
+    
+    
+    i64 originalPosition = sdStream->GetSeekPosR();
+
+    if (!sdStream->e.IsOk() || originalPosition == -1) {
+        e.SetError(Err::Code::FSEEK);
+        return std::nullopt;
+    }
+    if (!IRwAccessible(sdStream)) {
+        e.SetError(Err::Code::IO_READ);
+        return std::nullopt;    
+    }
+
+    if (!sdStream->SetSeekPosR(GetSDAddress())) {
+        e.SetError(Err::Code::FSEEK);
+        return std::nullopt;
+    }
+   
+    
+   // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+
+    bool ReadHeaderStatus = sdStream->ReadTStream<TRD_SD>(sdDesc);
+    if (!ReadHeaderStatus) {
+        e.SetError(Err::Code::IO_READ);
+        return std::nullopt;
+    }
+
+    if (!sdStream->SetSeekPosR(originalPosition)) {
+        e.SetError(Err::Code::FSEEK);
+        return std::nullopt;
+    }
+    if (!IValidateSDContent(sdDesc)) {
+        return std::nullopt;
+    }
+    e.Success();
+    return sdDesc;
  }
- bool TRDSecDesc::ReadSD() {
+ bool TRDSecDesc::Read() {
+    auto optHdr = TRDSecDesc::ReadBack();
+    //todo call when implemented IValidateTblAddr
+    if (optHdr.has_value() && IValidateSDContent(optHdr.value())) {
+        secDescInternal = optHdr.value();
+        return true;
+    }
+    
     return false;
 }
 
-bool TRDSecDesc::IsSDValid() {
-    return false;
+bool TRDSecDesc::IsValid() {
+    auto have = Tstream::TStreamInfo::GetFstreamContent(wFstr);
+    if (!have.has_value()) {
+        return false;
+    }
+    if (!have.value()->IsOpen()) {
+        return false;
+    }
+    /* use when actually properly implemented
+    if (!IValidateTblAddr(secDescInternal)) {
+        return false;
+    }
+    */
+    return IValidateSDContent(secDescInternal);
 }
 
 

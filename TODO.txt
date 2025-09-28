@@ -5,10 +5,10 @@ trheader.cpp check eacch field individually
              ?direct write??
              validate fields in update
 @@everySD.h
-            inherit from SectionCommon
+DONE            inherit from SectionCommon
 tstreaminfo.h
             check max_path
-            more abstraction like AppendPadding()
+DONE            more abstraction like AppendPadding()
 
 pkgio.cpp
             make generic Little endian conversion and fix the current broken one, template it like GetLeObject<T>
@@ -16,6 +16,7 @@ pkgio.cpp
 sdesc.cpp
             implement functions
             check sd tags and returns
+            call IValidateTblAddr
 
 sdescid.cpp
             read SUID inside stream

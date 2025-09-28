@@ -5,6 +5,7 @@
 #include "ccattribs.h"
 #include "tstreaminfo.h"
 #include "trdconsts.h"
+#include "sectioncommon.h"
 namespace LibTrident::Header {
 
 PACKED_STRUCT {
@@ -63,7 +64,7 @@ typedef enum {
 
 
 //todo each SECTION should inherit from something like SectionCommon, standardize the functions
-class TRDPkgHeader  {
+class TRDPkgHeader : public LibTrident::Sections::SectionCommon<TRD_HEADER>  {
 public:
     TRDPkgHeader(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
@@ -74,26 +75,29 @@ public:
     LibTrident::Err::TridentError e;
  
 
-    const TRD_HEADER& GetInternal() const { 
+    const TRD_HEADER& GetObject() const override { 
         return hdrInteral;
     }
-    TRD_HEADER& GetInternal() { 
+    TRD_HEADER& GetObject() override{ 
         return hdrInteral;
+    }
+    inline bool StatusOk() override {
+        return e.IsOk();
     }
 
+    bool Write() override;
+    bool Read() override;
+    std::optional<TRD_HEADER> ReadBack() override;
+    bool IsValid() override;
+    
+    
     bool Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
-    bool Create(const TRD_HDRFIELD_UPDATE& field);
-    bool WriteHeader();
-    bool ReadHeader();
-    
-    
     bool UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
+    bool Create(const TRD_HDRFIELD_UPDATE& field);
     bool UpdateIoctrlProp(u16 ioctrl);
     bool UpdateFileLenProp(u64 len);
     
     
-    std::optional<TRD_HEADER> ReadHeaderBack();
-    bool IsValid();
     static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
     static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     

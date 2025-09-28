@@ -25,7 +25,7 @@ typedef struct {
 
 class TStreamInfo{
 private:
-    u64 IGetSeekPos(bool read);
+    i64 IGetSeekPos(bool read);
     bool ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seek=std::ios::beg);
     TRDFstreamObject xfInfo;
 public:
@@ -50,16 +50,16 @@ public:
     //checks if the stream is only MARKED as open, data may be missing or corrupted
     bool IsOpen();
     
-    inline bool SetSeekPosW(u64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
+    inline bool SetSeekPosW(i64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
         return ISetSeekPos(true, pos, seekDir);
     }
-    inline bool SetSeekPosR(u64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
+    inline bool SetSeekPosR(i64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
         return ISetSeekPos(false, pos, seekDir);
     }
-    inline u64 GetSeekPosW() {
+    inline i64 GetSeekPosW() {
         return IGetSeekPos(false);
     }
-    inline u64 GetSeekPosR() {
+    inline i64 GetSeekPosR() {
         return IGetSeekPos(true);
     }
 
@@ -75,6 +75,7 @@ public:
     }
     
     bool WriteTStream(const char* data, u64 size, bool increment=true);
+    bool WritePadding(u16 size, int value=0, bool increment=true);
     
     
     

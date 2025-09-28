@@ -38,7 +38,8 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {Err::Code::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"},
     {Err::Code::RESV_VIOLATION, "Reserved field not set to 0"},
     {Err::Code::ALROPEN, "Object was already opened"},
-    {Err::Code::FNNOTIMPL, "Function not implemented. Do not use"}
+    {Err::Code::FNNOTIMPL, "Function not implemented. Do not use"},
+    {Err::Code::BADDATA, "Bad data was passed to the function"}
 };
 
 
