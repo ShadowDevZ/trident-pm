@@ -25,5 +25,5 @@ public:
     
     bool WriteDescriptorSUID() override;
     bool ReadDescriptorSUID() override;
-    u32  GenerateCRC() override;
+    bool IsValidSUID() override;
 };

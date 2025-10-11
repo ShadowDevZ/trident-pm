@@ -8,8 +8,8 @@
 #include "tstreaminfo.h"
 #include <string_view>
 #include <filesystem>
-
-
+#include <algorithm>
+#include <vector>
 
 //todo add most basic IO function here
 namespace LibTrident::PkgIO {
@@ -26,6 +26,8 @@ namespace LibTrident::PkgIO {
             bool ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
              
             bool GetFileStats(const std::filesystem::path& file, struct stat64& statOut);
+
+            
     };
    
 
@@ -35,9 +37,39 @@ namespace LibTrident::PkgIO {
             //beg=true mean beginning of section, beg=false end of section
             virtual bool WriteDescriptorSUID() = 0;
             virtual bool ReadDescriptorSUID() = 0;
-            virtual u32  GenerateCRC() = 0;
+            virtual bool  IsValidSUID() = 0;
            
     };
+
+    class BinarySerializer {
+        private:
+            std::vector<uint8_t> bufferData;
+        public:
+            template <typename T>
+            static T ReverseByteOrder(T var) {
+                static_assert(std::is_trivially_copyable<T>::var, "Cannot reverse non trivial type. For non trivial types implement serialize() function");
+                T reversed;
+
+
+                char* beg = static_cast<char*>(&var);
+                char* revPtr = reinterpret_cast<char*>(&reversed);
+                std::reverse_copy(beg, beg + sizeof(T), &revPtr);
+    
+                return reversed;
+            
+            }
+            const std::vector<uint8_t>& GetData() const {
+                return bufferData;
+            }
+            std::vector<uint8_t>& GetData() {
+                return bufferData;
+            }
+            //WriteRawData
+            //WriteTrivial
+            //WriteToStream
+    
+        };
+    
 
 };
 

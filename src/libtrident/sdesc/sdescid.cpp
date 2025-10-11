@@ -51,6 +51,6 @@ bool TRDSdToken::WriteDescriptorSUID() {
 bool TRDSdToken::ReadDescriptorSUID() {
     return false;
 }
-u32 TRDSdToken::GenerateCRC() {
-    return 0;
+bool TRDSdToken::IsValidSUID() {
+    return false;
 }

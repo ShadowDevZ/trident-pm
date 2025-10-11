@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "ccattribs.h"
 #include "ccattribs.h"
-#include <algorithm>
+
 
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
@@ -11,6 +11,7 @@ using namespace LibTrident::PkgIO::FileOperations;
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
 #endif
+
 bool _ICPU_IsLittleEndian() {
 
     int i=1;
@@ -18,16 +19,6 @@ bool _ICPU_IsLittleEndian() {
     return (int)*((unsigned char *)&i)==1;
 
 }
-/*
-std::string FileOperations::GetFileDir(const std::string& file) {
-    size_t pos = file.find_last_of('/');
-    if (pos == std::string::npos) {
-        return "";
-    }
-    return file.substr(0, pos);
-}
-*/
-
 std::streamsize FileOperations::GetFstreamSize(std::shared_ptr<std::fstream> fs) {
     if (!fs->is_open()) {
         return -1;
@@ -71,11 +62,9 @@ bool FileOperations::GetFileStats(const std::filesystem::path& file, struct stat
         
 }
 
-void ReverseByteOrder( char* start, size_t size )
-{
-    char* byteEnd = start + size;
-    std::reverse(start, byteEnd);
-}
+
+
+
 bool FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
     if (!stream->is_open() || !data || size < 1) {
         dbgprintf("Error: WriteLeStream() Failed\n");
