@@ -17,7 +17,8 @@ using namespace LibTrident::Consts::SUID;
 using namespace LibTrident::Header;
 using namespace LibTrident::PkgIO;
 constexpr std::pair<SUID::SUIDS,const std::string_view> gTuidList [] = {
-    {SUID::SUIDS::SECTION_DESCR,"7a153cca-f082-4837-9f8b-10905d006261"}
+    //SUIDS are in following format (XXX-UUID) where XXX is shorthand name
+    {SUID::SUIDS::SECTION_DESCR,"SDR-7a153cca-f082-4837-9f8b-10905d006261"}
     
 };
 const std::string_view SUID::GetSUIDString(SUID::SUIDS id) {

@@ -12,13 +12,7 @@ using namespace LibTrident::PkgIO::FileOperations;
 #error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
 #endif
 
-bool _ICPU_IsLittleEndian() {
 
-    int i=1;
-
-    return (int)*((unsigned char *)&i)==1;
-
-}
 std::streamsize FileOperations::GetFstreamSize(std::shared_ptr<std::fstream> fs) {
     if (!fs->is_open()) {
         return -1;
@@ -72,8 +66,12 @@ bool FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char
     }
     //THIS WONT WORK ON BIG ENDIAN AT ALL, IT ONLY WORKS FOR TRIVIAL TYPES NOT FOR STRUCTS
     //WE NEED TO SERIALIZE THE STRUCT BEFORE WRITING IT, OTHERWISE IT PRODUCES GARBAGE
-    if (_ICPU_IsLittleEndian()) {
+    if (BinarySerializer::IsLittleEndianArch()) {
         stream->write(data, size);
+    }
+    else {
+        //failsafe
+        assert(0 && "Unsupported operation on BE");
     }
     /* BROKEN
     else {
@@ -106,8 +104,12 @@ bool FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, s
         return false;
     }
     
-    if (_ICPU_IsLittleEndian()) {
+    if (BinarySerializer::IsLittleEndianArch()) {
         stream->read(data, size);
+    }
+    else {
+        //failsafe
+        assert(0 && "Unsupported operation on BE");
     }
     /*BROKEN
     else {
@@ -127,4 +129,47 @@ bool FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, s
     return true;
 }
 
+
+bool BinarySerializer::AddRaw(const void*  data, size_t size) {
+    if (!data || size == 0) {
+        return false;
+    }
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+    bufferData.insert(bufferData.end(), bytes, bytes + size);
+    return true;
+
+}
+
+bool BinarySerializer::WriteData(i64 seekPos, std::ios_base::seekdir seekDir) {
+    //todo make this boilerplate in all classes a function
+    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
+    if (!haveCtx.has_value()) {
+        return false;
+    }
+    auto tStream = haveCtx.value();
+    if (!tStream->CheckFileStreamInfo()) {
+        return false;
+    }
+    i64 ogSeek = tStream->GetSeekPosW();
+    if (ogSeek == -1 || seekPos < 0) {
+        return false;
+    }
+    if (!tStream->SetSeekPosW(seekPos, seekDir)) {
+        return false;
+    }
+    size_t alignSize = 0;
+    //todo use assertion in other function, quick fix
+    if (!IsDataSizeAligned(bufferData.size(), false)) {
+        alignSize = GetByteAlignment(bufferData.size()) - bufferData.size();
+    }
+    bufferData.insert(bufferData.end(), alignSize, 0);
+    dbgprintf("\n\n\n%lu\n", bufferData.size());
+    bool st = tStream->WriteTStream(reinterpret_cast<const char*>(bufferData.data()), bufferData.size(),  true);
+    tStream->SetSeekPosW(ogSeek);
+    return st;
+
+    
+    
+
+}
 //todo use ReadLeStream()

@@ -39,7 +39,8 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {Err::Code::RESV_VIOLATION, "Reserved field not set to 0"},
     {Err::Code::ALROPEN, "Object was already opened"},
     {Err::Code::FNNOTIMPL, "Function not implemented. Do not use"},
-    {Err::Code::BADDATA, "Bad data was passed to the function"}
+    {Err::Code::BADDATA, "Bad data was passed to the function"},
+    {Err::Code::ALIGNMENT, "Data was not properly aligned before written. Alignment violated"}
 };
 
 

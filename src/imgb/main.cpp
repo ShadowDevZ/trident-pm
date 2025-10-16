@@ -66,47 +66,58 @@ int main(void) {
     
 
    
-    
-   std::cout << std::boolalpha;
-   std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
+   
+   
+   
+   //std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
+   tassert("CreateHeader()",x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE));
 #ifdef _LIBTRIDENT_DEBUG
    print_header(x.GetObject());
 #endif
-   std::cout << "WriteHeaderHeader() " << x.Write() << std::endl;
+  tassert("WriteHeaderHeader()" , x.Write())
   // std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
-    std::cout << "ReadHeader() " << x.Read() << std::endl;
-    std::cout << std::endl;
+    tassert("ReadHeader() ", x.Read());
+    
     TRD_HDRFIELD_UPDATE updateField;
     updateField.architecture = ARCHT_AARCH64;
     updateField.buildFlags = BF_PLATF_NT;
     updateField.compression = COMPRALG_GZIP;
     updateField.fmtVersion = TRDPkgHeader::FormatHeaderVersion(3,1,2);
-    std::cout << "UpdateHeader() " << x.UpdateHeader(updateField) << std::endl;
+    
+    tassert("UpdateHeader() ", x.UpdateHeader(updateField));
  
-    std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
+    tassert("ValidateHeader() ", x.IsValid());
     print_header(x.GetObject());   
-    std::cout << std::endl;
-    std::cout << "ModifyLen() " << x.UpdateFileLenProp(0xbeefccaa) << std::endl;
-    std::cout << "ModifyIOCTRL() " << x.UpdateIoctrlProp(IOCTRL_DESC_WLOCK) << std::endl;
-    std::cout << "ValidateHeader() " << x.IsValid() << std::endl;
+   
+    tassert("ModifyLen() ", x.UpdateFileLenProp(0xbeefccaa));
+    tassert("ModifyIOCTRL() ", x.UpdateIoctrlProp(IOCTRL_DESC_WLOCK));
+    tassert("ValidateHeader() ", x.IsValid());
     print_header(x.GetObject());   
 
     TRDSecDesc sectionDesc(lt.fstrInfo);
-    std::cout << "WriteBlankSD() " << sectionDesc.WriteBlankSD() << std::endl;
+    tassert("WriteBlankSD() ", sectionDesc.WriteBlankSD());
     TRD_SD_UPDATEFIELD sdUpdate;
     sdUpdate.tblCount = UINT32_MAX;
     sdUpdate.tblDynamicOffset = UINT64_MAX;
     sdUpdate.tblRegistryOffset = UINT64_MAX;
-    std::cout << "UpdateSD() " << sectionDesc.UpdateSD(sdUpdate) << std::endl;
-    std::cout << "ModifySDCount() " << sectionDesc.UpdateSDTblCount(16) << std::endl;
-    std::cout << "ModifySDDtbl() " << sectionDesc.UpdateSDDynOffset(0x1337CAFFEE) << std::endl;
-    std::cout << "ModifySDTreg() " << sectionDesc.UpdateSDRegOffset(0xDEADBEEF) << std::endl;
-    std::cout << "ReadSD() " << sectionDesc.Read() << std::endl;
+    tassert("UpdateSD() ", sectionDesc.UpdateSD(sdUpdate));
+    tassert("ModifySDCount() ", sectionDesc.UpdateSDTblCount(16));
+    tassert("ModifySDDtbl() " , sectionDesc.UpdateSDDynOffset(0x1337CAFFEE));
+    tassert("ModifySDTreg() ", sectionDesc.UpdateSDRegOffset(0xDEADBEEF));
+    tassert("ReadSD() ", sectionDesc.Read());
     print_sd(sectionDesc.GetObject());
+    PkgIO::BinarySerializer bSer(lt.fstrInfo);
+    int oox = 0xbeefc;
+    
+    bSer.AddTrivial(oox);
+   
+    bSer.WriteData(0, std::ios::end);
+   
+   //std::cout << PkgIO::BinarySerializer::GetByteAlignment(sizeof(ccc)) << std::endl;
     //todo fr add those asserts
    // std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
    
-    std::cout << std::noboolalpha;
+    
     std::cout << x.e << std::endl;
    
 //ClosePkg() not needed because of RAII

@@ -116,21 +116,42 @@ std::optional<std::shared_ptr<Tstream::TStreamInfo>> Tstream::TStreamInfo::GetFs
       return fstrInfo;
 }
 
+
+
 bool TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
     if (!CheckFileStreamInfo())  {
         dbgprintf("Error: WriteLeStream(validate) Failed\n");
         return false;
     }
+    //for compatibility across different CPUS and to improve performance on x86/64
+    if (!BinarySerializer::IsDataSizeAligned(size)) {
+        e.SetError(Err::Code::ALIGNMENT);
+        return false;
+    }
+    if (size == 0) {
+        e.SetError(Err::Code::BADARG);
+        return false;
+    }
+    
    
     bool st = FileOperations::WriteLeData(xfInfo.hFile, data, size);
+
     if (st && increment) {
         xfInfo.fSize += size;
     }
     return st;
 }
 bool TStreamInfo::ReadTStream(char* s, u64 size) {
+    if (size == 0) {
+        e.SetError(Err::Code::BADARG);
+        return false;
+    }
     if (!CheckFileStreamInfo())  {
         dbgprintf("Error: ReadLeStream(validate) Failed\n");
+        return false;
+    }
+    if (!BinarySerializer::IsDataSizeAligned(size)) {
+        e.SetError(Err::Code::ALIGNMENT);
         return false;
     }
     return FileOperations::ReadLeData(xfInfo.hFile, s, size);
@@ -174,3 +195,4 @@ bool TStreamInfo::WritePadding(u16 size, int value, bool increment) {
     std::memset(padding, value, sizeof(padding));
     return WriteTStream(padding, sizeof(padding), increment);
 }
+

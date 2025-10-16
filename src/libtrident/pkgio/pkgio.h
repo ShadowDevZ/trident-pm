@@ -40,36 +40,94 @@ namespace LibTrident::PkgIO {
             virtual bool  IsValidSUID() = 0;
            
     };
-
+    //serializes struct to array of bytes
+    //each functiopn which wants to utilize TStream and use non trivial datatypes must implement Serialize() function
     class BinarySerializer {
-        private:
-            std::vector<uint8_t> bufferData;
-        public:
-            template <typename T>
-            static T ReverseByteOrder(T var) {
-                static_assert(std::is_trivially_copyable<T>::var, "Cannot reverse non trivial type. For non trivial types implement serialize() function");
-                T reversed;
-
-
-                char* beg = static_cast<char*>(&var);
-                char* revPtr = reinterpret_cast<char*>(&reversed);
-                std::reverse_copy(beg, beg + sizeof(T), &revPtr);
+private:
+    std::vector<uint8_t> bufferData;
+    std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
+    bool littleEndian = false;
+public:
     
-                return reversed;
+    static inline bool IsLittleEndianArch() {
+        int i = 1;
+        if ((int)*((unsigned char *)&i)==1) {
+            return true;
+        }
+        return false;
+    }
+    
+    inline bool HaveBE() {
+        return !littleEndian;
+    }
+   
+    BinarySerializer(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
+    wFstr(fStreamInfo), littleEndian(IsLittleEndianArch()) {}
+
+    BinarySerializer(const BinarySerializer& other) : wFstr(other.wFstr), littleEndian(other.littleEndian) {}
+    BinarySerializer(BinarySerializer&& other) : wFstr(std::move(other.wFstr)), littleEndian(other.littleEndian) {}
             
+    template <typename T>
+    static T ReverseByteOrder(T var) {
+        static_assert(std::is_trivially_copyable_v<T>,
+            "Cannot reverse non-trivial type. For non-trivial types, implement serialize().");
+
+        T reversed;
+
+        const unsigned char* src = reinterpret_cast<const unsigned char*>(&var);
+        unsigned char* dst = reinterpret_cast<unsigned char*>(&reversed);
+
+        std::reverse_copy(src, src + sizeof(T), dst);
+
+        return reversed;
+    }
+        //make the datatype 8 byte aligned
+            
+    static size_t GetByteAlignment(size_t varSize) {
+              
+        const auto& alignBytes = Consts::Binary::BSERIALIZE_DATA_ALIGN;
+                
+        if (varSize % alignBytes) {
+            varSize += (alignBytes - (varSize % alignBytes));
+        }
+
+        return varSize;
+    }
+    static inline bool IsDataSizeAligned(size_t size, bool die=true) {
+        if (size % LibTrident::Consts::Binary::BSERIALIZE_DATA_ALIGN != 0) {
+            if (die) {
+                dassert(0 && "Data must be 8 byte aligned");
             }
-            const std::vector<uint8_t>& GetData() const {
-                return bufferData;
-            }
-            std::vector<uint8_t>& GetData() {
-                return bufferData;
-            }
-            //WriteRawData
-            //WriteTrivial
-            //WriteToStream
+            return false;
+        }
+        return true;
+    } 
     
-        };
+    const std::vector<uint8_t>& GetData() const {
+        return bufferData;
+    }
+    std::vector<uint8_t>& GetData() {
+        return bufferData;
+    }
+    inline void EmptyData() {
+        bufferData.clear();
+    }
+
+    bool AddRaw(const void*  data, size_t size);
     
+    template <typename T>
+    bool AddTrivial(T t) {
+        static_assert(std::is_trivially_copyable_v<T>, "Only trivially copyable types are supported.");
+        if (HaveBE()) {
+            t = ReverseByteOrder(t);
+        }
+        return AddRaw(&t, sizeof(t));
+    }
+
+    bool WriteData(i64 seekPos, std::ios_base::seekdir seekDir=std::ios::beg);
+   
+
+};
 
 };
 

@@ -30,7 +30,8 @@ namespace LibTrident::Err {
             IREF_EXPIRED,
             RESV_VIOLATION,
             FNNOTIMPL,
-            BADDATA
+            BADDATA,
+            ALIGNMENT
             
     };
 
