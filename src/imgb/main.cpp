@@ -51,13 +51,30 @@ void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
 #endif
 
 typedef struct {
-    uint16_t x;
-    uint32_t y;
-    uint16_t w;
+    uint16_t x = 0;
+    uint32_t y = 0;
+    uint16_t z = 0;
 
-    //std::vector<char> serialize() const {
-    //    PkgIO::BinarySerializer(nullptr);
-  //  }
+    std::optional<std::vector<u8>> serialize() const {
+        PkgIO::BinarySerializer bs;
+        bs.AddTrivial(x);
+        bs.AddTrivial(y);
+        bs.AddTrivial(z);
+        return bs.GetFormattedData(false);
+
+    }
+
+    
+    //wip idea   void bs::ReadTrivial<T>(const std::vector<u8>& in, const char* outData);
+    void deserialize(const std::vector<u8>& dataIn) {
+        //on error throws exception
+        PkgIO::BinarySerializer bs(dataIn);
+        bs.ReadTrivial<u16>(&x);
+        bs.ReadTrivial<u32>(&y);
+        bs.ReadTrivial<u16>(&z);
+    }
+
+    
 
 }NTC_INFO_TEST;
 
@@ -120,7 +137,7 @@ int main(void) {
     print_sd(sectionDesc.GetObject());
     
     
-    
+    /*
     {
     PkgIO::BinarySerializer bSer;
    //int oox = 0xbeefc;
@@ -146,7 +163,22 @@ int main(void) {
     //todo fr add those asserts
    // std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
     }
-   
+   */
+  {
+    NTC_INFO_TEST ntc;
+    ntc.x = UINT16_MAX;
+    ntc.y = UINT32_MAX;
+    ntc.z = UINT16_MAX;
+    //later called using template 
+    const auto& haveNtc = ntc.serialize();
+    if (haveNtc.has_value()) {
+        const auto& val = haveNtc.value();
+        Err::Code x = PkgIO::BinarySerializer::WriteDataToTStream(lt.fstrInfo, val, 0, std::ios::end);
+        if (x == Err::Code::SUCCESS) {
+            dbgprintf("ok\n");
+        }
+    }
+  }
 
 
 

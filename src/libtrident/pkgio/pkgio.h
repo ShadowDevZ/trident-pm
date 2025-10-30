@@ -44,7 +44,7 @@ namespace LibTrident::PkgIO {
     //each functiopn which wants to utilize TStream and use non trivial datatypes must implement Serialize() function
     class BinarySerializer {
 private:
-    std::vector<uint8_t> bufferData;
+    std::vector<uint8_t> bufferData {};
   //  std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
     bool littleEndian = false;
 public:
@@ -78,8 +78,9 @@ public:
     inline bool HaveBE() {
         return !littleEndian;
     }
-   
     BinarySerializer() : littleEndian(IsLittleEndianArch()) {}
+    //second constructor for deserialize()
+    BinarySerializer(const std::vector<uint8_t>& data) : bufferData(data), littleEndian(IsLittleEndianArch()) {}
 
     BinarySerializer(const BinarySerializer& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
     BinarySerializer(BinarySerializer&& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
@@ -187,10 +188,16 @@ public:
         }
         return true;
     }
+
+    //todo
+    //reads sizeof T from bufferData and writes to ptrOut
+    template <typename T>
+    bool ReadTrivial(T* t) {
+        (void)(t);
+        return false;
+    }
     
-
-
-
+    
     template <typename T>
     bool AddTrivial(T t) {
         static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
@@ -200,7 +207,7 @@ public:
         return AddRaw(&t, sizeof(t));
     }
     //if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
-    std::optional<const std::reference_wrapper<std::vector<u8>>> GetFormattedData(bool autoAlign);
+    std::optional<std::vector<u8>> GetFormattedData(bool autoAlign);
     static Err::Code WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
 
 };

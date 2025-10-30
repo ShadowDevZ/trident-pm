@@ -175,7 +175,7 @@ Err::Code BinarySerializer::WriteDataToTStream(std::weak_ptr<LibTrident::Tstream
     return Err::Code::SUCCESS;
 }
 
-std::optional<const std::reference_wrapper<std::vector<u8>>> BinarySerializer::GetFormattedData(bool autoAlign) {
+std::optional<std::vector<u8>> BinarySerializer::GetFormattedData(bool autoAlign) {
     if (bufferData.empty()) {
         return std::nullopt;
     }
