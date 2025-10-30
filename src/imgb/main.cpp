@@ -50,9 +50,21 @@ void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
 }
 #endif
 
+typedef struct {
+    uint16_t x;
+    uint32_t y;
+    uint16_t w;
+
+    //std::vector<char> serialize() const {
+    //    PkgIO::BinarySerializer(nullptr);
+  //  }
+
+}NTC_INFO_TEST;
+
+
 int main(void) {
     PrintBuildTarget();
-   
+    
     LibTrident::TrPkg lt("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
     //lt.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
@@ -106,16 +118,39 @@ int main(void) {
     tassert("ModifySDTreg() ", sectionDesc.UpdateSDRegOffset(0xDEADBEEF));
     tassert("ReadSD() ", sectionDesc.Read());
     print_sd(sectionDesc.GetObject());
-    PkgIO::BinarySerializer bSer(lt.fstrInfo);
-    int oox = 0xbeefc;
     
-    bSer.AddTrivial(oox);
+    
+    
+    {
+    PkgIO::BinarySerializer bSer;
+   //int oox = 0xbeefc;
+   //unsigned char oox[] = {0xff, 0xaa};
+    std::vector<uchar> oox = {0xff, 0xaa,0xfc,0xff, 0xaa,0xfc,0xff, 0xaa};
+ 
+    bSer.EmptyData();
+    bSer.AddType(oox);
    
-    bSer.WriteData(0, std::ios::end);
-   
-   //std::cout << PkgIO::BinarySerializer::GetByteAlignment(sizeof(ccc)) << std::endl;
+   // tassert("BSWData() ", bSer.WriteData(true, 0, std::ios::end));
+    auto haveCtx = bSer.GetFormattedData(true);
+    if (haveCtx.has_value()) {
+        const auto& vec = haveCtx.value();
+      
+        bSer.WriteDataToTStream(lt.fstrInfo, vec, 0, std::ios::end);
+       // tassert("BSWData() ",  == Err::Code::SUCCESS);
+        
+    }
+    else {
+        dbgprintf("BSWfail\n");
+    }
+     //std::cout << PkgIO::BinarySerializer::GetByteAlignment(sizeof(ccc)) << std::endl;
     //todo fr add those asserts
    // std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
+    }
+   
+
+
+
+  
    
     
     std::cout << x.e << std::endl;

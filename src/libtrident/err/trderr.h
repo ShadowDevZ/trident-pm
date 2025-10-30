@@ -34,6 +34,7 @@ namespace LibTrident::Err {
             ALIGNMENT
             
     };
+    
 
 
 class TridentError {
@@ -49,6 +50,9 @@ public:
 
     static inline const std::string_view& TranslateError(const LibTrident::Err::TridentError& code) {
         return TranslateError(code.err);    
+    }
+    constexpr operator bool() const noexcept {
+        return err == Err::Code::SUCCESS;
     }
 
     static const std::string_view& TranslateError(LibTrident::Err::Code);

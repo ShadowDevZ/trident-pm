@@ -139,37 +139,70 @@ bool BinarySerializer::AddRaw(const void*  data, size_t size) {
     return true;
 
 }
-
-bool BinarySerializer::WriteData(i64 seekPos, std::ios_base::seekdir seekDir) {
+Err::Code BinarySerializer::WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {
     //todo make this boilerplate in all classes a function
+    if (data.empty()) {
+        return Err::Code::BADARG;
+    }
     auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        return false;
+        return Err::Code::IREF_EXPIRED;
     }
     auto tStream = haveCtx.value();
     if (!tStream->CheckFileStreamInfo()) {
-        return false;
+        return tStream->e.GetError();
     }
     i64 ogSeek = tStream->GetSeekPosW();
     if (ogSeek == -1 || seekPos < 0) {
-        return false;
+        return Err::Code::FSEEK;
     }
     if (!tStream->SetSeekPosW(seekPos, seekDir)) {
-        return false;
+        return Err::Code::FSEEK;
     }
+    if (!ExpectAlignedDataOrDie(data.size())) {
+        return Err::Code::BADDATA;
+    }
+
+    bool st = tStream->WriteTStream(reinterpret_cast<const char*>(data.data()), data.size(),  true);
+    bool seek = tStream->SetSeekPosW(ogSeek);
+    if (!st) {
+        return Err::Code::IO_WRITE;
+    }
+    if (!seek) {
+        return Err::Code::FSEEK;
+    }
+
+    return Err::Code::SUCCESS;
+}
+
+std::optional<const std::reference_wrapper<std::vector<u8>>> BinarySerializer::GetFormattedData(bool autoAlign) {
+    if (bufferData.empty()) {
+        return std::nullopt;
+    }
+   
     size_t alignSize = 0;
-    //todo use assertion in other function, quick fix
-    if (!IsDataSizeAligned(bufferData.size(), false)) {
-        alignSize = GetByteAlignment(bufferData.size()) - bufferData.size();
+
+    if (autoAlign) {
+        const auto& vSize = bufferData.size();
+        if (!IsDataSizeAligned(vSize)) {
+            alignSize = GetByteAlignment(vSize) - vSize;
+            dbgprintf("--Unaligned data serialized\nog:%luB new: %luB\n", vSize, alignSize+vSize);
+        }
     }
+
     bufferData.insert(bufferData.end(), alignSize, 0);
-    dbgprintf("\n\n\n%lu\n", bufferData.size());
-    bool st = tStream->WriteTStream(reinterpret_cast<const char*>(bufferData.data()), bufferData.size(),  true);
-    tStream->SetSeekPosW(ogSeek);
-    return st;
+    if (!ExpectAlignedDataOrDie(bufferData.size())) {
+            return std::nullopt;
+    }
+    dbgprintf("--Serializing data size %luB\n\n", bufferData.size());
+   // bool st = tStream->WriteTStream(reinterpret_cast<const char*>(bufferData.data()), bufferData.size(),  true);
+    
+    return bufferData;
 
     
     
 
 }
+
+
 //todo use ReadLeStream()

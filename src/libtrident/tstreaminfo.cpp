@@ -124,7 +124,7 @@ bool TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
         return false;
     }
     //for compatibility across different CPUS and to improve performance on x86/64
-    if (!BinarySerializer::IsDataSizeAligned(size)) {
+    if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
         e.SetError(Err::Code::ALIGNMENT);
         return false;
     }
@@ -150,7 +150,7 @@ bool TStreamInfo::ReadTStream(char* s, u64 size) {
         dbgprintf("Error: ReadLeStream(validate) Failed\n");
         return false;
     }
-    if (!BinarySerializer::IsDataSizeAligned(size)) {
+    if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
         e.SetError(Err::Code::ALIGNMENT);
         return false;
     }

@@ -45,27 +45,44 @@ namespace LibTrident::PkgIO {
     class BinarySerializer {
 private:
     std::vector<uint8_t> bufferData;
-    std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
+  //  std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
     bool littleEndian = false;
 public:
     
     static inline bool IsLittleEndianArch() {
+#if LT_ENDIAN_FORCE != 0
+        #if LT_ENDIAN_FORCE == 1
+            return true;
+        #else
+            return false;
+        #endif
+
+#elif LT_ENDIAN_CHECK_RT == 1
         int i = 1;
         if ((int)*((unsigned char *)&i)==1) {
             return true;
         }
         return false;
+
+
+#else
+    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        return false;
+    #else
+        return true
+    #endif
+    
+#endif
     }
     
     inline bool HaveBE() {
         return !littleEndian;
     }
    
-    BinarySerializer(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
-    wFstr(fStreamInfo), littleEndian(IsLittleEndianArch()) {}
+    BinarySerializer() : littleEndian(IsLittleEndianArch()) {}
 
-    BinarySerializer(const BinarySerializer& other) : wFstr(other.wFstr), littleEndian(other.littleEndian) {}
-    BinarySerializer(BinarySerializer&& other) : wFstr(std::move(other.wFstr)), littleEndian(other.littleEndian) {}
+    BinarySerializer(const BinarySerializer& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
+    BinarySerializer(BinarySerializer&& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
             
     template <typename T>
     static T ReverseByteOrder(T var) {
@@ -93,14 +110,27 @@ public:
 
         return varSize;
     }
-    static inline bool IsDataSizeAligned(size_t size, bool die=true) {
-        if (size % LibTrident::Consts::Binary::BSERIALIZE_DATA_ALIGN != 0) {
-            if (die) {
-                dassert(0 && "Data must be 8 byte aligned");
-            }
-            return false;
-        }
-        return true;
+    /*
+    /if data size is no aligned the function manipulating the data needs to fix it
+    by calling GetByteAlignment()
+    Why wont we use this always instead of killing on failure ? Well if malformed data enters 
+    the function we could possibly write bad data
+    */
+    static inline bool IsDataSizeAligned(size_t size) {
+        return size % LibTrident::Consts::Binary::BSERIALIZE_DATA_ALIGN == 0;
+    }
+
+    //If data is ok returns true otherwise false
+    //same as IsDataSizeAligned except that this leaves no room for fixing the size by padding it
+    //kills program if size is not properly aligned
+    static inline bool ExpectAlignedDataOrDie(size_t size) {
+        //normal assert used because this condition simply cant happen
+        bool aligned = IsDataSizeAligned(size);
+        assert(aligned && "Data must be 8 byte aligned");
+        
+        //just in case the assertion fails
+        return aligned;
+
     } 
     
     const std::vector<uint8_t>& GetData() const {
@@ -112,20 +142,66 @@ public:
     inline void EmptyData() {
         bufferData.clear();
     }
-
-    bool AddRaw(const void*  data, size_t size);
+    //Warning this method DOES NOT check nor modify endianness
+    //Do not use this method unless no other override is available
+    //When calling this function you are responsible for passing data in correct endianness
+    LT_UNSAFE_API bool AddRaw(const void*  data, size_t size);
     
+   
+    //C styled array override, only for fundamental types
+    //if your arrays uses non fundamental type please define your own serialize method
+    template <typename T, std::size_t N>
+    bool AddType(const T (&arr)[N]) {
+        if (N < 1) {
+            return false;
+        }
+
+        for (std::size_t i = 0; i < N; ++i) {
+            if (!AddTrivial(arr[i])) {return false;}
+        }
+        return true;
+    }
+    //std::array override, only for fundamental types
+    //if your arrays uses non fundamental type please define your own serialize method
+    template <typename T, std::size_t N>
+    bool AddType(const std::array<T, N>& arr) {
+        if (N < 1) {
+            return false;
+        }
+
+        for (const auto& v : arr) {
+            if (!AddTrivial(v)) {return false;}
+        }
+        return true;
+    }
+    //std::vector override, only for fundamental types
+    //if your arrays uses non fundamental type please define your own serialize method
+    template <typename T>
+    bool AddType(const std::vector<T>& vec) {
+        if (vec.size() < 1) {
+            return false;
+        }
+
+        for (const auto& v : vec) {
+            if (!AddTrivial(v)) {return false;}
+        }
+        return true;
+    }
+    
+
+
+
     template <typename T>
     bool AddTrivial(T t) {
-        static_assert(std::is_trivially_copyable_v<T>, "Only trivially copyable types are supported.");
+        static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
         if (HaveBE()) {
             t = ReverseByteOrder(t);
         }
         return AddRaw(&t, sizeof(t));
     }
-
-    bool WriteData(i64 seekPos, std::ios_base::seekdir seekDir=std::ios::beg);
-   
+    //if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
+    std::optional<const std::reference_wrapper<std::vector<u8>>> GetFormattedData(bool autoAlign);
+    static Err::Code WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
 
 };
 
