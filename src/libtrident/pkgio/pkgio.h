@@ -14,18 +14,21 @@
 //todo add most basic IO function here
 namespace LibTrident::PkgIO {
    namespace FileOperations {
-           
+            //throws std::ios_base::failure on failure 
             std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
             
             ///The following 2 functions format the buffer and WriteHeader it as Little endian
             //does not increment fSize
            
+            //throws std::ios::base on failure
+            void WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
             
-            bool WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
             //increments fSize by bytes written by default, if updating alReadHeadery written variable INCREMENT MUST BE FALSE
-            bool ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
-             
-            bool GetFileStats(const std::filesystem::path& file, struct stat64& statOut);
+            //throws std::ios::base, std::bad_alloc, std::runtime_error on failure
+            void ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
+           
+            //throws std::system_error on failure
+            std::shared_ptr<struct stat64> GetFileStats(const std::filesystem::path& file);
 
             
     };
@@ -127,8 +130,9 @@ public:
     static inline bool ExpectAlignedDataOrDie(size_t size) {
         //normal assert used because this condition simply cant happen
         bool aligned = IsDataSizeAligned(size);
-        assert(aligned && "Data must be 8 byte aligned");
-        
+        if (!aligned) {
+            throw std::runtime_error("Passed data was not properly aligned");
+        }
         //just in case the assertion fails
         return aligned;
 
@@ -146,47 +150,46 @@ public:
     //Warning this method DOES NOT check nor modify endianness
     //Do not use this method unless no other override is available
     //When calling this function you are responsible for passing data in correct endianness
-    LT_UNSAFE_API bool AddRaw(const void*  data, size_t size);
+    //throws std::invalid_argument on failure
+    LT_UNSAFE_API void AddRaw(const void*  data, size_t size);
     
    
     //C styled array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <typename T, std::size_t N>
-    bool AddType(const T (&arr)[N]) {
+    void AddType(const T (&arr)[N]) {
         if (N < 1) {
-            return false;
+            throw std::invalid_argument("Array is empty");
         }
 
         for (std::size_t i = 0; i < N; ++i) {
-            if (!AddTrivial(arr[i])) {return false;}
+            AddTrivial(arr[i]);
         }
-        return true;
     }
     //std::array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <typename T, std::size_t N>
-    bool AddType(const std::array<T, N>& arr) {
+    void AddType(const std::array<T, N>& arr) {
         if (N < 1) {
-            return false;
+            throw std::invalid_argument("Array is empty");
         }
 
         for (const auto& v : arr) {
-            if (!AddTrivial(v)) {return false;}
+            AddTrivial(v);
         }
-        return true;
+       
     }
     //std::vector override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <typename T>
-    bool AddType(const std::vector<T>& vec) {
-        if (vec.size() < 1) {
-            return false;
+    void AddType(const std::vector<T>& vec) {
+        if (vec.empty()) {
+            throw std::invalid_argument("Vector is empty");
         }
 
         for (const auto& v : vec) {
-            if (!AddTrivial(v)) {return false;}
+            AddTrivial(v);
         }
-        return true;
     }
 
     //todo
@@ -199,16 +202,16 @@ public:
     
     
     template <typename T>
-    bool AddTrivial(T t) {
+    void AddTrivial(T t) {
         static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
         if (HaveBE()) {
             t = ReverseByteOrder(t);
         }
-        return AddRaw(&t, sizeof(t));
+        AddRaw(&t, sizeof(t));
     }
     //if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
     std::optional<std::vector<u8>> GetFormattedData(bool autoAlign);
-    static Err::Code WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
+    static void WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
 
 };
 

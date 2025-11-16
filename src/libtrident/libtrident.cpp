@@ -68,15 +68,9 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFl
     fInfo.name = path;
     dbgprintf("name: %s\n", fInfo.name.c_str()); 
     dbgprintf("dir: %s\n", fInfo.dirPath.c_str()); 
+    fInfo.fileStat = std::move(FileOperations::GetFileStats(path));
 
-    if (!FileOperations::GetFileStats(path.c_str(), fInfo.fileStat)) {
-        throw std::runtime_error("Unable to call stat()");
-    }
- 
-
-    if (!fstrInfo->SetFileStreamInfo(fInfo)) {
-        throw std::runtime_error("Setting FileStreamInfoObject failed");
-    }
+    fstrInfo->SetFileStreamInfo(fInfo);
 
 }
 //ClosePkg, reset context, filestream close fd

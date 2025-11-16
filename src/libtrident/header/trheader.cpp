@@ -1,5 +1,5 @@
 #include "trheader.h"
-#include <sstream>
+
 #include <zlib.h>
 #include "pkgio.h"
 
@@ -61,10 +61,7 @@ std::optional<TRD_HEADER> TRDPkgHeader::ReadBack() {
         return std::nullopt;
     }
 
-    if (!hdrStream->SetSeekPosR(TRD_HDR_START_OFFSET)) {
-        e.SetError(Err::Code::FSEEK);
-        return std::nullopt;
-    }
+    hdrStream->SetSeekPosR(TRD_HDR_START_OFFSET);
    
     if (!ICheckHeaderSize(hdrInteral)) {
         e.SetError(Err::Code::FSECCRP);
@@ -73,16 +70,10 @@ std::optional<TRD_HEADER> TRDPkgHeader::ReadBack() {
     
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
-    bool ReadHeaderStatus = hdrStream->ReadTStream<TRD_HEADER>(hdr);
-    if (!ReadHeaderStatus) {
-        e.SetError(Err::Code::IO_READ);
-        return std::nullopt;
-    }
+    hdrStream->ReadTStream<TRD_HEADER>(hdr);
 
-    if (!hdrStream->SetSeekPosR(originalPosition)) {
-        e.SetError(Err::Code::FSEEK);
-        return std::nullopt;
-    }
+    hdrStream->SetSeekPosR(originalPosition);
+       
     if (!IValidateHeader(hdr)) {
         return std::nullopt;
     }
@@ -181,13 +172,10 @@ bool TRDPkgHeader::Write() {
    // const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
   //  streamInfo->hFile->Write(hdrContent, GetHeaderByteSize());
     
-    if (!hdrStream->SetSeekPosW(TRD_HDR_START_OFFSET)) {
-        e.SetError(Err::Code::FSEEK);
-        return false;
-    }
-    bool WriteHeaderStatus = hdrStream->WriteTStream<TRD_HEADER>(hdrInteral);
+    hdrStream->SetSeekPosW(TRD_HDR_START_OFFSET);
+    hdrStream->WriteTStream<TRD_HEADER>(hdrInteral);
    
-    if (!hdrStream->e.IsOk() || !WriteHeaderStatus) {
+    if (!hdrStream->e.IsOk()) {
         e.SetError(Err::Code::IO_WRITE);
         return false;
     }
@@ -294,18 +282,19 @@ std::string TRDPkgHeader::HeaderVersionFormatToString(u16 fmt, bool abRevision) 
     u8 revision = std::stoi(base.substr(4));
 
     
-    std::stringstream ss;
-    ss << major << "." << minor << ".";
+    //std::stringstream ss;
+    std::string strVersion;
+    strVersion += major + "." + minor + ".";
     if (abRevision) {
         char revName = 'A' + revision;
-        ss << revName;
+        strVersion += revName;
     }
     else {
-        ss << std::to_string(revision);
+        strVersion += std::to_string(revision);
     }
     
 
-    return ss.str();
+    return strVersion;
 
 }
  bool TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD_UPDATE& update) {

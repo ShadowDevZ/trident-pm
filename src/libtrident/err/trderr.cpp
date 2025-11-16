@@ -45,26 +45,35 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
 
 
 
-Err::Code Err::TridentError::GetError() {
+Err::Code Err::TridentError::GetError() noexcept {
     return err;
 }
-bool Err::TridentError::IsOk() {
+bool Err::TridentError::IsOk() noexcept {
     if (err == Err::Code::SUCCESS) {
         return true;
     }
     return false;
 }
 
-void Err::TridentError::SetError(const Err::Code code) {
+void Err::TridentError::SetError(const Err::Code code) noexcept {
     err = code;
 }
-void Err::TridentError::SetError(const Err::TridentError& code) {
+void Err::TridentError::SetError(const Err::TridentError& code) noexcept {
     err = code.err;
 }
-void Err::TridentError::Success() {
+void Err::TridentError::Success() noexcept {
     err = Err::Code::SUCCESS;
 }
-const std::string_view& Err::TridentError::TranslateError(const Err::Code code) {
+void Err::TridentError::AssertOkOrDie(const std::string& msg) {
+    AssertOkOrDie(msg, err);
+}
+void Err::TridentError::AssertOkOrDie(const std::string& msg, Err::Code code) {
+    if (code != Err::Code::SUCCESS) {
+        throw std::runtime_error(msg + " " + std::string(TranslateError(code)));
+    }
+}
+
+const std::string_view& Err::TridentError::TranslateError(const Err::Code code) noexcept {
    
    for (const auto&  x: gErrorMessages)  {
         if (x.first == code) {
@@ -75,6 +84,6 @@ const std::string_view& Err::TridentError::TranslateError(const Err::Code code) 
    
    return gErrorMessages[0].second;
 }
-const std::string_view& Err::TridentError::GetErrorAsString() {
+const std::string_view& Err::TridentError::GetErrorAsString() noexcept {
     return TridentError::TranslateError(TridentError::GetError());
 }

@@ -65,14 +65,13 @@ Err::Code SUID::WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, st
    // auto& fstrInfo = streamInfo->GetFstreamObject();
    
     
-    if (!streamInfo->SetSeekPosW(loc)) {
-        return Err::Code::FSEEK;
-    }
+    streamInfo->SetSeekPosW(loc);
+    
 
 
     //stream.WriteHeader(static_cast<const char*>(SUID), SUID::SUID_MAX_LENGTH);
-    bool WriteHeaderStatus = streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
-    if (!streamInfo->e.IsOk() || !WriteHeaderStatus) {
+    streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
+    if (!streamInfo->e.IsOk()) {
         return Err::Code::IO_WRITE;
     }
     return Err::Code::SUCCESS;

@@ -41,21 +41,28 @@ class TridentError {
 protected:
     LibTrident::Err::Code err = LibTrident::Err::Code::UNDEFINED;
 public:
-    LibTrident::Err::Code GetError();
-    const std::string_view& GetErrorAsString();
-    void SetError(LibTrident::Err::Code code);
-    void SetError(const LibTrident::Err::TridentError& code);
-    void Success();
-    bool IsOk();
+    LibTrident::Err::Code GetError() noexcept;
+    const std::string_view& GetErrorAsString() noexcept;
+    void SetError(LibTrident::Err::Code code) noexcept;
+    void SetError(const LibTrident::Err::TridentError& code) noexcept;
+    void Success() noexcept;
+    bool IsOk() noexcept;
 
-    static inline const std::string_view& TranslateError(const LibTrident::Err::TridentError& code) {
+    //throws std::runtime on failure
+    void AssertOkOrDie(const std::string& msg);
+    //throws std::runtime on failure
+    static void AssertOkOrDie(const std::string& msg, Err::Code code);
+
+
+    static inline const std::string_view& TranslateError(const LibTrident::Err::TridentError& code) noexcept {
         return TranslateError(code.err);    
     }
-    constexpr operator bool() const noexcept {
-        return err == Err::Code::SUCCESS;
-    }
+    //this becomes confusing, rather use wrappers
+   // constexpr operator bool() const noexcept {
+    //    return err == Err::Code::SUCCESS;
+   // }
 
-    static const std::string_view& TranslateError(LibTrident::Err::Code);
+    static const std::string_view& TranslateError(LibTrident::Err::Code) noexcept;
     friend std::ostream& operator<<(std::ostream& os, const TridentError& m) {
         os << m.TranslateError(m.err);
     return os;

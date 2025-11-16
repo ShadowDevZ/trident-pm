@@ -20,11 +20,11 @@ u32 IGenerateChecksum(const TRD_SD& sd);
 
 //difference between these and raw functions is that Raw function point to the start of GUID whilst these point to actual data
 //less error checking
-foffset_t TRDSecDesc::GetSDAddress() { 
+foffset_t TRDSecDesc::GetSDAddress() noexcept { 
     //todo actually find the TUID inside the stream and get its position to check presence start
    return TRDSdToken::GetOptRawSDStart() + LibTrident::Consts::SUID::SUID_MAX_LENGTH;
 }
-foffset_t TRDSecDesc::GetSDEnd() {
+foffset_t TRDSecDesc::GetSDEnd()  noexcept{
     return GetSDAddress() + LibTrident::Consts::SD::TRD_SECTIONSD_SIZE;
 }
 //todo for normal write lookup the SUID using bmh algo from uid.cpp in future
@@ -71,14 +71,11 @@ bool TRDSecDesc::WriteBlankSD() {
    // auto& fstrInfo = sdStream->GetFstreamObject();
    // auto& fstrStream = sdStream->GetFstreamObject().hFile;
     
-    if (!sdStream->SetSeekPosW(GetSDAddress())) {
-        e.SetError(Err::Code::FSEEK);
-        return false;
-    }
+    sdStream->SetSeekPosW(GetSDAddress());
     
     //const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
-    bool leStatus = sdStream->WriteTStream<TRD_SD>(secDescInternal);
-    if (!leStatus || !sdStream->e.IsOk()) {
+    sdStream->WriteTStream<TRD_SD>(secDescInternal);
+    if (!sdStream->e.IsOk()) {
         e.SetError(Err::Code::IO_WRITE);
         return false;
     }
@@ -214,24 +211,16 @@ std::optional<TRD_SD> TRDSecDesc::ReadBack() {
         return std::nullopt;    
     }
 
-    if (!sdStream->SetSeekPosR(GetSDAddress())) {
-        e.SetError(Err::Code::FSEEK);
-        return std::nullopt;
-    }
+    sdStream->SetSeekPosR(GetSDAddress());
    
     
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
-    bool ReadHeaderStatus = sdStream->ReadTStream<TRD_SD>(sdDesc);
-    if (!ReadHeaderStatus) {
-        e.SetError(Err::Code::IO_READ);
-        return std::nullopt;
-    }
+    sdStream->ReadTStream<TRD_SD>(sdDesc);
+  
 
-    if (!sdStream->SetSeekPosR(originalPosition)) {
-        e.SetError(Err::Code::FSEEK);
-        return std::nullopt;
-    }
+    sdStream->SetSeekPosR(originalPosition);
+
     if (!IValidateSDContent(sdDesc)) {
         return std::nullopt;
     }
@@ -252,9 +241,11 @@ std::optional<TRD_SD> TRDSecDesc::ReadBack() {
 bool TRDSecDesc::IsValid() {
     auto have = Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!have.has_value()) {
+        e.SetError(Err::Code::IREF_EXPIRED);
         return false;
     }
     if (!have.value()->IsOpen()) {
+        e.SetError(Err::Code::FOPEN);
         return false;
     }
     /* use when actually properly implemented

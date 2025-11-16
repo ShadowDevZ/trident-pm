@@ -173,10 +173,7 @@ int main(void) {
     const auto& haveNtc = ntc.serialize();
     if (haveNtc.has_value()) {
         const auto& val = haveNtc.value();
-        Err::Code x = PkgIO::BinarySerializer::WriteDataToTStream(lt.fstrInfo, val, 0, std::ios::end);
-        if (x == Err::Code::SUCCESS) {
-            dbgprintf("ok\n");
-        }
+        PkgIO::BinarySerializer::WriteDataToTStream(lt.fstrInfo, val, 0, std::ios::end);
     }
   }
 

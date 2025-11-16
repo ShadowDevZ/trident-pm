@@ -89,14 +89,13 @@ Err::Code Tstream::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObj
     return Err::Code::SUCCESS;
 }
 */
-bool Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
-    Err::Code status = StreamRemoteIsOpen(info);
-    e.SetError(status);
-    if (!e.IsOk()) {
-        return false;
-    }
+
+void Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
+    
+    e.AssertOkOrDie("StreamRemoteIsOpen() failed, err: ", StreamRemoteIsOpen(info));
+  
     xfInfo = info;
-    return true;
+    e.Success();
 }
 
 
@@ -118,47 +117,41 @@ std::optional<std::shared_ptr<Tstream::TStreamInfo>> Tstream::TStreamInfo::GetFs
 
 
 
-bool TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
+void TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
     if (!CheckFileStreamInfo())  {
-        dbgprintf("Error: WriteLeStream(validate) Failed\n");
-        return false;
+        throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     //for compatibility across different CPUS and to improve performance on x86/64
     if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
         e.SetError(Err::Code::ALIGNMENT);
-        return false;
     }
     if (size == 0) {
-        e.SetError(Err::Code::BADARG);
-        return false;
+        throw std::invalid_argument("Size was 0");
     }
     
-   
-    bool st = FileOperations::WriteLeData(xfInfo.hFile, data, size);
+    //throws exception on failure, no need to check
+    FileOperations::WriteLeData(xfInfo.hFile, data, size);
 
-    if (st && increment) {
+    if (increment) {
         xfInfo.fSize += size;
     }
-    return st;
 }
-bool TStreamInfo::ReadTStream(char* s, u64 size) {
+void TStreamInfo::ReadTStream(char* s, u64 size) {
     if (size == 0) {
-        e.SetError(Err::Code::BADARG);
-        return false;
+        throw std::invalid_argument("Size was 0");
     }
     if (!CheckFileStreamInfo())  {
-        dbgprintf("Error: ReadLeStream(validate) Failed\n");
-        return false;
+        throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
         e.SetError(Err::Code::ALIGNMENT);
-        return false;
     }
-    return FileOperations::ReadLeData(xfInfo.hFile, s, size);
+
+    FileOperations::ReadLeData(xfInfo.hFile, s, size);
 }
 
 
-bool TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) {
+void TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) {
     if (read) {
         xfInfo.hFile->seekg(pos, seekd);
     }
@@ -167,10 +160,12 @@ bool TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) 
     }
     if (!xfInfo.hFile) {
         e.SetError(Err::Code::FSEEK);
-        return false;
+        //i was actually thinking if exceptions are necessary here but given that the user could set invalid offset
+        //and this could invalidate the whole program means we would have to check seekpos in every function 
+        throw std::ios_base::failure("seekg() failure");
     }
     e.Success();
-    return true;
+   
 
 
 }
@@ -184,15 +179,15 @@ i64 TStreamInfo::IGetSeekPos(bool read) {
     }
     if (pos == -1 || !xfInfo.hFile) {
         e.SetError(Err::Code::FSEEK);
-        return -1;
+        throw std::ios_base::failure("tellg() failed");
     }
     e.Success();
     return pos;
 }
 
-bool TStreamInfo::WritePadding(u16 size, int value, bool increment) {
+void TStreamInfo::WritePadding(u16 size, int value, bool increment) {
     char padding[size];
     std::memset(padding, value, sizeof(padding));
-    return WriteTStream(padding, sizeof(padding), increment);
+    WriteTStream(padding, sizeof(padding), increment);
 }
 

@@ -37,13 +37,13 @@ public:
     TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
     TRDSecDesc(TRDSecDesc&& other) : wFstr(std::move(other.wFstr)) {}
     
-    const TRD_SD& GetObject() const override { 
+    const TRD_SD& GetObject() const noexcept override { 
         return secDescInternal;
     }
-    TRD_SD& GetObject() override { 
+    TRD_SD& GetObject() noexcept override { 
         return secDescInternal;
     }
-    inline bool StatusOk()  override {
+    inline bool StatusOk()  noexcept override {
         return e.IsOk();
     }
     inline bool Write() override {
@@ -71,8 +71,8 @@ public:
     
     
     
-    static foffset_t GetSDAddress();
-    static foffset_t GetSDEnd();
+    static foffset_t GetSDAddress() noexcept;
+    static foffset_t GetSDEnd() noexcept;
 private:
     bool IChecksumValid(u32 crc, const TRD_SD& sd);
     bool IWriteSD(bool blankWrite=false);
@@ -80,10 +80,12 @@ private:
     bool IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr);
     bool IValidateSDContent(const TRD_SD& sd);
     bool IValidateTblAddr(const TRD_SD& sd); 
+    
+    
     //gets the starting position of SD table, private because by default SD table is written right after header
     //booyer moore horsepool
     //
-    foffset_t FindSDAddress();
+    ////foffset_t FindSDAddress();
     
   
 
