@@ -68,7 +68,7 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFl
     fInfo.name = path;
     dbgprintf("name: %s\n", fInfo.name.c_str()); 
     dbgprintf("dir: %s\n", fInfo.dirPath.c_str()); 
-    fInfo.fileStat = std::move(FileOperations::GetFileStats(path));
+    fInfo.fileStat = FileOperations::GetFileStats(path);
 
     fstrInfo->SetFileStreamInfo(fInfo);
 

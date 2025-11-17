@@ -13,7 +13,11 @@ using namespace LibTrident::PkgIO::FileOperations;
 #endif
 
 
-std::streamsize FileOperations::GetFstreamSize(std::shared_ptr<std::fstream> fs) {
+std::streamsize FileOperations::GetFstreamSize(std::weak_ptr<std::fstream> fsx) {
+    auto fs = fsx.lock();
+    if (!fs) {
+        throw std::runtime_error("Expired reference");
+    }
     if (!fs->is_open()) {
         throw std::ios_base::failure("Failed to open fd");
     }
@@ -126,6 +130,47 @@ void BinarySerializer::AddRaw(const void*  data, size_t size) {
     }
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
     bufferData.insert(bufferData.end(), bytes, bytes + size);
+
+}
+#include <cstring>
+size_t BinarySerializer::ReadRaw(void*  dataOut, size_t size, size_t offset) {
+    if (dataOut == nullptr) {
+        throw std::invalid_argument("nullptr was passed");
+    }
+    if (offset + size > bufferData.size()) {
+        throw std::out_of_range("Buffer was not big enough");
+    }
+    
+    if (size == 0) {
+        throw std::runtime_error("Read 0 bytes");
+    }
+    uint8_t* bytes = reinterpret_cast<uint8_t*>(dataOut);
+    std::memcpy(bytes, bufferData.data() + offset, size);
+
+
+    return size;
+
+}
+
+std::unique_ptr<std::vector<u8>> BinarySerializer::ReadDataFromTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, i64 seekPos, u64 size, bool checkAlignment) {
+   
+    if (!checkAlignment || !IsDataSizeAligned(size)) {
+        throw std::invalid_argument("Data size not aligned");
+    }
+    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
+    if (!haveCtx.has_value()) {
+        throw std::runtime_error("Weak pointer reference expired");
+    }
+    auto tStream = haveCtx.value();
+    if (!tStream->CheckFileStreamInfo()) {
+        throw std::runtime_error("CheckFileStreamInfo() failed");
+    }
+    i64 ogSeek = tStream->GetSeekPosR();
+    tStream->SetSeekPosR(seekPos);
+    auto data = std::make_unique<std::vector<u8>>(size);
+    tStream->ReadTStream(reinterpret_cast<char*>(data->data()),  size);
+    tStream->SetSeekPosR(ogSeek);
+    return data;
 
 }
 void BinarySerializer::WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {

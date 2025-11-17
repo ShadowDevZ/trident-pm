@@ -15,7 +15,7 @@
 namespace LibTrident::PkgIO {
    namespace FileOperations {
             //throws std::ios_base::failure on failure 
-            std::streamsize GetFstreamSize(std::shared_ptr<std::fstream> fs);
+            std::streamsize GetFstreamSize(std::weak_ptr<std::fstream> fsx);
             
             ///The following 2 functions format the buffer and WriteHeader it as Little endian
             //does not increment fSize
@@ -120,7 +120,7 @@ public:
     Why wont we use this always instead of killing on failure ? Well if malformed data enters 
     the function we could possibly write bad data
     */
-    static inline bool IsDataSizeAligned(size_t size) {
+    static constexpr bool IsDataSizeAligned(size_t size) {
         return size % LibTrident::Consts::Binary::BSERIALIZE_DATA_ALIGN == 0;
     }
 
@@ -194,12 +194,34 @@ public:
 
     //todo
     //reads sizeof T from bufferData and writes to ptrOut
+    
     template <typename T>
-    bool ReadTrivial(T* t) {
-        (void)(t);
-        return false;
+    //returns number of bytes read
+    size_t ReadTrivial(T* t, size_t offset=0) {
+        static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
+        //nulllptr handlerd here
+        size_t readSize = ReadRaw(t, sizeof(*t), offset);
+        if (HaveBE()) {
+            *t = ReverseByteOrder(*t);
+        }
+        return readSize;
     }
     
+    //Warning this method DOES NOT check nor modify endianness
+    //Do not use this method unless no other override is available
+    //When calling this function you are responsible for passing data in correct endianness
+    //throws std::invalid_argument on failure
+    LT_UNSAFE_API size_t ReadRaw(void*  dataOut, size_t size, size_t offset=0);
+
+
+
+    constexpr static std::size_t ElementSize() {
+        return 0;
+    }
+    template <typename T, typename... Ts>
+    constexpr static std::size_t ElementSize(const T&, const Ts&... args) {
+        return sizeof(T) + ElementSize(args...);
+    }
     
     template <typename T>
     void AddTrivial(T t) {
@@ -209,10 +231,20 @@ public:
         }
         AddRaw(&t, sizeof(t));
     }
-    //if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
-    std::optional<std::vector<u8>> GetFormattedData(bool autoAlign);
-    static void WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
+    /*
+    if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
+      bool autoalign aligns elements to the correct size but this should not be used because
+      when receiving the data you now have to explicitly move the offset at the element,
+      this is confusing to anyone reading the function, instead if you have information that
+      doesnt match the data add _reserved or _padding field
+    */
+    std::optional<std::vector<u8>> GetFormattedData(bool autoAlign=false);
 
+    static void WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr,
+                const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
+
+    static std::unique_ptr<std::vector<u8>> ReadDataFromTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, i64 seekPos,
+                u64 size, bool checkAlignment=true);
 };
 
 };

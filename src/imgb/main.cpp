@@ -1,10 +1,11 @@
 
-#include <string.h>
+#include <string.h> 
 #include <iostream>
 #include "libtrident.h"
 #include "suid.h"
 #include "sdesc.h"
-
+#include <array>
+#include "serdatacommon.h"
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace LibTrident;
 using namespace LibTrident::Header;
@@ -49,37 +50,58 @@ void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
     dbgprintf("[SD_END]\n\n");
 }
 #endif
-
-typedef struct {
-    uint16_t x = 0;
+//test
+struct NTC_INFO_TEST : PkgIO::SerializableData{
+    uint16_t x = 0; 
     uint32_t y = 0;
     uint16_t z = 0;
 
-    std::optional<std::vector<u8>> serialize() const {
+    size_t Sizeof() const override {
+        return PkgIO::BinarySerializer::ElementSize(x,y,z);
+    }
+    //std::array<uint32_t,2> c{};
+
+//the sum of sizeof of all elements must be properly aligned
+    std::optional<std::vector<u8>> Serialize() const override {
         PkgIO::BinarySerializer bs;
-        bs.AddTrivial(x);
-        bs.AddTrivial(y);
-        bs.AddTrivial(z);
-        return bs.GetFormattedData(false);
+        bs.AddTrivial(x); //2B
+        bs.AddTrivial(y); //4B
+        bs.AddTrivial(z); //2B
+      //  bs.AddType(c);
+       
+        return bs.GetFormattedData();
 
     }
 
     
     //wip idea   void bs::ReadTrivial<T>(const std::vector<u8>& in, const char* outData);
-    void deserialize(const std::vector<u8>& dataIn) {
+    //if return is false caller throws std::invalid_argument exception
+    bool Deserialize(const std::vector<u8>& dataIn) override {
         //on error throws exception
         PkgIO::BinarySerializer bs(dataIn);
-        bs.ReadTrivial<u16>(&x);
-        bs.ReadTrivial<u32>(&y);
-        bs.ReadTrivial<u16>(&z);
+        size_t xsize = 0;
+        xsize += bs.ReadTrivial<u16>(&x, xsize);
+        xsize += bs.ReadTrivial<u32>(&y, xsize);
+        xsize += bs.ReadTrivial<u16>(&z, xsize);
+        
+        
+        if (xsize != this->Sizeof()){
+            return false;
+        }
+      
+       // xsize += bs.ReadRaw(&x, sizeof(x), xsize);
+      //  xsize += bs.ReadRaw(&y, sizeof(y), xsize);
+        //xsize += bs.ReadRaw(&z, sizeof(z), xsize);
+        return true;
     }
 
     
 
-}NTC_INFO_TEST;
+};
 
 
 int main(void) {
+    
     PrintBuildTarget();
     
     LibTrident::TrPkg lt("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
@@ -88,6 +110,7 @@ int main(void) {
 
 
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
+    
 #ifdef _LIBTRIDENT_DEBUG
   
 #endif
@@ -103,6 +126,7 @@ int main(void) {
 #ifdef _LIBTRIDENT_DEBUG
    print_header(x.GetObject());
 #endif
+// NOLINTNEXTLINE
   tassert("WriteHeaderHeader()" , x.Write())
   // std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
     tassert("ReadHeader() ", x.Read());
@@ -125,16 +149,16 @@ int main(void) {
 
     TRDSecDesc sectionDesc(lt.fstrInfo);
     tassert("WriteBlankSD() ", sectionDesc.WriteBlankSD());
-    TRD_SD_UPDATEFIELD sdUpdate;
-    sdUpdate.tblCount = UINT32_MAX;
-    sdUpdate.tblDynamicOffset = UINT64_MAX;
-    sdUpdate.tblRegistryOffset = UINT64_MAX;
-    tassert("UpdateSD() ", sectionDesc.UpdateSD(sdUpdate));
-    tassert("ModifySDCount() ", sectionDesc.UpdateSDTblCount(16));
-    tassert("ModifySDDtbl() " , sectionDesc.UpdateSDDynOffset(0x1337CAFFEE));
-    tassert("ModifySDTreg() ", sectionDesc.UpdateSDRegOffset(0xDEADBEEF));
-    tassert("ReadSD() ", sectionDesc.Read());
-    print_sd(sectionDesc.GetObject());
+     TRD_SD_UPDATEFIELD sdUpdate;
+     sdUpdate.tblCount = UINT32_MAX;
+     sdUpdate.tblDynamicOffset = UINT64_MAX;
+     sdUpdate.tblRegistryOffset = UINT64_MAX;
+     tassert("UpdateSD() ", sectionDesc.UpdateSD(sdUpdate));
+     tassert("ModifySDCount() ", sectionDesc.UpdateSDTblCount(16));
+     tassert("ModifySDDtbl() " , sectionDesc.UpdateSDDynOffset(0x1337CAFFEEDDDDDD));
+     tassert("ModifySDTreg() ", sectionDesc.UpdateSDRegOffset(0xEEEEEEEEEEEEEEEE));
+     tassert("ReadSD() ", sectionDesc.Read());
+     print_sd(sectionDesc.GetObject());
     
     
     /*
@@ -164,17 +188,39 @@ int main(void) {
    // std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
     }
    */
+  
+  //write 
+ 
+  
+  const auto& currentSeek = lt.fstrInfo->GetSeekPosR();
   {
     NTC_INFO_TEST ntc;
-    ntc.x = UINT16_MAX;
-    ntc.y = UINT32_MAX;
-    ntc.z = UINT16_MAX;
+    ntc.x = 0xfde2;
+    ntc.y = 0xfad13333;
+    ntc.z = 0x2edf;
+   // ntc.c = {UINT32_MAX, UINT32_MAX};
+   // ntc.c = 'A';
     //later called using template 
-    const auto& haveNtc = ntc.serialize();
+    const auto& haveNtc = ntc.Serialize();
     if (haveNtc.has_value()) {
         const auto& val = haveNtc.value();
         PkgIO::BinarySerializer::WriteDataToTStream(lt.fstrInfo, val, 0, std::ios::end);
     }
+  }
+  //read
+  {
+    NTC_INFO_TEST ntcRead;
+    ntcRead.x = 0;
+    ntcRead.y = 0;
+    ntcRead.z = 0;
+    const auto& ntcReadSize = ntcRead.Sizeof();
+    std::cout << "ntc size: " << ntcReadSize << "\n";
+    const auto readData =  PkgIO::BinarySerializer::ReadDataFromTStream(lt.fstrInfo, currentSeek, ntcReadSize);
+    
+    if(!ntcRead.Deserialize(*readData)) {
+        return 1;
+    }
+    printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
   }
 
 
@@ -183,6 +229,7 @@ int main(void) {
    
     
     std::cout << x.e << std::endl;
+   // lt.fstrInfo->WritePadding(32, 0xCCCC);
    
 //ClosePkg() not needed because of RAII
   //  lt.ClosePkg();

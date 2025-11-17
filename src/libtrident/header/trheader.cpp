@@ -1,7 +1,7 @@
 #include "trheader.h"
 
 #include <zlib.h>
-#include "pkgio.h"
+//#include "pkgio.h"
 
 using namespace LibTrident;
 using namespace LibTrident::Header;

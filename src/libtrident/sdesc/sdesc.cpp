@@ -1,8 +1,8 @@
 #include "sdesc.h"
 #include "sdescid.h"
 #include "trheader.h"
-#include "pkgio.h"
-#include "suid.h"
+//#include "pkgio.h"
+//#include "suid.h"
 #include "trdconsts.h"
 #include "tstreaminfo.h"
 #include <cstring>
@@ -10,7 +10,7 @@
 #include <zlib.h>
 using namespace LibTrident::SectionDescriptor;
 using namespace LibTrident::Header;
-using namespace LibTrident::UID;
+//using namespace LibTrident::UID;
 using namespace LibTrident;
 
 u32 IGenerateChecksum(const TRD_SD& sd);
@@ -185,7 +185,7 @@ bool TRDSecDesc::UpdateSDRegOffset(u64 tregOffset) {
 
 std::optional<TRD_SD> TRDSecDesc::ReadBack() {
     TRD_SD sdDesc { };
-   
+    
     auto haveCtx= Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         e.SetError(Err::Code::IREF_EXPIRED);

@@ -186,8 +186,10 @@ i64 TStreamInfo::IGetSeekPos(bool read) {
 }
 
 void TStreamInfo::WritePadding(u16 size, int value, bool increment) {
-    char padding[size];
-    std::memset(padding, value, sizeof(padding));
-    WriteTStream(padding, sizeof(padding), increment);
+    //char padding[size];
+    std::vector<char> padding(size);
+    std::fill(padding.begin(), padding.end(), value);
+   // std::memset(padding, value, sizeof(padding));
+    WriteTStream(reinterpret_cast<const char*>(padding.data()), padding.size(), increment);
 }
 

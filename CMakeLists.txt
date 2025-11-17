@@ -7,6 +7,8 @@ find_package(ZLIB REQUIRED)
 set(TRDLIB "libtrdpm")
 set(TRDPM "trpm")
 set(TRDBLD "trdbld")
+#for clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # CMAKE requirements
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
