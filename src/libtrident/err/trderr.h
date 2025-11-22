@@ -49,9 +49,9 @@ public:
     bool IsOk() noexcept;
 
     //throws std::runtime on failure
-    void AssertOkOrDie(const std::string& msg);
+    void ErrSuccessOrExcept(const std::string& msg);
     //throws std::runtime on failure
-    static void AssertOkOrDie(const std::string& msg, Err::Code code);
+    static void ErrSuccessOrExcept(const std::string& msg, Err::Code code);
 
 
     static inline const std::string_view& TranslateError(const LibTrident::Err::TridentError& code) noexcept {

@@ -64,10 +64,10 @@ void Err::TridentError::SetError(const Err::TridentError& code) noexcept {
 void Err::TridentError::Success() noexcept {
     err = Err::Code::SUCCESS;
 }
-void Err::TridentError::AssertOkOrDie(const std::string& msg) {
-    AssertOkOrDie(msg, err);
+void Err::TridentError::ErrSuccessOrExcept(const std::string& msg) {
+    ErrSuccessOrExcept(msg, err);
 }
-void Err::TridentError::AssertOkOrDie(const std::string& msg, Err::Code code) {
+void Err::TridentError::ErrSuccessOrExcept(const std::string& msg, Err::Code code) {
     if (code != Err::Code::SUCCESS) {
         throw std::runtime_error(msg + " " + std::string(TranslateError(code)));
     }

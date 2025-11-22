@@ -17,21 +17,16 @@ bool Tstream::TStreamInfo::CheckFileStreamInfo() {
         e.SetError(Err::Code::FOPEN);
         return false;
     }
-    if (xfInfo.fileFlags == 0) {
-        e.SetError(Err::Code::ACCESS);
-        return false;
-    }
+   
     e.Success();
     return true;
 }
 
 Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
-    if (info.fileFlags & LibTrident::IOFLAGS::_I_IO_INVCLOSED) {
+    if (info.acccessModel._internal == IOFLAGS::_TrdInternalIO::IoClosed) {
         return Err::Code::FOPEN;
     }
-    if (info.fileFlags == 0) {
-        return Err::Code::ACCESS;
-    }
+   
     if (!info.hFile || ! info.hFile->is_open() || (!info.fileOpened)) {
     
         return Err::Code::FOPEN;;
@@ -57,7 +52,7 @@ Err::Code TStreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
 } 
 */
 bool Tstream::TStreamInfo::CloseStream() {
-    xfInfo.fileFlags |= LibTrident::IOFLAGS::_I_IO_INVCLOSED;
+    xfInfo.acccessModel._internal = IOFLAGS::_TrdInternalIO::IoClosed;
     return true;
    
 }
@@ -92,7 +87,7 @@ Err::Code Tstream::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObj
 
 void Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
     
-    e.AssertOkOrDie("StreamRemoteIsOpen() failed, err: ", StreamRemoteIsOpen(info));
+    e.ErrSuccessOrExcept("StreamRemoteIsOpen() failed, err: ", StreamRemoteIsOpen(info));
   
     xfInfo = info;
     e.Success();

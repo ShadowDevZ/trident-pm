@@ -12,7 +12,7 @@ using namespace LibTrident::Header;
 using namespace LibTrident::SectionDescriptor;
 
 void PrintBuildTarget() {
-#ifdef _LIBTRIDENT_DEBUG
+#if defined(_LIBTRIDENT_DEBUG)
 std::cout << "Target: Debug\n\n";    
 #else
 std::cout << "Target: Release\n"; 
@@ -21,7 +21,7 @@ std::cout << "Target: Release\n";
 #include <vector>
 
 
-#ifdef _LIBTRIDENT_DEBUG
+#if defined(_LIBTRIDENT_DEBUG)
 void print_header(const LibTrident::Header::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
@@ -50,6 +50,7 @@ void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
     dbgprintf("[SD_END]\n\n");
 }
 #endif
+
 //test
 struct NTC_INFO_TEST : PkgIO::SerializableData{
     uint16_t x = 0; 
@@ -98,20 +99,30 @@ struct NTC_INFO_TEST : PkgIO::SerializableData{
     
 
 };
+ #define tassert(fnName, expr) \
+    do { \
+        if (!(expr)) { \
+            fprintf(stderr, "\x1B[31m[fail]%s\nAS: <%s :: %s, %d, %s>\x1B[0m\n", fnName, #expr, __ASSERT_FILE, __ASSERT_LINE, __ASSERT_FUNCTION); \
+            abort(); \
+        } else { \
+            std::cout << "\x1B[32m" << fnName << " [ok]\x1B[0m\n"; \
+        } \
+    } while(0);
 
 
+//#include "systemspecific/common/filemgmnt.h"
 int main(void) {
-    
+   // std::cout << SystemSpecific::CreateTemporaryFile().value() << std::endl;
     PrintBuildTarget();
-    
-    LibTrident::TrPkg lt("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
+    LibTrident::TrPkg lt("./test.tpx", {IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::AllAccess, IOFLAGS::TrdXattrIO::None, IOFLAGS::_TrdInternalIO::None});
+  //  LibTrident::TrPkg lt("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
     //lt.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
 
 
     LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
     
-#ifdef _LIBTRIDENT_DEBUG
+#if defined(_LIBTRIDENT_DEBUG)
   
 #endif
 
@@ -123,7 +134,7 @@ int main(void) {
    
    //std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
    tassert("CreateHeader()",x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE));
-#ifdef _LIBTRIDENT_DEBUG
+#if defined(_LIBTRIDENT_DEBUG)
    print_header(x.GetObject());
 #endif
 // NOLINTNEXTLINE
@@ -140,13 +151,15 @@ int main(void) {
     tassert("UpdateHeader() ", x.UpdateHeader(updateField));
  
     tassert("ValidateHeader() ", x.IsValid());
+#if defined(_LIBTRIDENT_DEBUG)
     print_header(x.GetObject());   
-   
+#endif
     tassert("ModifyLen() ", x.UpdateFileLenProp(0xbeefccaa));
     tassert("ModifyIOCTRL() ", x.UpdateIoctrlProp(IOCTRL_DESC_WLOCK));
     tassert("ValidateHeader() ", x.IsValid());
+#if defined(_LIBTRIDENT_DEBUG)
     print_header(x.GetObject());   
-
+#endif
     TRDSecDesc sectionDesc(lt.fstrInfo);
     tassert("WriteBlankSD() ", sectionDesc.WriteBlankSD());
      TRD_SD_UPDATEFIELD sdUpdate;
@@ -158,8 +171,9 @@ int main(void) {
      tassert("ModifySDDtbl() " , sectionDesc.UpdateSDDynOffset(0x1337CAFFEEDDDDDD));
      tassert("ModifySDTreg() ", sectionDesc.UpdateSDRegOffset(0xEEEEEEEEEEEEEEEE));
      tassert("ReadSD() ", sectionDesc.Read());
+#if defined(_LIBTRIDENT_DEBUG)
      print_sd(sectionDesc.GetObject());
-    
+#endif
     
     /*
     {

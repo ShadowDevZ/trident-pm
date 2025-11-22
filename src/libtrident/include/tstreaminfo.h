@@ -4,17 +4,18 @@
 #include "datatypes.h"
 #include <sys/stat.h>
 #include <optional>
+#include "ioflags.h"
+#include <filesystem>
 //#include "ioflags.h"
 namespace LibTrident::Tstream {
 
 typedef struct {
     //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation
-    std::string dirPath;
-    std::string name;
+    std::filesystem::path absolutePath;
     std::shared_ptr<std::fstream> hFile;
     //does not represent actual file size, but sizeof(whole file - header), not utilized yet
     std::streamsize fSize;
-    IO_OpenFlag fileFlags;
+    IOFLAGS::TRDAccessModel acccessModel;
     //for future use, atime
     std::shared_ptr<struct stat64> fileStat;
     //struct stat64 fileStat;

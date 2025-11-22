@@ -10,8 +10,7 @@ using namespace PkgIO;
 void LibTrident::TrPkg::ClosePkg() {
     //we do not perform any checks so RAII can take care of it
     Tstream::TRDFstreamObject& closeInfo =  fstrInfo->GetFstreamObject();
-    closeInfo.dirPath = "";
-    closeInfo.name = "";
+    closeInfo.absolutePath.clear();
     closeInfo.fileOpened = false;
     fstrInfo->CloseStream();
     if (closeInfo.hFile && closeInfo.hFile->is_open()) {
@@ -21,17 +20,21 @@ void LibTrident::TrPkg::ClosePkg() {
 }
 
 
-void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFlag openFlags) {
+void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& accessModel) {
     if (fstrInfo->GetFstreamObject().fileOpened) {
         throw std::runtime_error("Package was already opened using current instance");
     }
     
-    std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
-    if (openMode == 0) {
-        throw std::invalid_argument("Invalid openflags");
+    //std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
+    auto optOpenMode = IOFLAGS::TranslateAccessModel(accessModel);
+    if (!optOpenMode.has_value()) {
+        throw std::invalid_argument("Incorrect access model used");
     }
+    std::ios::openmode openMode = optOpenMode.value();
+
+   
     const std::filesystem::path& absolutePath = std::filesystem::absolute(path);
-    \
+    
     const std::filesystem::path& parentDir = absolutePath.parent_path();
     
     if (!std::filesystem::exists(parentDir)) {
@@ -40,7 +43,7 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFl
     
     //the user doesnt need to specify 
     openMode |= std::ios::binary;
-    
+  
     std::shared_ptr<std::fstream> fsPkg = std::make_shared<std::fstream>(path, openMode);
     if (!fsPkg || !fsPkg->is_open()) {
         throw std::filesystem::filesystem_error("Failed to obtain file handle", std::error_code());
@@ -54,7 +57,7 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFl
     //We are creating copy instead of simply moving is because if error occurs the original stream must remain unchanged
     Tstream::TRDFstreamObject fInfo;
     
-    fInfo.fileFlags = openFlags;
+    fInfo.acccessModel = accessModel;
     fInfo.fSize = fileSize;
 
    // fInfo.hFile->seekg(0, std::ios::beg); 
@@ -63,11 +66,11 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path, IO_OpenFl
     dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
    
     fInfo.hFile = fsPkg;
-    fInfo.dirPath = parentDir.generic_u8string();
+    
     fInfo.fileOpened = true;
-    fInfo.name = path;
-    dbgprintf("name: %s\n", fInfo.name.c_str()); 
-    dbgprintf("dir: %s\n", fInfo.dirPath.c_str()); 
+    fInfo.absolutePath = absolutePath;
+    dbgprintf("name: %s\n", fInfo.absolutePath.filename().c_str()); 
+    dbgprintf("dir: %s\n", fInfo.absolutePath.parent_path().c_str()); 
     fInfo.fileStat = FileOperations::GetFileStats(path);
 
     fstrInfo->SetFileStreamInfo(fInfo);

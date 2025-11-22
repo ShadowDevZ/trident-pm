@@ -10,6 +10,7 @@
 #include "ioflags.h"
 #include "tstreaminfo.h"
 #include <filesystem>
+
 namespace LibTrident {
 
 
@@ -31,8 +32,16 @@ public:
     ClosePkg();
    }
 
-   TrPkg(const std::filesystem::path& path, u16 openFlags) : fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {
-    OpenPackage(path, openFlags);
+   TrPkg(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& access) : 
+   fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {
+
+
+    OpenPackage(path, access);
+   }
+   TrPkg(const std::filesystem::path& path, IOFLAGS::TrdOpenIO open, IOFLAGS::TrdAccessIO access, 
+    IOFLAGS::TrdXattrIO xattr = IOFLAGS::TrdXattrIO::None): fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {
+    
+      OpenPackage(path, {open, access, xattr, IOFLAGS::_TrdInternalIO::None});
    }
    //std::shared_ptr<TRDFstreamObject> GetFstreamObject() {
    //     return fInfo;
@@ -43,7 +52,7 @@ public:
     
 
    
-    void OpenPackage(const std::filesystem::path& path, IO_OpenFlag openFlags);
+    void OpenPackage(const std::filesystem::path& path, const IOFLAGS::TRDAccessModel& accessModel);
     void ClosePkg();
 
 //private:
