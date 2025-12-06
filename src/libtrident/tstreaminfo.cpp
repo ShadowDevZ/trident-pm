@@ -6,44 +6,36 @@
 using namespace LibTrident;
 using namespace PkgIO;
 using namespace LibTrident::Tstream;
-bool Tstream::TStreamInfo::CheckFileStreamInfo() {
+
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::CheckFileStreamInfo() {
     //check if pointer was allocated usiong OpenPkg()
-    if (!xfInfo.hFile) {
-        e.SetError(Err::Code::FOPEN);
-        return false;
+    if (!TStreamInfo::IsOpen() || !xfInfo.hFile) {
+        return std::unexpected(Err::Code::FileOpenFailure);
     }
-    
-    if (!TStreamInfo::IsOpen()) {
-        e.SetError(Err::Code::FOPEN);
-        return false;
-    }
-   
-    e.Success();
-    return true;
+    return {};
 }
 
 Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
     if (info.acccessModel._internal == IOFLAGS::_TrdInternalIO::IoClosed) {
-        return Err::Code::FOPEN;
+        return Err::Code::FileOpenFailure;
     }
    
     if (!info.hFile || ! info.hFile->is_open() || (!info.fileOpened)) {
     
-        return Err::Code::FOPEN;;
+        return Err::Code::FileOpenFailure;
     }
 
-    return Err::Code::SUCCESS;
+    return Err::Code::Success;
 }
 
 
 
-bool Tstream::TStreamInfo::IsOpen() {
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::IsOpen() {
     Err::Code status = StreamRemoteIsOpen(xfInfo);
-    e.SetError(status);
-    if (!e.IsOk()) {
-        return false;
-    } 
-    return true;
+    if (status != Err::Code::Success) {
+        return std::unexpected(status);
+    }
+    return {};
 }
 /*
 Err::Code TStreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
@@ -51,10 +43,9 @@ Err::Code TStreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
     return Err::Code::SUCCESS;
 } 
 */
-bool Tstream::TStreamInfo::CloseStream() {
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::CloseStream() {
     xfInfo.acccessModel._internal = IOFLAGS::_TrdInternalIO::IoClosed;
-    return true;
-   
+    return {};
 }
 
 /*
@@ -86,11 +77,11 @@ Err::Code Tstream::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObj
 */
 
 void Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
-    
-    e.ErrSuccessOrExcept("StreamRemoteIsOpen() failed, err: ", StreamRemoteIsOpen(info));
+    if (StreamRemoteIsOpen(info) != Err::Code::Success) {
+        throw std::runtime_error("Stream remote is closed");
+    }
   
     xfInfo = info;
-    e.Success();
 }
 
 
@@ -107,7 +98,7 @@ std::optional<std::shared_ptr<Tstream::TStreamInfo>> Tstream::TStreamInfo::GetFs
         return std::nullopt;
         
     }
-      return fstrInfo;
+    return fstrInfo;
 }
 
 
@@ -118,7 +109,7 @@ void TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
     }
     //for compatibility across different CPUS and to improve performance on x86/64
     if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
-        e.SetError(Err::Code::ALIGNMENT);
+        return;
     }
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
@@ -139,7 +130,7 @@ void TStreamInfo::ReadTStream(char* s, u64 size) {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
-        e.SetError(Err::Code::ALIGNMENT);
+        return;
     }
 
     FileOperations::ReadLeData(xfInfo.hFile, s, size);
@@ -154,12 +145,11 @@ void TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) 
         xfInfo.hFile->seekp(pos, seekd);
     }
     if (!xfInfo.hFile) {
-        e.SetError(Err::Code::FSEEK);
+        
         //i was actually thinking if exceptions are necessary here but given that the user could set invalid offset
         //and this could invalidate the whole program means we would have to check seekpos in every function 
         throw std::ios_base::failure("seekg() failure");
     }
-    e.Success();
    
 
 
@@ -173,10 +163,9 @@ i64 TStreamInfo::IGetSeekPos(bool read) {
         pos =  xfInfo.hFile->tellp();
     }
     if (pos == -1 || !xfInfo.hFile) {
-        e.SetError(Err::Code::FSEEK);
+        
         throw std::ios_base::failure("tellg() failed");
     }
-    e.Success();
     return pos;
 }
 

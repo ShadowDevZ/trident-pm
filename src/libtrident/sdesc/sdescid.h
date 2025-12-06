@@ -9,7 +9,7 @@ class TRDSdToken : LibTrident::PkgIO::Descriptor {
 private:
     std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
 public:
-    LibTrident::Err::TridentError e;
+    
     TRDSdToken(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSdToken(const TRDSdToken& other) : wFstr(other.wFstr) {}
@@ -23,7 +23,7 @@ public:
         return GetOptRawSDStart() + LibTrident::Consts::SD::TRD_SECTIONSD_SIZE;
     }
     
-    bool WriteDescriptorSUID() override;
-    bool ReadDescriptorSUID() override;
+    std::expected<void, LibTrident::Err::TrdError> WriteDescriptorSUID() override;
+    std::expected<void, LibTrident::Err::TrdError> ReadDescriptorSUID() override;
     bool IsValidSUID() override;
 };

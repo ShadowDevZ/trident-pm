@@ -14,66 +14,36 @@ if its marked as constexpr. This is fixed inside C++20+ but we are currently stu
 are embedding struct or using std::pair, also we cannot do this because it makes only 1 element array yay
 //constexpr std::array gErrorMessages {_errmsgTbl};
 */
+using eCode = Err::Code;
 constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
-    {Err::Code::UNDEFINED, "Undefined error"},
-    {Err::Code::OK, "Operation was successful"},
-    {Err::Code::FAIL, "The call to the specified function has failed"},
-    {Err::Code::MALLOC, "Memory allocation has failed"},
-    {Err::Code::BADARG, "Unknown or incorrect argument has been passed to the function"},
-    {Err::Code::ACCESS, "Insufficient privileges to the specified resource, access denied"},
-    {Err::Code::NULL_OBJ, "The object was NULL"},
-    {Err::Code::FOPEN, "Error opening access handle"},
-    {Err::Code::NOTDIR, "Filesystem object is not a directory"},
-    {Err::Code::INVFILE, "Filesystem object does not exist"},
-    {Err::Code::CHMOD, "Failed to change permissions"},
-    {Err::Code::COPYOBJ, "Failed to copy object"},
-    {Err::Code::FSEEK, "Failed to set seek pointer"},
-    {Err::Code::FSECNP, "File section is missing"},
-    {Err::Code::FSECCRP, "File section tags are corrupted"},
-    {Err::Code::IO_READ, "Failed to ReadHeader file"},
-    {Err::Code::IO_WRITE, "Failed to WriteHeader file"},
-    {Err::Code::CHKSUM, "CRC32 checksum has failed"},
-    {Err::Code::NOSUID, "SUID token not found"},
-    {Err::Code::INVSUID, "Invalid SUID token"},
-    {Err::Code::IREF_EXPIRED, "Internal reference to object has expired. Context is lost"},
-    {Err::Code::RESV_VIOLATION, "Reserved field not set to 0"},
-    {Err::Code::ALROPEN, "Object was already opened"},
-    {Err::Code::FNNOTIMPL, "Function not implemented. Do not use"},
-    {Err::Code::BADDATA, "Bad data was passed to the function"},
-    {Err::Code::ALIGNMENT, "Data was not properly aligned before written. Alignment violated"}
+    {eCode::UndefinedError, "Undefined error"},
+    {eCode::Success, "Operation was successful"},
+    {eCode::GenericFailure, "The call to the specified function has failed"},
+    {eCode::InvalidFuncArg, "Unknown or incorrect argument has been passed to the function"},
+    {eCode::FileAccessFailure, "Insufficient privileges to the specified resource, access denied"},
+    {eCode::NullObject, "The object was NULL"},
+    {eCode::FileOpenFailure, "Error opening access handle"},
+    {eCode::ObjectNotDir, "Filesystem object is not a directory"},
+    {eCode::ObjectNotFile, "Filesystem object does not exist"},
+    {eCode::FileAttrModFailure, "Failed to change permissions"},
+    {eCode::ObjectCopyFailure, "Failed to copy object"},
+    {eCode::StreamSeekFailure, "Failed to set seek pointer"},
+    {eCode::SectionMissing, "File section is missing"},
+    {eCode::SectionCorrupted, "Section contains invalid data"},
+    {eCode::FileReadFailure, "Failed to read file"},
+    {eCode::FileWriteFailure, "Failed to write file"},
+    {eCode::ChecksumFailure, "CRC32 checksum has failed"},
+    {eCode::SUIDMissing, "SUID token not found"},
+    {eCode::SUIDInvalid, "Invalid SUID token"},
+    {eCode::ReservedFieldViolated, "Reserved field not set to 0"},
+    {eCode::FileAlrOpen, "Object was already opened"},
+    {eCode::FunctionNotImplemented, "Function not implemented. Do not use"},
+    {eCode::UnalignedData, "Data was not properly aligned before written. Alignment violated"},
+    {eCode::BadObject, "Object does not hold correct size/data"},
+    {eCode::ReferenceExpired, "Reference object has expired"}
 };
 
-
-
-Err::Code Err::TridentError::GetError() noexcept {
-    return err;
-}
-bool Err::TridentError::IsOk() noexcept {
-    if (err == Err::Code::SUCCESS) {
-        return true;
-    }
-    return false;
-}
-
-void Err::TridentError::SetError(const Err::Code code) noexcept {
-    err = code;
-}
-void Err::TridentError::SetError(const Err::TridentError& code) noexcept {
-    err = code.err;
-}
-void Err::TridentError::Success() noexcept {
-    err = Err::Code::SUCCESS;
-}
-void Err::TridentError::ErrSuccessOrExcept(const std::string& msg) {
-    ErrSuccessOrExcept(msg, err);
-}
-void Err::TridentError::ErrSuccessOrExcept(const std::string& msg, Err::Code code) {
-    if (code != Err::Code::SUCCESS) {
-        throw std::runtime_error(msg + " " + std::string(TranslateError(code)));
-    }
-}
-
-const std::string_view& Err::TridentError::TranslateError(const Err::Code code) noexcept {
+std::string_view Err::TrdError::TranslateError(LibTrident::Err::Code code) noexcept {
    
    for (const auto&  x: gErrorMessages)  {
         if (x.first == code) {
@@ -83,7 +53,4 @@ const std::string_view& Err::TridentError::TranslateError(const Err::Code code) 
    }
    
    return gErrorMessages[0].second;
-}
-const std::string_view& Err::TridentError::GetErrorAsString() noexcept {
-    return TridentError::TranslateError(TridentError::GetError());
 }

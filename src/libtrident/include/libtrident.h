@@ -19,8 +19,6 @@ namespace LibTrident {
 class TrPkg  {
 public:
     
-    LibTrident::Err::TridentError e;
-    
     //LibTrident::Header::PackageHeader hdr;
     std::shared_ptr<LibTrident::Tstream::TStreamInfo> fstrInfo;
     

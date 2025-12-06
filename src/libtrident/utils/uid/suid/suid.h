@@ -4,7 +4,7 @@
 #include "trdconsts.h"
 #include "tstreaminfo.h"
 #include "uid.h"
-
+#include <optional>
 namespace LibTrident::UID {
 
 namespace SUID {
@@ -14,10 +14,10 @@ namespace SUID {
         SECTION_DESCR
         ///...
     };
-    const std::string_view GetSUIDString(SUID::SUIDS id);
+    const std::optional<std::string_view> GetSUIDString(SUID::SUIDS id);
     bool IsValidSUID(const std::string_view& suid);
-    LibTrident::Err::Code WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
-    std::pair<bool,std::vector<u8>> GetUIDPattern(const char* str);
+    std::expected<void, Err::TrdError> WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
+    std::optional<std::vector<u8>> GetUIDPattern(const std::string_view str);
 
 
 }};

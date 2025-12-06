@@ -31,7 +31,7 @@ private:
     TRD_SD secDescInternal;
 
 public:
-    LibTrident::Err::TridentError e;
+   
     TRDSecDesc(std::shared_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
@@ -43,43 +43,40 @@ public:
     TRD_SD& GetObject() noexcept override { 
         return secDescInternal;
     }
-    inline bool StatusOk()  noexcept override {
-        return e.IsOk();
-    }
-    inline bool Write() override {
+    std::expected<void, Err::TrdError> Write() override {
         return IWriteSD(false);
     }
    
     bool IsValid() override;
-    bool Read() override;
-    std::optional<TRD_SD> ReadBack() override;
+    std::expected<void, Err::TrdError> Read() override;
+    std::expected<TRD_SD, Err::TrdError> ReadBack() override;
    //creates blank section
    //we cant really create it like header because there is 0 initial information to append during sequentional 
    //initialization as there are 0 tables
     
    //Create()
-    bool WriteBlankSD();
+    std::expected<void, Err::TrdError> WriteBlankSD();
 
-    static LibTrident::Err::Code IsSDPresent();
+    static std::expected<void, Err::TrdError> IsSDPresent();
     
     //updates information written to file
-    bool UpdateSD(const TRD_SD_UPDATEFIELD& sd, bool autoWrite=true);
+    std::expected<void, Err::TrdError> UpdateSD(const TRD_SD_UPDATEFIELD& sd, bool autoWrite=true);
     
-    bool UpdateSDTblCount(u32 tblCount);
-    bool UpdateSDDynOffset(u64 dynOffset);
-    bool UpdateSDRegOffset(u64 tregOffset);
+    std::expected<void, Err::TrdError> UpdateSDTblCount(u32 tblCount);
+    std::expected<void, Err::TrdError> UpdateSDDynOffset(u64 dynOffset);
+    std::expected<void, Err::TrdError> UpdateSDRegOffset(u64 tregOffset);
     
     
     
-    static foffset_t GetSDAddress() noexcept;
-    static foffset_t GetSDEnd() noexcept;
+    static constexpr foffset_t GetSDAddress() noexcept;
+    static constexpr foffset_t GetSDEnd() noexcept;
 private:
     bool IChecksumValid(u32 crc, const TRD_SD& sd);
-    bool IWriteSD(bool blankWrite=false);
-    bool IRwAccessible();
-    bool IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr);
-    bool IValidateSDContent(const TRD_SD& sd);
-    bool IValidateTblAddr(const TRD_SD& sd); 
+    std::expected<void, Err::TrdError> IWriteSD(bool blankWrite=false);
+    std::expected<void, Err::TrdError> IRwAccessible();
+    std::expected<void, Err::TrdError> IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr);
+    std::expected<void, Err::TrdError> IValidateSDContent(const TRD_SD& sd);
+    std::expected<void, Err::TrdError> IValidateTblAddr(const TRD_SD& sd); 
     
     
     //gets the starting position of SD table, private because by default SD table is written right after header

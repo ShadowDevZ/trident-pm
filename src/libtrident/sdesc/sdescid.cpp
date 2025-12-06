@@ -8,15 +8,15 @@ using namespace LibTrident::Header;
 using namespace LibTrident::Tstream;
 using namespace LibTrident::UID;
 using namespace LibTrident;
-
+using eCode = Err::Code;
 
 //address right after header
 
-foffset_t GetSDAddress() { 
+constexpr foffset_t GetSDAddress() { 
     //todo actually find the TUID inside the stream and get its position to check presence start
     return TRDSdToken::GetOptRawSDStart() + LibTrident::Consts::SUID::SUID_MAX_LENGTH + 1;
 }
-foffset_t GetSDEnd() {
+constexpr foffset_t GetSDEnd() {
     return GetSDAddress() + TRDSdToken::GetRawSDEnd() + LibTrident::Consts::SUID::SUID_MAX_LENGTH + 1;
 }
 
@@ -26,30 +26,23 @@ foffset_t GetSDEnd() {
 
 
 
-bool TRDSdToken::WriteDescriptorSUID() {
+std::expected<void, Err::TrdError> TRDSdToken::WriteDescriptorSUID() {
     auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
-        e.SetError(Err::Code::IREF_EXPIRED);
-        return false;
+        return std::unexpected(Err::TrdError(eCode::ReferenceExpired));
     }
     auto sdStream = haveCtx.value();
     if (!sdStream->CheckFileStreamInfo()) {
-        e.SetError(Err::Code::NULL_OBJ);
-        return false;
+        return std::unexpected(Err::TrdError(eCode::NullObject));
     }
     std::streampos sdOffset= static_cast<std::streampos>(GetOptRawSDStart());
     
  
-    Err::Code errSuid = SUID::WriteSUIDAt(sdStream, sdOffset, SUID::SUIDS::SECTION_DESCR);
-    e.SetError(errSuid);
-    if (errSuid == Err::Code::OK) {
-        return true;
-    }
-    return false;
+    return SUID::WriteSUIDAt(sdStream, sdOffset, SUID::SUIDS::SECTION_DESCR);
     
 }
-bool TRDSdToken::ReadDescriptorSUID() {
-    return false;
+std::expected<void, Err::TrdError> TRDSdToken::ReadDescriptorSUID() {
+    return std::unexpected(Err::TrdError(eCode::FunctionNotImplemented));
 }
 bool TRDSdToken::IsValidSUID() {
     return false;

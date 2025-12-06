@@ -46,7 +46,7 @@ std::optional<u64> UID::FindFirstUID(const std::vector<u8> blob, const std::vect
     return std::nullopt;
 }
 
-std::optional<std::vector<u8>> UID::GetUIDPattern(const std::string_view& str) {
+std::optional<std::vector<u8>> UID::SUID::GetUIDPattern(const std::string_view str) {
     if (!LibTrident::UID::SUID::IsValidSUID(str)) {
         return std::nullopt;
     }

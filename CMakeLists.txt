@@ -12,7 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # CMAKE requirements
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always -Wall -Wextra -Wunreachable-code -Wfloat-equal")
 

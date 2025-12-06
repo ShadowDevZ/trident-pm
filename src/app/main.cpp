@@ -1,6 +1,6 @@
-#include <cstdio>
+#include <print>
 
 int main() {
-    std::printf("test file 1\n");
+    std::print("test file 1\n");
     return 0;
 }

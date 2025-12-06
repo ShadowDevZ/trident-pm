@@ -6,6 +6,7 @@
 #include <optional>
 #include "ioflags.h"
 #include <filesystem>
+#include <expected>
 //#include "ioflags.h"
 namespace LibTrident::Tstream {
 
@@ -31,7 +32,7 @@ private:
     void ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seek=std::ios::beg);
     TRDFstreamObject xfInfo;
 public:
-    LibTrident::Err::TridentError e;
+    
 
     
    
@@ -47,10 +48,10 @@ public:
     
 
     //checks if each field is correctly set
-    bool CheckFileStreamInfo();
-    bool CloseStream();
+    std::expected<void, Err::TrdError> CheckFileStreamInfo();
+    std::expected<void, Err::TrdError> CloseStream();
     //checks if the stream is only MARKED as open, data may be missing or corrupted
-    bool IsOpen();
+    std::expected<void, Err::TrdError> IsOpen();
      //throws std::iosbase::failure on exception
     inline void SetSeekPosW(i64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
         ISetSeekPos(true, pos, seekDir);

@@ -21,7 +21,7 @@ constexpr std::pair<SUID::SUIDS,const std::string_view> gTuidList [] = {
     {SUID::SUIDS::SECTION_DESCR,"SDR-7a153cca-f082-4837-9f8b-10905d006261"}
     
 };
-const std::string_view SUID::GetSUIDString(SUID::SUIDS id) {
+const std::optional<std::string_view> SUID::GetSUIDString(SUID::SUIDS id) {
      for (const auto&  x: gTuidList)  {
         if (x.first == id) {
             
@@ -29,7 +29,7 @@ const std::string_view SUID::GetSUIDString(SUID::SUIDS id) {
         }
    }
    
-   return "";
+   return std::nullopt;
 }
 
 bool SUID::IsValidSUID(const std::string_view& suid) {
@@ -44,23 +44,28 @@ bool SUID::IsValidSUID(const std::string_view& suid) {
     return false;
 }
 
-Err::Code SUID::WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
+std::expected<void, Err::TrdError> SUID::WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id) {  
    
    
     if (loc < 1) {
-        return Err::Code::BADARG;
+        return std::unexpected(Err::TrdError(Err::Code::InvalidFuncArg));
     }
-    const std::string_view& suidString = SUID::GetSUIDString(id);
+    auto haveSuid = SUID::GetSUIDString(id);
+    if (!haveSuid.has_value()) {
+        return std::unexpected(Err::TrdError(Err::Code::BadObject));
+    }
+    const std::string_view suidString = haveSuid.value();
     
     if (!SUID::IsValidSUID(suidString)) {
-        return Err::Code::BADARG;
+        return std::unexpected(Err::TrdError(Err::Code::InvalidFuncArg));
     } 
-    if (!streamInfo->CheckFileStreamInfo()) {
-        return Err::Code::NULL_OBJ;
+    auto strInfo = streamInfo->CheckFileStreamInfo();
+    if (!strInfo.has_value()) {
+        return std::unexpected(strInfo.error());
     }
-    Err::Code errCodePresent = TRDPkgHeader::IsHeaderPresent(streamInfo);
-    if (errCodePresent != Err::Code::SUCCESS) {
-        return errCodePresent;
+    auto hdrPresent = TRDPkgHeader::IsHeaderPresent(streamInfo);
+    if (!hdrPresent.has_value()) {
+        return std::unexpected(hdrPresent.error());
     }
    // auto& fstrInfo = streamInfo->GetFstreamObject();
    
@@ -71,8 +76,5 @@ Err::Code SUID::WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, st
 
     //stream.WriteHeader(static_cast<const char*>(SUID), SUID::SUID_MAX_LENGTH);
     streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
-    if (!streamInfo->e.IsOk()) {
-        return Err::Code::IO_WRITE;
-    }
-    return Err::Code::SUCCESS;
+    return {};
 } 

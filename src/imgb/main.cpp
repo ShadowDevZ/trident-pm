@@ -6,6 +6,8 @@
 #include "sdesc.h"
 #include <array>
 #include "serdatacommon.h"
+
+
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace LibTrident;
 using namespace LibTrident::Header;
@@ -30,8 +32,12 @@ void print_header(const LibTrident::Header::TRD_HEADER& hdr) {
     }
     dbgprintf("\n");
     dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
-    dbgprintf("\tVersion Format %s\n", 
-    TRDPkgHeader::HeaderVersionFormatToString(hdr.fmtVersion).c_str());
+    auto hdrFmtVal = TRDPkgHeader::HeaderVersionFormatToString(hdr.fmtVersion);
+    if (!hdrFmtVal.has_value()) {
+        abort();
+    }
+    
+    dbgprintf("\tVersion Format %s\n", hdrFmtVal.value().c_str());
     dbgprintf("\tCompression: %u\n", hdr.compression);
     dbgprintf("\tBuild flags %u\n", hdr.buildFlags);
     dbgprintf("\tArchitecture %u\n", hdr.architecture);
@@ -146,7 +152,7 @@ int main(void) {
     updateField.architecture = ARCHT_AARCH64;
     updateField.buildFlags = BF_PLATF_NT;
     updateField.compression = COMPRALG_GZIP;
-    updateField.fmtVersion = TRDPkgHeader::FormatHeaderVersion(3,1,2);
+    updateField.fmtVersion = TRDPkgHeader::FormatHeaderVersion(3,1,2).value();
     
     tassert("UpdateHeader() ", x.UpdateHeader(updateField));
  
@@ -199,7 +205,7 @@ int main(void) {
     }
      //std::cout << PkgIO::BinarySerializer::GetByteAlignment(sizeof(ccc)) << std::endl;
     //todo fr add those asserts
-   // std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
+    //std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
     }
    */
   
@@ -238,11 +244,11 @@ int main(void) {
   }
 
 
-
-  
+    
    
     
-    std::cout << x.e << std::endl;
+  //lt.fstrInfo->WritePadding(32, 0xCCCC);
+   
    // lt.fstrInfo->WritePadding(32, 0xCCCC);
    
 //ClosePkg() not needed because of RAII

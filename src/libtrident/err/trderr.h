@@ -4,68 +4,71 @@
 #include "datatypes.h"
 namespace LibTrident::Err {
     enum class Code {
-            UNDEFINED = 0,
-            SUCCESS = 1,
-            OK = 1,
-            FAIL,
-            MALLOC,
-            BADARG,
-            ACCESS,
-            NULL_OBJ,
-            FOPEN,
-            NOTDIR,
-            NOTFILE,
-            INVFILE,
-            CHMOD,
-            COPYOBJ,
-            FSEEK,
-            FSECNP,
-            FSECCRP,
-            IO_READ,
-            IO_WRITE,
-            CHKSUM,
-            INVSUID,
-            NOSUID,
-            ALROPEN,
-            IREF_EXPIRED,
-            RESV_VIOLATION,
-            FNNOTIMPL,
-            BADDATA,
-            ALIGNMENT
+            UndefinedError = 0,
+            Success = 1,
+            GenericFailure,
+            InvalidFuncArg,
+            FileAccessFailure,
+            NullObject,
+            FileOpenFailure,
+            ObjectNotDir,
+            ObjectNotFile,
+            FileMissing,
+            FileAttrModFailure,
+            ObjectCopyFailure,
+            StreamSeekFailure,
+            SectionMissing,
+            SectionCorrupted,
+            FileReadFailure,
+            FileWriteFailure,
+            ChecksumFailure,
+            SUIDInvalid,
+            SUIDMissing,
+            FileAlrOpen,
+            ReservedFieldViolated,
+            FunctionNotImplemented,
+            UnalignedData,
+            UnsupportedPlatform,
+            BadObject,
+            ReferenceExpired
             
     };
     
-
-
-class TridentError {
+class TrdError {
 protected:
-    LibTrident::Err::Code err = LibTrident::Err::Code::UNDEFINED;
+    LibTrident::Err::Code err {LibTrident::Err::Code::Success};
 public:
-    LibTrident::Err::Code GetError() noexcept;
-    const std::string_view& GetErrorAsString() noexcept;
-    void SetError(LibTrident::Err::Code code) noexcept;
-    void SetError(const LibTrident::Err::TridentError& code) noexcept;
-    void Success() noexcept;
-    bool IsOk() noexcept;
-
-    //throws std::runtime on failure
-    void ErrSuccessOrExcept(const std::string& msg);
-    //throws std::runtime on failure
-    static void ErrSuccessOrExcept(const std::string& msg, Err::Code code);
-
-
-    static inline const std::string_view& TranslateError(const LibTrident::Err::TridentError& code) noexcept {
-        return TranslateError(code.err);    
+    TrdError() {};
+    TrdError(Err::Code code) : err(code) {};
+    LibTrident::Err::Code GetError() const noexcept {
+        return err;
     }
-    //this becomes confusing, rather use wrappers
-   // constexpr operator bool() const noexcept {
-    //    return err == Err::Code::SUCCESS;
-   // }
+    void SetError(Err::Code code) {
+        err = code;
+    }
+    bool IsOK() const noexcept {
+        return (err == Err::Code::Success);
+    }
+    void SetSuccess() {
+        err = Err::Code::Success;
+    }
+    //stringview is nonowning, so no reference
+    std::string_view GetErrorAsString() const noexcept {
+        return TrdError::TranslateError(err);
+    }
+    static std::string_view TranslateError(LibTrident::Err::Code code) noexcept;
 
-    static const std::string_view& TranslateError(LibTrident::Err::Code) noexcept;
-    friend std::ostream& operator<<(std::ostream& os, const TridentError& m) {
+    static std::string_view TranslateError(const TrdError& trdErr) noexcept {
+        return TranslateError(trdErr.err);
+    }
+    friend std::ostream& operator<<(std::ostream& os, const TrdError& m)  {
         os << m.TranslateError(m.err);
-    return os;
+        return os;
+    }
+    operator bool() const {
+        return IsOK();
+    }
 
-}
-};};
+};
+
+};

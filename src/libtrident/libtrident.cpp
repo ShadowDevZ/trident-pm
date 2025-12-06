@@ -31,8 +31,8 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFL
         throw std::invalid_argument("Incorrect access model used");
     }
     std::ios::openmode openMode = optOpenMode.value();
-
-   
+    
+    
     const std::filesystem::path& absolutePath = std::filesystem::absolute(path);
     
     const std::filesystem::path& parentDir = absolutePath.parent_path();

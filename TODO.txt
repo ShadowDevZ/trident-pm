@@ -20,3 +20,8 @@ sdesc.cpp
 
 sdescid.cpp
             read SUID inside stream
+
+pkgio.cpp
+            bettter reversing bytes
+*
+            improve whole library architecture from drawn sketch

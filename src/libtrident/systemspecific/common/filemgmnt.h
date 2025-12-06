@@ -1,9 +1,10 @@
 #pragma once
-#include <optional>
+#include <expected>
 #include "ccattribs.h"
 #include <filesystem>
+#include "trderr.h"
 namespace LibTrident::SystemSpecific {
     
-    std::optional<std::filesystem::path> CreateTemporaryFile();
+    std::expected<std::filesystem::path, LibTrident::Err::TrdError> CreateTemporaryFile();
 
 };

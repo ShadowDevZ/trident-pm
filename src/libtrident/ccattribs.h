@@ -32,7 +32,7 @@ Do not use unless you know what you are doing
 #define LT_ENDIAN_FORCE 0
 
 
-#ifdef _LIBTRIDENT_DEBUG
+#if defined(_LIBTRIDENT_DEBUG)
     #define dbgprintf(...) fprintf( stderr, __VA_ARGS__ )
     #define ASSERTION_FAIL_EXIT_CODE 500
 

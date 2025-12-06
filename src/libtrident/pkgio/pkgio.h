@@ -38,11 +38,14 @@ namespace LibTrident::PkgIO {
         public:
             virtual ~Descriptor() = default;
             //beg=true mean beginning of section, beg=false end of section
-            virtual bool WriteDescriptorSUID() = 0;
-            virtual bool ReadDescriptorSUID() = 0;
+            virtual std::expected<void, Err::TrdError> WriteDescriptorSUID() = 0;
+            virtual std::expected<void, Err::TrdError> ReadDescriptorSUID() = 0;
             virtual bool  IsValidSUID() = 0;
            
     };
+
+
+
     //serializes struct to array of bytes
     //each functiopn which wants to utilize TStream and use non trivial datatypes must implement Serialize() function
     class BinarySerializer {
@@ -88,6 +91,30 @@ public:
     BinarySerializer(const BinarySerializer& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
     BinarySerializer(BinarySerializer&& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
             
+    
+     //todo C++23 introduced std::byteswap(), use with std::bitcast
+     /*
+     //this should work. We now even have better constexpr way of checking endianness,
+     todo get rid of the macro ridden mess
+     dont have time now, do something like this instead
+     constexpr T ReverByteOrder(T var) {
+        static_assert(std::is_trivially_copyable_v<T>,
+            "Cannot reverse non-trivial type. For non-trivial types, implement serialize().");
+
+        if constexpr std::endian::native == std::endian::littl {
+            return var
+        }
+        if constexpr (std::is_integral_v<T>) {
+            return std::byteswap(var);
+        }
+        else {
+        auto bytes = std::bit_cast<std::array<std::byte, sizeof(T)>>(var);
+        std::reverse(bytes.begin(), bytes.end());
+        return std::bit_cast<T>(bytes);
+        }
+     }
+     
+     */
     template <typename T>
     static T ReverseByteOrder(T var) {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -97,11 +124,12 @@ public:
 
         const unsigned char* src = reinterpret_cast<const unsigned char*>(&var);
         unsigned char* dst = reinterpret_cast<unsigned char*>(&reversed);
-
+        
         std::reverse_copy(src, src + sizeof(T), dst);
-
         return reversed;
+
     }
+        
         //make the datatype 8 byte aligned
             
     static size_t GetByteAlignment(size_t varSize) {
@@ -202,7 +230,8 @@ public:
         //nulllptr handlerd here
         size_t readSize = ReadRaw(t, sizeof(*t), offset);
         if (HaveBE()) {
-            *t = ReverseByteOrder(*t);
+            //*t = ReverseByteOrder(*t);
+            *t = std::byteswap(*t);
         }
         return readSize;
     }
@@ -227,7 +256,8 @@ public:
     void AddTrivial(T t) {
         static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
         if (HaveBE()) {
-            t = ReverseByteOrder(t);
+            //t = ReverseByteOrder(t);
+            t = std::byteswap(t);
         }
         AddRaw(&t, sizeof(t));
     }

@@ -6,6 +6,7 @@
 #include "tstreaminfo.h"
 #include "trdconsts.h"
 #include "sectioncommon.h"
+#include <expected>
 namespace LibTrident::Header {
 
 PACKED_STRUCT {
@@ -71,8 +72,6 @@ public:
     TRDPkgHeader(const TRDPkgHeader& other) : wFstr(other.wFstr) {}
     TRDPkgHeader(TRDPkgHeader&& other) : wFstr(std::move(other.wFstr)) {}
     
-
-    LibTrident::Err::TridentError e;
  
 
     const TRD_HEADER& GetObject() const override { 
@@ -81,38 +80,36 @@ public:
     TRD_HEADER& GetObject() override{ 
         return hdrInteral;
     }
-    inline bool StatusOk() override {
-        return e.IsOk();
-    }
+   
 
-    bool Write() override;
-    bool Read() override;
-    std::optional<TRD_HEADER> ReadBack() override;
+    std::expected<void, LibTrident::Err::TrdError> Write() override;
+    std::expected<void, LibTrident::Err::TrdError> Read() override;
+    std::expected<TRD_HEADER, LibTrident::Err::TrdError> ReadBack() override;
     bool IsValid() override;
     
     
-    bool Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
-    bool UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
-    bool Create(const TRD_HDRFIELD_UPDATE& field);
-    bool UpdateIoctrlProp(u16 ioctrl);
-    bool UpdateFileLenProp(u64 len);
+    std::expected<void, LibTrident::Err::TrdError> Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
+    std::expected<void, LibTrident::Err::TrdError> UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
+    std::expected<void, LibTrident::Err::TrdError> Create(const TRD_HDRFIELD_UPDATE& field);
+    std::expected<void, LibTrident::Err::TrdError> UpdateIoctrlProp(u16 ioctrl);
+    std::expected<void, LibTrident::Err::TrdError> UpdateFileLenProp(u64 len);
     
     
-    static u16 FormatHeaderVersion(u8 major, u8 minor, u8 revision);
-    static std::string HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
+    static std::expected<u16, LibTrident::Err::TrdError> FormatHeaderVersion(u8 major, u8 minor, u8 revision);
+    static std::expected<std::string, LibTrident::Err::TrdError> HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
     
-    static LibTrident::Err::Code IsHeaderPresent(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo);
+    static std::expected<void, LibTrident::Err::TrdError> IsHeaderPresent(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fStreamInfo);
     
     
     
-    private:
+private:
     std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
     TRD_HEADER hdrInteral;
     //TRD_HEADER cacheHdr;
    
-    bool ICheckCRC(u32 crc, const TRD_HEADER& hdr);
+    std::expected<void, LibTrident::Err::TrdError> ICheckCRC(u32 crc, const TRD_HEADER& hdr);
     bool ICheckHeaderSize(const TRD_HEADER& hdr);
-    bool IValidateHeader(const TRD_HEADER& hdrIn);
+    std::expected<void, LibTrident::Err::TrdError> IValidateHeader(const TRD_HEADER& hdrIn);
     //std::pair<bool,Tstream::TRDFstreamObject&> ICheckAndGetFstreamContent();
     
     
