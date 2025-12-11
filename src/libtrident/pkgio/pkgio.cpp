@@ -65,7 +65,7 @@ void FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char
     //WE NEED TO SERIALIZE THE STRUCT BEFORE WRITING IT, OTHERWISE IT PRODUCES GARBAGE
 
      ///endian operations will be moved entirely to BinarySerializer class
-    if (BinarySerializer::IsLittleEndianArch()) {
+    if (BinarySerializer::IsLittleEndian()) {
         stream->write(data, size);
     }
     else {
@@ -100,7 +100,7 @@ void FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, s
         throw std::bad_alloc();
     }
     ///endian operations will be moved entirely to BinarySerializer class
-    if (BinarySerializer::IsLittleEndianArch()) {
+    if (BinarySerializer::IsLittleEndian()) {
         stream->read(data, size);
     }
     else {

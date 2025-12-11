@@ -13,30 +13,25 @@
     #define _LIBTRIDENT_DEBUG 1
 #endif
 
-/*
-Option to override endianness checking
-1: Check at runtime [default]
-0: Check at compile time (requires recompilation)
-*/
-#define LT_ENDIAN_CHECK_RT 1
 
-/*
-Allows to manually overridce endianness for debugging purposes.
-Do not use unless you know what you are doing
 
-0: Off, no enforcement [default]
-1: Force little endian
-2: Force big endian
 
-*/
-#define LT_ENDIAN_FORCE 0
 
 
 #if defined(_LIBTRIDENT_DEBUG)
     #define dbgprintf(...) fprintf( stderr, __VA_ARGS__ )
     #define ASSERTION_FAIL_EXIT_CODE 500
 
-  
+        /*
+    Allows to manually overridce endianness for debugging purposes.
+    Do not use unless you know what you are doing
+
+    0: Off, no enforcement [default]
+    1: Force little endian
+    2: Force big endian
+
+    */
+    #define LT_DEBUG_ENDIAN_FORCE 0
     
 #else
     #define dbgprintf(...) do{ } while ( 0 );

@@ -21,6 +21,7 @@ namespace LibTrident::PkgIO {
             //does not increment fSize
            
             //throws std::ios::base on failure
+            //todo rewrite this shared ptr mess, bad code
             void WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
             
             //increments fSize by bytes written by default, if updating alReadHeadery written variable INCREMENT MUST BE FALSE
@@ -43,7 +44,8 @@ namespace LibTrident::PkgIO {
             virtual bool  IsValidSUID() = 0;
            
     };
-
+    template <typename T>
+    concept ConTriviablyCopyable = std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>;
 
 
     //serializes struct to array of bytes
@@ -51,70 +53,58 @@ namespace LibTrident::PkgIO {
     class BinarySerializer {
 private:
     std::vector<uint8_t> bufferData {};
+    std::endian emulEndianness{std::endian::native};
   //  std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
-    bool littleEndian = false;
 public:
-    
-    static inline bool IsLittleEndianArch() {
-#if LT_ENDIAN_FORCE != 0
-        #if LT_ENDIAN_FORCE == 1
-            return true;
-        #else
-            return false;
-        #endif
-
-#elif LT_ENDIAN_CHECK_RT == 1
-        int i = 1;
-        if ((int)*((unsigned char *)&i)==1) {
-            return true;
+        //checks if the whole project is little endian
+        //can only be overriden at compile time for debugging
+        static bool IsLittleEndian() {
+            #if LT_DEBUG_ENDIAN_FORCE == 1
+                return true;
+            #elif LT_DEBUG_ENDIAN_FORCE == 2
+                return false;
+            #else
+                return std::endian::native == std::endian::little;
+            #endif
         }
-        return false;
-
-
-#else
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-        return false;
-    #else
-        return true
-    #endif
-    
-#endif
-    }
-    
-    inline bool HaveBE() {
-        return !littleEndian;
-    }
-    BinarySerializer() : littleEndian(IsLittleEndianArch()) {}
+        //checks if the current BinarySerializer class is little endian
+        //can be overriden through constructor
+        bool IsInstanceLittleEndian() {
+            #if LT_DEBUG_ENDIAN_FORCE == 1
+                return true;
+            #elif LT_DEBUG_ENDIAN_FORCE == 2
+                return false;
+            #else
+                return emulEndianness == std::endian::little;
+            #endif
+        }
+  
+    BinarySerializer(std::endian emulated = std::endian::native) : emulEndianness(emulated) {}
     //second constructor for deserialize()
-    BinarySerializer(const std::vector<uint8_t>& data) : bufferData(data), littleEndian(IsLittleEndianArch()) {}
+    BinarySerializer(const std::vector<uint8_t>& data, std::endian emulated = std::endian::native
+    ) : bufferData(data), emulEndianness(emulated) {}
+    
+    BinarySerializer(const BinarySerializer& other) : bufferData(other.bufferData),
+    emulEndianness(other.emulEndianness) {}
 
-    BinarySerializer(const BinarySerializer& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
-    BinarySerializer(BinarySerializer&& other) : bufferData(other.bufferData), littleEndian(other.littleEndian) {}
+    BinarySerializer(BinarySerializer&& other) : bufferData(other.bufferData),
+    emulEndianness(other.emulEndianness) {}
             
     
-     //todo C++23 introduced std::byteswap(), use with std::bitcast
-     /*
-     //this should work. We now even have better constexpr way of checking endianness,
-     todo get rid of the macro ridden mess
-     dont have time now, do something like this instead
-     constexpr T ReverByteOrder(T var) {
-        static_assert(std::is_trivially_copyable_v<T>,
-            "Cannot reverse non-trivial type. For non-trivial types, implement serialize().");
-
-        if constexpr std::endian::native == std::endian::littl {
-            return var
-        }
+    template <ConTriviablyCopyable T>
+    constexpr T ReverseByteOrder(T var) {
         if constexpr (std::is_integral_v<T>) {
             return std::byteswap(var);
         }
         else {
-        auto bytes = std::bit_cast<std::array<std::byte, sizeof(T)>>(var);
-        std::reverse(bytes.begin(), bytes.end());
-        return std::bit_cast<T>(bytes);
+            auto bytes = std::bit_cast<std::array<std::byte, sizeof(T)>>(var);
+            std::reverse(bytes.begin(), bytes.end());
+            return std::bit_cast<T>(bytes);
         }
      }
      
-     */
+     
+    /*
     template <typename T>
     static T ReverseByteOrder(T var) {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -129,12 +119,13 @@ public:
         return reversed;
 
     }
+    */
         
         //make the datatype 8 byte aligned
             
     static size_t GetByteAlignment(size_t varSize) {
               
-        const auto& alignBytes = Consts::Binary::BSERIALIZE_DATA_ALIGN;
+        constexpr auto alignBytes = Consts::Binary::BSERIALIZE_DATA_ALIGN;
                 
         if (varSize % alignBytes) {
             varSize += (alignBytes - (varSize % alignBytes));
@@ -184,7 +175,7 @@ public:
    
     //C styled array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
-    template <typename T, std::size_t N>
+    template <ConTriviablyCopyable T, std::size_t N>
     void AddType(const T (&arr)[N]) {
         if (N < 1) {
             throw std::invalid_argument("Array is empty");
@@ -196,7 +187,7 @@ public:
     }
     //std::array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
-    template <typename T, std::size_t N>
+    template <ConTriviablyCopyable T, std::size_t N>
     void AddType(const std::array<T, N>& arr) {
         if (N < 1) {
             throw std::invalid_argument("Array is empty");
@@ -209,7 +200,7 @@ public:
     }
     //std::vector override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
-    template <typename T>
+    template <ConTriviablyCopyable T>
     void AddType(const std::vector<T>& vec) {
         if (vec.empty()) {
             throw std::invalid_argument("Vector is empty");
@@ -229,9 +220,9 @@ public:
         static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
         //nulllptr handlerd here
         size_t readSize = ReadRaw(t, sizeof(*t), offset);
-        if (HaveBE()) {
-            //*t = ReverseByteOrder(*t);
-            *t = std::byteswap(*t);
+        if (!IsInstanceLittleEndian()) {
+            *t = ReverseByteOrder(*t);
+           // *t = std::byteswap(*t);
         }
         return readSize;
     }
@@ -252,12 +243,13 @@ public:
         return sizeof(T) + ElementSize(args...);
     }
     
-    template <typename T>
+    template <ConTriviablyCopyable T>
     void AddTrivial(T t) {
         static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
-        if (HaveBE()) {
-            //t = ReverseByteOrder(t);
-            t = std::byteswap(t);
+        if (!IsInstanceLittleEndian()) {
+            t = ReverseByteOrder(t);
+            
+            //t = std::byteswap(t);
         }
         AddRaw(&t, sizeof(t));
     }
