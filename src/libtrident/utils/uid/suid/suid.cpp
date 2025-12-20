@@ -1,3 +1,5 @@
+//temporarily disabled for testing
+/*
 #include "suid.h"
 #include "string.h"
 #include <array>
@@ -14,7 +16,6 @@
 using namespace LibTrident;
 using namespace LibTrident::UID;
 using namespace LibTrident::Consts::SUID;
-using namespace LibTrident::Header;
 using namespace LibTrident::PkgIO;
 constexpr std::pair<SUID::SUIDS,const std::string_view> gTuidList [] = {
     //SUIDS are in following format (XXX-UUID) where XXX is shorthand name
@@ -78,3 +79,5 @@ std::expected<void, Err::TrdError> SUID::WriteSUIDAt(std::shared_ptr<Tstream::TS
     streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
     return {};
 } 
+
+*/

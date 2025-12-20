@@ -1,3 +1,5 @@
+//temporarily disabled for testing
+/*
 #include "sdesc.h"
 #include "sdescid.h"
 #include "trheader.h"
@@ -9,7 +11,7 @@
 #include "trderr.h"
 #include <zlib.h>
 using namespace LibTrident::SectionDescriptor;
-using namespace LibTrident::Header;
+
 //using namespace LibTrident::UID;
 using namespace LibTrident;
 using eCode = Err::Code;
@@ -78,11 +80,11 @@ std::expected<void, Err::TrdError> TRDSecDesc::IWriteSD(bool blankWrite) {
     return {};
 }
 //checks if we have header first
-std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(){
+//std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(){
     //todo check
-   return IRwAccessible(wFstr);
-}
-std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr) {
+ //  return IRwAccessible(wFstr);
+//}
+std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(LibTrident::Tstream::TStreamInfo& fstr) {
     //todo check
     auto hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
     if (!hdrStatus.has_value()) {
@@ -119,6 +121,9 @@ prototypes. There is also problem that when we write to the file and size change
 the kernel won't update the size automatically resulting in SIGBUS, this becomes problematic. Perhaps in future we could
 utilize header only cross platform library like https://github.com/vimpunk/mio
 */
+
+
+/*
 std::expected<void, Err::TrdError> TRDSecDesc::IValidateSDContent(const TRD_SD& sd) {
     
     if (!IChecksumValid(sd.crc, sd)) {
@@ -235,6 +240,7 @@ bool TRDSecDesc::IsValid() {
         return false;
     }
     */
+/*
     return IValidateSDContent(secDescInternal).has_value();
 }
 
@@ -242,3 +248,6 @@ bool TRDSecDesc::IsValid() {
 std::expected<void, Err::TrdError> TRDSecDesc::IsSDPresent() {
     return std::unexpected(Err::TrdError(eCode::FunctionNotImplemented));
 }
+
+
+*/

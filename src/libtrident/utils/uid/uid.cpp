@@ -1,3 +1,5 @@
+//temporarily disabled for testing
+/*
 #include "uid.h"
 #include <algorithm>
 #include <functional>
@@ -60,3 +62,5 @@ std::optional<std::vector<u8>> UID::SUID::GetUIDPattern(const std::string_view s
 }
 //when finding patterns eg. looking for SUID SECDESC string we load the whole file into dynami buffer
 //later on when we add dynamic sections (the DATA table may be tens of GB's) we have to mmap the file to the memory or code chunk parser
+
+*/

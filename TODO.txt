@@ -25,3 +25,5 @@ pkgio.cpp
             bettter reversing bytes
 *
             improve whole library architecture from drawn sketch
+
+mark every constructor as explicit

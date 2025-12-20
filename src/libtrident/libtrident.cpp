@@ -4,15 +4,20 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <stdexcept>
+#include "trheader.h"
 using namespace LibTrident;
 using namespace PkgIO;
 
+TRDPkgHeader TrPkg::header() {
+    return TRDPkgHeader(*this);
+}
+
 void LibTrident::TrPkg::ClosePkg() {
     //we do not perform any checks so RAII can take care of it
-    Tstream::TRDFstreamObject& closeInfo =  fstrInfo->GetFstreamObject();
+    Tstream::TRDFstreamObject& closeInfo =  fstrInfo.GetFstreamObject();
     closeInfo.absolutePath.clear();
     closeInfo.fileOpened = false;
-    fstrInfo->CloseStream();
+    fstrInfo.CloseStream();
     if (closeInfo.hFile && closeInfo.hFile->is_open()) {
         closeInfo.hFile->close();
     }
@@ -21,7 +26,7 @@ void LibTrident::TrPkg::ClosePkg() {
 
 
 void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& accessModel) {
-    if (fstrInfo->GetFstreamObject().fileOpened) {
+    if (fstrInfo.GetFstreamObject().fileOpened) {
         throw std::runtime_error("Package was already opened using current instance");
     }
     
@@ -73,7 +78,7 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFL
     dbgprintf("dir: %s\n", fInfo.absolutePath.parent_path().c_str()); 
     fInfo.fileStat = FileOperations::GetFileStats(path);
 
-    fstrInfo->SetFileStreamInfo(fInfo);
+    fstrInfo.SetFileStreamInfo(fInfo);
 
 }
 //ClosePkg, reset context, filestream close fd

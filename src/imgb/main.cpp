@@ -6,11 +6,11 @@
 #include "sdesc.h"
 #include <array>
 #include "serdatacommon.h"
-
+#include "trheader.h"
 
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace LibTrident;
-using namespace LibTrident::Header;
+
 using namespace LibTrident::SectionDescriptor;
 
 void PrintBuildTarget() {
@@ -24,7 +24,7 @@ std::cout << "Target: Release\n";
 
 
 #if defined(_LIBTRIDENT_DEBUG)
-void print_header(const LibTrident::Header::TRD_HEADER& hdr) {
+void print_header(const LibTrident::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
     for (auto const& it: hdr.magic) {
@@ -117,6 +117,10 @@ struct NTC_INFO_TEST : PkgIO::SerializableData{
 
 
 //#include "systemspecific/common/filemgmnt.h"
+
+//HEAVILY WIP, DO NOT USE THIS BRANCH TESTING ONLY, multiple things are disabled
+//HeaderIsPresent function is currently broken beyond comprehension rewrite it, dont have time now
+#warning "Testing branch only, everything is broken here, dont use"
 int main(void) {
    // std::cout << SystemSpecific::CreateTemporaryFile().value() << std::endl;
     PrintBuildTarget();
@@ -126,7 +130,7 @@ int main(void) {
 
 
 
-    LibTrident::Header::TRDPkgHeader x(lt.fstrInfo);
+    auto x = lt.header();
     
 #if defined(_LIBTRIDENT_DEBUG)
   
@@ -136,7 +140,7 @@ int main(void) {
 
    
    
-   
+    
    
    //std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
    tassert("CreateHeader()",x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE));
@@ -166,6 +170,7 @@ int main(void) {
 #if defined(_LIBTRIDENT_DEBUG)
     print_header(x.GetObject());   
 #endif
+/*
     TRDSecDesc sectionDesc(lt.fstrInfo);
     tassert("WriteBlankSD() ", sectionDesc.WriteBlankSD());
      TRD_SD_UPDATEFIELD sdUpdate;
@@ -211,7 +216,7 @@ int main(void) {
   
   //write 
  
-  
+  /*
   const auto& currentSeek = lt.fstrInfo->GetSeekPosR();
   {
     NTC_INFO_TEST ntc;
@@ -244,7 +249,7 @@ int main(void) {
   }
 
 
-    
+    */
    
     
   //lt.fstrInfo->WritePadding(32, 0xCCCC);

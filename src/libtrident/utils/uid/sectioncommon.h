@@ -4,7 +4,7 @@
 #pragma once
 namespace LibTrident::Sections {
     template <typename T>
-    class SectionCommon {
+    class  SectionCommon {
         public:
             virtual std::expected<void, Err::TrdError> Write() = 0;
             virtual std::expected<void, Err::TrdError> Read() = 0;

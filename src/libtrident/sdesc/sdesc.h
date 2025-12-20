@@ -73,8 +73,8 @@ public:
 private:
     bool IChecksumValid(u32 crc, const TRD_SD& sd);
     std::expected<void, Err::TrdError> IWriteSD(bool blankWrite=false);
-    std::expected<void, Err::TrdError> IRwAccessible();
-    std::expected<void, Err::TrdError> IRwAccessible(std::weak_ptr<LibTrident::Tstream::TStreamInfo> fstr);
+ //   std::expected<void, Err::TrdError> IRwAccessible();
+    std::expected<void, Err::TrdError> IRwAccessible(LibTrident::Tstream::TStreamInfo& fstr);
     std::expected<void, Err::TrdError> IValidateSDContent(const TRD_SD& sd);
     std::expected<void, Err::TrdError> IValidateTblAddr(const TRD_SD& sd); 
     

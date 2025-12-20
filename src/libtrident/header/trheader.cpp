@@ -1,10 +1,9 @@
 #include "trheader.h"
-
+#include "libtrident.h"
 #include <zlib.h>
 //#include "pkgio.h"
 
 using namespace LibTrident;
-using namespace LibTrident::Header;
 using namespace LibTrident::Consts::HeaderConsts;
 using eCode = Err::Code;
 //we are intentionally not using sizeof()
@@ -30,7 +29,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::Read() {
         return std::unexpected(Err::TrdError(eCode::FileReadFailure));
     }
     
-    hdrInteral = optHdr.value();
+    trpkg.hdrInternal = optHdr.value();
     return {};
 }
 
@@ -38,37 +37,30 @@ std::expected<void, Err::TrdError> TRDPkgHeader::Read() {
 
 std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::ReadBack() {
     TRD_HEADER hdr { };
-   
-    auto haveCtx= Tstream::TStreamInfo::GetFstreamContent(wFstr);
-    if (!haveCtx.has_value()) {
-        return std::unexpected(Err::TrdError(eCode::ReferenceExpired));
-    }
-    auto hdrStream = haveCtx.value();
-    
-    
-    if (!hdrStream->CheckFileStreamInfo()) {
+    auto& hdrStream = trpkg.fstrInfo;
+    if (!hdrStream.CheckFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
     }
     
    // auto& fstrStream = hdrStream->GetFstreamObject();
     
-    i64 originalPosition = hdrStream->GetSeekPosR();
+    i64 originalPosition = hdrStream.GetSeekPosR();
 
     if (originalPosition == -1) {
         return std::unexpected(Err::TrdError(eCode::StreamSeekFailure));
     }
 
-    hdrStream->SetSeekPosR(TRD_HDR_START_OFFSET);
+    hdrStream.SetSeekPosR(TRD_HDR_START_OFFSET);
    
-    if (!ICheckHeaderSize(hdrInteral)) {
+    if (!ICheckHeaderSize(trpkg.hdrInternal)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
-    hdrStream->ReadTStream<TRD_HEADER>(hdr);
+    hdrStream.ReadTStream<TRD_HEADER>(hdr);
 
-    hdrStream->SetSeekPosR(originalPosition);
+    hdrStream.SetSeekPosR(originalPosition);
        
     if (!IValidateHeader(hdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
@@ -77,22 +69,24 @@ std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::ReadBack() {
     return hdr;
 }
 bool TRDPkgHeader::IsValid() {
-    auto have = Tstream::TStreamInfo::GetFstreamContent(wFstr);
-    if (!have.has_value()) {
+    if (!trpkg.fstrInfo.IsOpen()) {
         return false;
     }
-    if (!have.value()->IsOpen()) {
-        return false;
-    }
-    return IValidateHeader(hdrInteral).has_value();
+    return IValidateHeader(trpkg.hdrInternal).has_value();
+}
+const TRD_HEADER& TRDPkgHeader::GetObject() const {
+    return trpkg.hdrInternal;
+}
+TRD_HEADER& TRDPkgHeader::GetObject() {
+    return trpkg.hdrInternal;
 }
 
-std::expected<void, Err::TrdError> TRDPkgHeader::IsHeaderPresent(std::weak_ptr<LibTrident::Tstream::TStreamInfo> streamInfo) {
-    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(streamInfo);
-    if (!haveCtx.has_value()) {
-        return std::unexpected(Err::TrdError(Err::Code::ReferenceExpired));
+//UNSAFE WIP, always returns true
+std::expected<void, Err::TrdError> TRDPkgHeader::IsHeaderPresent(LibTrident::Tstream::TStreamInfo& streamInfo) {
+    /*
+    if (!streamInfo.CheckFileStreamInfo().has_value()) {
+        return std::unexpected(Err::TrdError(eCode::NullObject));
     }
-    auto fStreamInfo = haveCtx.value();
 
     TRDPkgHeader hdr(fStreamInfo);
    
@@ -106,7 +100,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::IsHeaderPresent(std::weak_ptr<L
         return std::unexpected(valHdr.error());
         
     }
-    
+    */
     return {};
 }
 
@@ -136,19 +130,14 @@ std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADE
 }
 
 std::expected<void, Err::TrdError> TRDPkgHeader::Write() {
-    if (!ICheckHeaderSize(hdrInteral)) {
+    if (!ICheckHeaderSize(trpkg.hdrInternal)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     if (!IsValid()) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
-    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
-    if (!haveCtx.has_value()) {
-        return std::unexpected(Err::TrdError(eCode::ReferenceExpired));
-      
-    }
-    auto hdrStream = haveCtx.value();
-    if (!hdrStream->CheckFileStreamInfo()) {
+    auto& hdrStream = trpkg.fstrInfo;
+    if (!hdrStream.CheckFileStreamInfo()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
        
     }
@@ -159,8 +148,8 @@ std::expected<void, Err::TrdError> TRDPkgHeader::Write() {
    // const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
   //  streamInfo->hFile->Write(hdrContent, GetHeaderByteSize());
     
-    hdrStream->SetSeekPosW(TRD_HDR_START_OFFSET);
-    hdrStream->WriteTStream<TRD_HEADER>(hdrInteral);
+    hdrStream.SetSeekPosW(TRD_HDR_START_OFFSET);
+    hdrStream.WriteTStream<TRD_HEADER>(trpkg.hdrInternal);
    
     return {};
 }
@@ -226,7 +215,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::Create(const TRD_HDRFIELD_UPDAT
     hdr.fileLen = UINT64_MAX;
     hdr.ioCtrl = 0;
 
-    hdrInteral = hdr;
+    trpkg.hdrInternal = hdr;
     return {};
 }
 
@@ -280,7 +269,7 @@ std::expected<std::string, Err::TrdError> TRDPkgHeader::HeaderVersionFormatToStr
 
 }
 std::expected<void, Err::TrdError> TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD_UPDATE& update) {
-    TRD_HEADER hdr = hdrInteral;
+    TRD_HEADER hdr = trpkg.hdrInternal;
     hdr.architecture = static_cast<u8>(update.architecture);
     hdr.fmtVersion = update.fmtVersion;
     hdr.compression = static_cast<u8>(update.compression);
@@ -291,7 +280,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD
     if (!val.has_value()) {
         return std::unexpected(val.error());
     } 
-    hdrInteral = hdr;
+    trpkg.hdrInternal = hdr;
     
     return TRDPkgHeader::Write();
  }
@@ -299,13 +288,13 @@ std::expected<void, Err::TrdError> TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD
 //todo write directly
 std::expected<void, Err::TrdError> TRDPkgHeader::UpdateIoctrlProp(u16 ioctrl) {
     //todo check if valid
-    hdrInteral.ioCtrl = ioctrl;
+    trpkg.hdrInternal.ioCtrl = ioctrl;
     return TRDPkgHeader::Write();
 }
 
 std::expected<void, Err::TrdError> TRDPkgHeader::UpdateFileLenProp(u64 len) {
     //todo check if valid
-    hdrInteral.fileLen = len;
+    trpkg.hdrInternal.fileLen = len;
     return TRDPkgHeader::Write();
 
  }

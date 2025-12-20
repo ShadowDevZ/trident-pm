@@ -1,10 +1,13 @@
+//temporarily disabled for testin
+/*
+
 #include "sdescid.h"
 #include "trheader.h"
 #include "tstreaminfo.h"
 #include "suid.h"
 #include "pkgio.h"
 
-using namespace LibTrident::Header;
+
 using namespace LibTrident::Tstream;
 using namespace LibTrident::UID;
 using namespace LibTrident;
@@ -47,3 +50,5 @@ std::expected<void, Err::TrdError> TRDSdToken::ReadDescriptorSUID() {
 bool TRDSdToken::IsValidSUID() {
     return false;
 }
+
+*/

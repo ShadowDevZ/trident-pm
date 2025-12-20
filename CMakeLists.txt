@@ -14,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always -Wall -Wextra -Wunreachable-code -Wfloat-equal")
+set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -fstack-protector -fdiagnostics-color=always -Wall -Wextra -Wunreachable-code -Wfloat-equal")
 
 ##### COMMENT TO DISABLE SANITIZERS FOR DEBUG BUILD
 set(ASANON_FLAGS "-fsanitize=address")

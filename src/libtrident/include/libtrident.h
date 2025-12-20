@@ -1,10 +1,10 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstddef>
 #include <string>
 
+#include "hrddefs.h"
 
-#include "trheader.h"
 #include "trderr.h"
 #include "pkgio.h"
 #include "ioflags.h"
@@ -14,47 +14,45 @@
 namespace LibTrident {
 
 
-
+class TRDPkgHeader;
 
 class TrPkg  {
 public:
-    
-    //LibTrident::Header::PackageHeader hdr;
-    std::shared_ptr<LibTrident::Tstream::TStreamInfo> fstrInfo;
-    
-    
-    // PackageHeader pkg;
-   TrPkg() : fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {};
+  
+   TrPkg()  {};
+
    ~TrPkg() {
     dbgprintf("~Destructor called\n");
     ClosePkg();
    }
+   TRDPkgHeader header();
+   const LibTrident::Tstream::TStreamInfo& GetTstream() const {
+    return fstrInfo;
+   }
+   LibTrident::Tstream::TStreamInfo& GetTstream(){
+    return fstrInfo;
+   }
 
-   TrPkg(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& access) : 
-   fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {
-
-
+   explicit TrPkg(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& access)  {
     OpenPackage(path, access);
    }
-   TrPkg(const std::filesystem::path& path, IOFLAGS::TrdOpenIO open, IOFLAGS::TrdAccessIO access, 
-    IOFLAGS::TrdXattrIO xattr = IOFLAGS::TrdXattrIO::None): fstrInfo(std::make_shared<LibTrident::Tstream::TStreamInfo>()) {
+   explicit TrPkg(const std::filesystem::path& path, IOFLAGS::TrdOpenIO open, IOFLAGS::TrdAccessIO access, 
+    IOFLAGS::TrdXattrIO xattr = IOFLAGS::TrdXattrIO::None)  {
     
       OpenPackage(path, {open, access, xattr, IOFLAGS::_TrdInternalIO::None});
    }
-   //std::shared_ptr<TRDFstreamObject> GetFstreamObject() {
-   //     return fInfo;
-   //     
-  // }
-   
-   // PackageHeader hdr;
-    
 
-   
-    void OpenPackage(const std::filesystem::path& path, const IOFLAGS::TRDAccessModel& accessModel);
-    void ClosePkg();
+  void OpenPackage(const std::filesystem::path& path, const IOFLAGS::TRDAccessModel& accessModel);
+  void ClosePkg();
 
-//private:
- 
+
+
+private:
+  LibTrident::Tstream::TStreamInfo fstrInfo {};
+  LibTrident::TRD_HEADER hdrInternal {};
+
+  //TRDPkgHeader headerSection;
+  friend class TRDPkgHeader;
   // std::shared_ptr<TRDFstreamObject> fInfo;
 
 };
