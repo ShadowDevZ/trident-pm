@@ -29,7 +29,7 @@ namespace LibTrident::PkgIO {
             void ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
            
             //throws std::system_error on failure
-            std::shared_ptr<struct stat64> GetFileStats(const std::filesystem::path& file);
+            struct stat64 GetFileStats(const std::filesystem::path& file);
 
             
     };
@@ -262,10 +262,10 @@ public:
     */
     std::optional<std::vector<u8>> GetFormattedData(bool autoAlign=false);
 
-    static void WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr,
+    static void WriteDataToTStream(LibTrident::Tstream::TStreamInfo& tStream,
                 const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
 
-    static std::unique_ptr<std::vector<u8>> ReadDataFromTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, i64 seekPos,
+    static std::vector<u8> ReadDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos,
                 u64 size, bool checkAlignment=true);
 };
 

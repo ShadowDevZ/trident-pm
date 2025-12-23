@@ -15,6 +15,9 @@ using eCode = Err::Code;
 
 
 
+const TRD_HEADER& TRDPkgHeader::GetHeader() const {
+    return trpkg.trdHdr;
+}
 
 
 
@@ -24,43 +27,43 @@ using eCode = Err::Code;
 //in future this might get overloaded with something like int version
 
 std::expected<void, Err::TrdError> TRDPkgHeader::Read() {
-    auto optHdr = TRDPkgHeader::ReadBack();
+    auto optHdr = TRDPkgHeader::ReadBack(trpkg.fstrInfo);
     if (!optHdr.has_value() || !IValidateHeader(optHdr.value())) {
         return std::unexpected(Err::TrdError(eCode::FileReadFailure));
     }
     
-    trpkg.hdrInternal = optHdr.value();
+    trpkg.trdHdr = optHdr.value();
     return {};
 }
 
 
-
-std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::ReadBack() {
+//reads back header, performs all field and validity checks, no need to call IValidateHeader
+std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::ReadBack(Tstream::TStreamInfo& tStream) {
     TRD_HEADER hdr { };
-    auto& hdrStream = trpkg.fstrInfo;
-    if (!hdrStream.CheckFileStreamInfo().has_value()) {
+   // auto& hdrStream = trpkg.fstrInfo;
+    if (!tStream.CheckFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
     }
     
-   // auto& fstrStream = hdrStream->GetFstreamObject();
+   // auto& fstrStream = tStream->GetFstreamObject();
     
-    i64 originalPosition = hdrStream.GetSeekPosR();
+    i64 originalPosition = tStream.GetSeekPos();
 
     if (originalPosition == -1) {
         return std::unexpected(Err::TrdError(eCode::StreamSeekFailure));
     }
 
-    hdrStream.SetSeekPosR(TRD_HDR_START_OFFSET);
+    tStream.SetSeekPos(TRD_HDR_START_OFFSET);
    
-    if (!ICheckHeaderSize(trpkg.hdrInternal)) {
+    if (!ICheckHeaderSize(hdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
-    hdrStream.ReadTStream<TRD_HEADER>(hdr);
+    tStream.ReadTStream<TRD_HEADER>(hdr);
 
-    hdrStream.SetSeekPosR(originalPosition);
+    tStream.SetSeekPos(originalPosition);
        
     if (!IValidateHeader(hdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
@@ -72,41 +75,27 @@ bool TRDPkgHeader::IsValid() {
     if (!trpkg.fstrInfo.IsOpen()) {
         return false;
     }
-    return IValidateHeader(trpkg.hdrInternal).has_value();
-}
-const TRD_HEADER& TRDPkgHeader::GetObject() const {
-    return trpkg.hdrInternal;
-}
-TRD_HEADER& TRDPkgHeader::GetObject() {
-    return trpkg.hdrInternal;
+    return IValidateHeader(trpkg.trdHdr).has_value();
 }
 
-//UNSAFE WIP, always returns true
+
 std::expected<void, Err::TrdError> TRDPkgHeader::IsHeaderPresent(LibTrident::Tstream::TStreamInfo& streamInfo) {
-    /*
+   
     if (!streamInfo.CheckFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
     }
-
-    TRDPkgHeader hdr(fStreamInfo);
    
-    auto optHdr = hdr.ReadBack();
+    auto optHdr = TRDPkgHeader::ReadBack(streamInfo);
     if (!optHdr.has_value()) {
         return std::unexpected(Err::TrdError(Err::Code::FileReadFailure));
     }
-    auto valHdr = hdr.IValidateHeader(optHdr.value());
-    if (!valHdr.has_value()) {
-        dbgprintf("header not present\n");
-        return std::unexpected(valHdr.error());
-        
-    }
-    */
+    
     return {};
 }
 
 
 
-std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn) {
+std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn){
     if (!ICheckHeaderSize(hdrIn)) {
         return std::unexpected(Err::TrdError(eCode::SectionMissing));
     }
@@ -130,7 +119,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADE
 }
 
 std::expected<void, Err::TrdError> TRDPkgHeader::Write() {
-    if (!ICheckHeaderSize(trpkg.hdrInternal)) {
+    if (!ICheckHeaderSize(trpkg.trdHdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     if (!IsValid()) {
@@ -147,9 +136,9 @@ std::expected<void, Err::TrdError> TRDPkgHeader::Write() {
 
    // const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
   //  streamInfo->hFile->Write(hdrContent, GetHeaderByteSize());
-    
-    hdrStream.SetSeekPosW(TRD_HDR_START_OFFSET);
-    hdrStream.WriteTStream<TRD_HEADER>(trpkg.hdrInternal);
+    //hdrStream.gets
+    hdrStream.SetSeekPos(TRD_HDR_START_OFFSET);
+    hdrStream.WriteTStream<TRD_HEADER>(trpkg.trdHdr);
    
     return {};
 }
@@ -215,7 +204,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::Create(const TRD_HDRFIELD_UPDAT
     hdr.fileLen = UINT64_MAX;
     hdr.ioCtrl = 0;
 
-    trpkg.hdrInternal = hdr;
+    trpkg.trdHdr = hdr;
     return {};
 }
 
@@ -269,7 +258,7 @@ std::expected<std::string, Err::TrdError> TRDPkgHeader::HeaderVersionFormatToStr
 
 }
 std::expected<void, Err::TrdError> TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD_UPDATE& update) {
-    TRD_HEADER hdr = trpkg.hdrInternal;
+    TRD_HEADER hdr = trpkg.trdHdr;
     hdr.architecture = static_cast<u8>(update.architecture);
     hdr.fmtVersion = update.fmtVersion;
     hdr.compression = static_cast<u8>(update.compression);
@@ -280,7 +269,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD
     if (!val.has_value()) {
         return std::unexpected(val.error());
     } 
-    trpkg.hdrInternal = hdr;
+    trpkg.trdHdr = hdr;
     
     return TRDPkgHeader::Write();
  }
@@ -288,13 +277,13 @@ std::expected<void, Err::TrdError> TRDPkgHeader::UpdateHeader(const TRD_HDRFIELD
 //todo write directly
 std::expected<void, Err::TrdError> TRDPkgHeader::UpdateIoctrlProp(u16 ioctrl) {
     //todo check if valid
-    trpkg.hdrInternal.ioCtrl = ioctrl;
+    trpkg.trdHdr.ioCtrl = ioctrl;
     return TRDPkgHeader::Write();
 }
 
 std::expected<void, Err::TrdError> TRDPkgHeader::UpdateFileLenProp(u64 len) {
     //todo check if valid
-    trpkg.hdrInternal.fileLen = len;
+    trpkg.trdHdr.fileLen = len;
     return TRDPkgHeader::Write();
 
  }

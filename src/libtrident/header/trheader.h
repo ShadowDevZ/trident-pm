@@ -20,12 +20,10 @@ public:
 
     std::expected<void, LibTrident::Err::TrdError> Write() /*override*/;
     std::expected<void, LibTrident::Err::TrdError> Read() /*override*/;
-    std::expected<TRD_HEADER, LibTrident::Err::TrdError> ReadBack() /*override*/;
+    static std::expected<TRD_HEADER, LibTrident::Err::TrdError> ReadBack(Tstream::TStreamInfo& tStream)/*override*/;
     bool IsValid() /*override*/;
     
-    const TRD_HEADER& GetObject() const;
-    
-    TRD_HEADER& GetObject();
+    const TRD_HEADER& GetHeader() const;
     
     std::expected<void, LibTrident::Err::TrdError> Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
     std::expected<void, LibTrident::Err::TrdError> UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
@@ -47,9 +45,9 @@ private:
     TrPkg& trpkg;
     
    
-    std::expected<void, LibTrident::Err::TrdError> ICheckCRC(u32 crc, const TRD_HEADER& hdr);
-    bool ICheckHeaderSize(const TRD_HEADER& hdr);
-    std::expected<void, LibTrident::Err::TrdError> IValidateHeader(const TRD_HEADER& hdrIn);
+    static std::expected<void, LibTrident::Err::TrdError> ICheckCRC(u32 crc, const TRD_HEADER& hdr);
+    static bool ICheckHeaderSize(const TRD_HEADER& hdr);
+    static std::expected<void, LibTrident::Err::TrdError> IValidateHeader(const TRD_HEADER& hdrIn);
     //std::pair<bool,Tstream::TRDFstreamObject&> ICheckAndGetFstreamContent();
     
     

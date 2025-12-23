@@ -18,7 +18,7 @@ typedef struct {
     std::streamsize fSize;
     IOFLAGS::TRDAccessModel acccessModel;
     //for future use, atime
-    std::shared_ptr<struct stat64> fileStat;
+    struct stat64 fileStat;
     //struct stat64 fileStat;
     bool fileOpened;
 
@@ -28,8 +28,6 @@ typedef struct {
 
 class TStreamInfo{
 private:
-    i64 IGetSeekPos(bool read);
-    void ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seek=std::ios::beg);
     TRDFstreamObject xfInfo;
 public:
     
@@ -48,27 +46,14 @@ public:
     
 
     //checks if each field is correctly set
-    std::expected<void, Err::TrdError> CheckFileStreamInfo();
+    std::expected<void, Err::TrdError> CheckFileStreamInfo() const;
     std::expected<void, Err::TrdError> CloseStream();
     //checks if the stream is only MARKED as open, data may be missing or corrupted
-    std::expected<void, Err::TrdError> IsOpen();
-     //throws std::iosbase::failure on exception
-    inline void SetSeekPosW(i64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
-        ISetSeekPos(true, pos, seekDir);
-    }
-     //throws std::iosbase::failure on exception
-    inline void SetSeekPosR(i64 pos, std::ios_base::seekdir seekDir=std::ios::beg) {
-        ISetSeekPos(false, pos, seekDir);
-    }
+    std::expected<void, Err::TrdError> IsOpen() const;
     //throws std::iosbase::failure on exception
-    inline i64 GetSeekPosW() {
-        return IGetSeekPos(false);
-    }
-     //throws std::iosbase::failure on exception
-    inline i64 GetSeekPosR() {
-        return IGetSeekPos(true);
-    }
-
+    void SetSeekPos(u64 pos, std::ios_base::seekdir seek=std::ios::beg);
+    //throws std::iosbase::failure on exception
+    i64 GetSeekPos() const;
     
     
     template <typename T>
@@ -86,19 +71,18 @@ public:
     
     
     template <typename T>
-    void ReadTStream(T& t, u64 size) {
+    void ReadTStream(T& t, u64 size) const {
         ReadTStream(reinterpret_cast<char*>(&t), size);
     }
     
     template <typename T>
-    void ReadTStream(T& t) {
+    void ReadTStream(T& t) const{
         ReadTStream(t, sizeof(t));
     }
 
     //throws std::invalid_argument runtime error or anything by FileOperations::ReadLeData
-    void ReadTStream(char* s, u64 size);
+    void ReadTStream(char* s, u64 size) const;
 
-   static std::optional<std::shared_ptr<Tstream::TStreamInfo>> GetFstreamContent(std::weak_ptr<Tstream::TStreamInfo> weakFstr);
  
 };
 

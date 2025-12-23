@@ -15,9 +15,9 @@ namespace SUID {
         ///...
     };
     const std::optional<std::string_view> GetSUIDString(SUID::SUIDS id);
-    bool IsValidSUID(const std::string_view& suid);
+    bool IsValidSUID(std::string_view suid);
     std::expected<void, Err::TrdError> WriteSUIDAt(std::shared_ptr<Tstream::TStreamInfo> streamInfo, std::streampos loc, SUID::SUIDS id);
-    std::optional<std::vector<u8>> GetUIDPattern(const std::string_view str);
+    std::optional<std::vector<u8>> GetUIDPattern(std::string_view str);
 
 
 }};

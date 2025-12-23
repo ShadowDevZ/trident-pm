@@ -4,7 +4,7 @@
 #include "ccattribs.h"
 #include "ccattribs.h"
 #include <cerrno>
-
+#include <format>
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
 using namespace LibTrident::PkgIO::FileOperations;
@@ -43,10 +43,10 @@ std::streamsize FileOperations::GetFstreamSize(std::weak_ptr<std::fstream> fsx) 
     return fileSize;
   
 }
-std::shared_ptr<struct stat64> FileOperations::GetFileStats(const std::filesystem::path& file) {
+struct stat64 FileOperations::GetFileStats(const std::filesystem::path& file) {
     //yes i know on x86 stat is always evaluated to stat64, better be safe then sorry
-    std::shared_ptr<struct stat64> fileStat = std::make_shared<struct stat64>();
-    if (stat64(file.c_str(), fileStat.get()) == 0) {
+    struct stat64 fileStat {};
+    if (stat64(file.c_str(), &fileStat) == 0) {
         
         return fileStat;
         
@@ -138,7 +138,8 @@ size_t BinarySerializer::ReadRaw(void*  dataOut, size_t size, size_t offset) {
         throw std::invalid_argument("nullptr was passed");
     }
     if (offset + size > bufferData.size()) {
-        throw std::out_of_range("Buffer was not big enough");
+        std::string pi = std::format("buffsz: {}, exp_atl: {}", bufferData.size(), offset+size);
+        throw std::out_of_range("Buffer was not big enough " + pi);
     }
     
     if (size == 0) {
@@ -152,49 +153,41 @@ size_t BinarySerializer::ReadRaw(void*  dataOut, size_t size, size_t offset) {
 
 }
 
-std::unique_ptr<std::vector<u8>> BinarySerializer::ReadDataFromTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, i64 seekPos, u64 size, bool checkAlignment) {
+std::vector<u8> BinarySerializer::ReadDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos, u64 size, bool checkAlignment) {
    
     if (!checkAlignment || !IsDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
     }
-    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
-    if (!haveCtx.has_value()) {
-        throw std::runtime_error("Weak pointer reference expired");
-    }
-    auto tStream = haveCtx.value();
-    if (!tStream->CheckFileStreamInfo()) {
+    if (!tStream.CheckFileStreamInfo()) {
         throw std::runtime_error("CheckFileStreamInfo() failed");
     }
-    i64 ogSeek = tStream->GetSeekPosR();
-    tStream->SetSeekPosR(seekPos);
-    auto data = std::make_unique<std::vector<u8>>(size);
-    tStream->ReadTStream(reinterpret_cast<char*>(data->data()),  size);
-    tStream->SetSeekPosR(ogSeek);
+    i64 ogSeek = tStream.GetSeekPos();
+    tStream.SetSeekPos(seekPos);
+    std::vector<u8> data(size);
+   // data.reserve(size);
+
+    tStream.ReadTStream(reinterpret_cast<char*>(data.data()),  size);
+    tStream.SetSeekPos(ogSeek);
     return data;
 
 }
-void BinarySerializer::WriteDataToTStream(std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {
+void BinarySerializer::WriteDataToTStream(LibTrident::Tstream::TStreamInfo& tStream, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {
     //todo make this boilerplate in all classes a function
     if (data.empty()) {
         throw std::invalid_argument("Empty buffer was passed");
     }
-    auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
-    if (!haveCtx.has_value()) {
-        throw std::runtime_error("Weak pointer reference expired");
-    }
-    auto tStream = haveCtx.value();
-    if (!tStream->CheckFileStreamInfo()) {
+    if (!tStream.CheckFileStreamInfo()) {
         throw std::runtime_error("CheckFileStreamInfo() failed");
     }
-    i64 ogSeek = tStream->GetSeekPosW();
+    i64 ogSeek = tStream.GetSeekPos();
 
-    tStream->SetSeekPosW(seekPos, seekDir);
+    tStream.SetSeekPos(seekPos, seekDir);
     if (!ExpectAlignedDataOrDie(data.size())) {
         throw std::invalid_argument("Unaligned data");
     }
 
-    tStream->WriteTStream(reinterpret_cast<const char*>(data.data()), data.size(),  true);
-    tStream->SetSeekPosW(ogSeek);
+    tStream.WriteTStream(reinterpret_cast<const char*>(data.data()), data.size(),  true);
+    tStream.SetSeekPos(ogSeek);
 
 }
 

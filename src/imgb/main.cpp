@@ -1,5 +1,5 @@
 
-#include <string.h> 
+#include <cstring> 
 #include <iostream>
 #include "libtrident.h"
 #include "suid.h"
@@ -7,7 +7,7 @@
 #include <array>
 #include "serdatacommon.h"
 #include "trheader.h"
-
+#include <cstdlib>
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace LibTrident;
 
@@ -105,25 +105,29 @@ struct NTC_INFO_TEST : PkgIO::SerializableData{
     
 
 };
- #define tassert(fnName, expr) \
-    do { \
-        if (!(expr)) { \
-            fprintf(stderr, "\x1B[31m[fail]%s\nAS: <%s :: %s, %d, %s>\x1B[0m\n", fnName, #expr, __ASSERT_FILE, __ASSERT_LINE, __ASSERT_FUNCTION); \
-            abort(); \
-        } else { \
-            std::cout << "\x1B[32m" << fnName << " [ok]\x1B[0m\n"; \
-        } \
-    } while(0);
 
+template <typename FN, typename EXPR>
+requires std::convertible_to<FN, std::string_view>
+void tassert(FN fnName, EXPR expr) {
+    std::string_view sv(fnName);
+    if (!(expr)) {
+       std::cerr << "\x1B[31m" << fnName << std::setw(22-sv.size()) << "[fail]" << "\x1B[0m\n";
+       std::exit(1);
+    }
+    else {
+        std::cout << "\x1B[32m" << fnName << std::setw(22-sv.size()) << "[ok]" << "\x1B[0m\n";
+    }
+}
 
 //#include "systemspecific/common/filemgmnt.h"
 
 //HEAVILY WIP, DO NOT USE THIS BRANCH TESTING ONLY, multiple things are disabled
-//HeaderIsPresent function is currently broken beyond comprehension rewrite it, dont have time now
 #warning "Testing branch only, everything is broken here, dont use"
+
 int main(void) {
    // std::cout << SystemSpecific::CreateTemporaryFile().value() << std::endl;
     PrintBuildTarget();
+   
     LibTrident::TrPkg lt("./test.tpx", {IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::AllAccess, IOFLAGS::TrdXattrIO::None, IOFLAGS::_TrdInternalIO::None});
   //  LibTrident::TrPkg lt("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
     //lt.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
@@ -143,14 +147,14 @@ int main(void) {
     
    
    //std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
-   tassert("CreateHeader()",x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE));
+    tassert("CreateHeader()",x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE));
 #if defined(_LIBTRIDENT_DEBUG)
-   print_header(x.GetObject());
+   print_header(x.GetHeader());
 #endif
 // NOLINTNEXTLINE
-  tassert("WriteHeaderHeader()" , x.Write())
+    tassert("WriteHeader()" , x.Write());
   // std::cout << "HeaderRBValid() " << x.IsWrittenHeaderValid() << std::endl;
-    tassert("ReadHeader() ", x.Read());
+    tassert("ReadHeader()", x.Read());
     
     TRD_HDRFIELD_UPDATE updateField;
     updateField.architecture = ARCHT_AARCH64;
@@ -158,17 +162,17 @@ int main(void) {
     updateField.compression = COMPRALG_GZIP;
     updateField.fmtVersion = TRDPkgHeader::FormatHeaderVersion(3,1,2).value();
     
-    tassert("UpdateHeader() ", x.UpdateHeader(updateField));
+    tassert("UpdateHeader()", x.UpdateHeader(updateField));
  
-    tassert("ValidateHeader() ", x.IsValid());
+    tassert("ValidateHeader()", x.IsValid());
 #if defined(_LIBTRIDENT_DEBUG)
-    print_header(x.GetObject());   
+    print_header(x.GetHeader());   
 #endif
-    tassert("ModifyLen() ", x.UpdateFileLenProp(0xbeefccaa));
-    tassert("ModifyIOCTRL() ", x.UpdateIoctrlProp(IOCTRL_DESC_WLOCK));
-    tassert("ValidateHeader() ", x.IsValid());
+    tassert("ModifyLen()", x.UpdateFileLenProp(0xbeefccaa));
+    tassert("ModifyIOCTRL()", x.UpdateIoctrlProp(IOCTRL_DESC_WLOCK));
+    tassert("ValidateHeader()", x.IsValid());
 #if defined(_LIBTRIDENT_DEBUG)
-    print_header(x.GetObject());   
+    print_header(x.GetHeader());   
 #endif
 /*
     TRDSecDesc sectionDesc(lt.fstrInfo);
@@ -186,7 +190,8 @@ int main(void) {
      print_sd(sectionDesc.GetObject());
 #endif
     
-    /*
+    */
+
     {
     PkgIO::BinarySerializer bSer;
    //int oox = 0xbeefc;
@@ -201,7 +206,7 @@ int main(void) {
     if (haveCtx.has_value()) {
         const auto& vec = haveCtx.value();
       
-        bSer.WriteDataToTStream(lt.fstrInfo, vec, 0, std::ios::end);
+        bSer.WriteDataToTStream(lt.GetTstream(), vec, 0, std::ios::end);
        // tassert("BSWData() ",  == Err::Code::SUCCESS);
         
     }
@@ -212,12 +217,13 @@ int main(void) {
     //todo fr add those asserts
     //std::cout << "WritePadding()" << lt.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
     }
-   */
+   
   
   //write 
  
-  /*
-  const auto& currentSeek = lt.fstrInfo->GetSeekPosR();
+  
+  //const auto& currentSeek = lt.GetTstream().GetSeekPos();
+  lt.GetTstream().SetSeekPos(0, std::ios::end);
   {
     NTC_INFO_TEST ntc;
     ntc.x = 0xfde2;
@@ -229,10 +235,11 @@ int main(void) {
     const auto& haveNtc = ntc.Serialize();
     if (haveNtc.has_value()) {
         const auto& val = haveNtc.value();
-        PkgIO::BinarySerializer::WriteDataToTStream(lt.fstrInfo, val, 0, std::ios::end);
+        PkgIO::BinarySerializer::WriteDataToTStream(lt.GetTstream(), val, 0, std::ios::end);
     }
   }
   //read
+  const auto& currentSeek = lt.GetTstream().GetSeekPos();
   {
     NTC_INFO_TEST ntcRead;
     ntcRead.x = 0;
@@ -240,16 +247,16 @@ int main(void) {
     ntcRead.z = 0;
     const auto& ntcReadSize = ntcRead.Sizeof();
     std::cout << "ntc size: " << ntcReadSize << "\n";
-    const auto readData =  PkgIO::BinarySerializer::ReadDataFromTStream(lt.fstrInfo, currentSeek, ntcReadSize);
+    const auto readData =  PkgIO::BinarySerializer::ReadDataFromTStream(lt.GetTstream(), currentSeek, ntcReadSize);
     
-    if(!ntcRead.Deserialize(*readData)) {
+    if(!ntcRead.Deserialize(readData)) {
         return 1;
     }
     printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
   }
 
 
-    */
+    
    
     
   //lt.fstrInfo->WritePadding(32, 0xCCCC);

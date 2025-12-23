@@ -49,7 +49,7 @@ public:
 
 private:
   LibTrident::Tstream::TStreamInfo fstrInfo {};
-  LibTrident::TRD_HEADER hdrInternal {};
+  LibTrident::TRD_HEADER trdHdr {};
 
   //TRDPkgHeader headerSection;
   friend class TRDPkgHeader;

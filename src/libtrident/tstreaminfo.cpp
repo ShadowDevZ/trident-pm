@@ -7,7 +7,7 @@ using namespace LibTrident;
 using namespace PkgIO;
 using namespace LibTrident::Tstream;
 
-std::expected<void, Err::TrdError> Tstream::TStreamInfo::CheckFileStreamInfo() {
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::CheckFileStreamInfo() const {
     //check if pointer was allocated usiong OpenPkg()
     if (!TStreamInfo::IsOpen() || !xfInfo.hFile) {
         return std::unexpected(Err::Code::FileOpenFailure);
@@ -30,7 +30,7 @@ Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
 
 
 
-std::expected<void, Err::TrdError> Tstream::TStreamInfo::IsOpen() {
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::IsOpen() const {
     Err::Code status = StreamRemoteIsOpen(xfInfo);
     if (status != Err::Code::Success) {
         return std::unexpected(status);
@@ -85,21 +85,6 @@ void Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
 }
 
 
-std::optional<std::shared_ptr<Tstream::TStreamInfo>> Tstream::TStreamInfo::GetFstreamContent(std::weak_ptr<Tstream::TStreamInfo> weakFstr) {
-   
-    auto fstrInfo = weakFstr.lock();
-    
-    if (!fstrInfo) {
-       
-        return std::nullopt;
-    }
-
-    if (!fstrInfo->CheckFileStreamInfo()) {
-        return std::nullopt;
-        
-    }
-    return fstrInfo;
-}
 
 
 
@@ -122,7 +107,7 @@ void TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
         xfInfo.fSize += size;
     }
 }
-void TStreamInfo::ReadTStream(char* s, u64 size) {
+void TStreamInfo::ReadTStream(char* s, u64 size) const {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
@@ -137,31 +122,19 @@ void TStreamInfo::ReadTStream(char* s, u64 size) {
 }
 
 
-void TStreamInfo::ISetSeekPos(bool read, u64 pos, std::ios_base::seekdir seekd) {
-    if (read) {
-        xfInfo.hFile->seekg(pos, seekd);
-    }
-    else {
-        xfInfo.hFile->seekp(pos, seekd);
-    }
+void TStreamInfo::SetSeekPos(u64 pos, std::ios_base::seekdir seekd) {
+    xfInfo.hFile->seekg(pos, seekd);
+    xfInfo.hFile->seekp(pos, seekd);
     if (!xfInfo.hFile) {
         
         //i was actually thinking if exceptions are necessary here but given that the user could set invalid offset
         //and this could invalidate the whole program means we would have to check seekpos in every function 
         throw std::ios_base::failure("seekg() failure");
     }
-   
-
-
 }
-i64 TStreamInfo::IGetSeekPos(bool read) {
-    i64 pos = -1;
-    if (read) {
-        pos =  xfInfo.hFile->tellg();
-    }
-    else {
-        pos =  xfInfo.hFile->tellp();
-    }
+i64 TStreamInfo::GetSeekPos() const {
+    i64 pos = xfInfo.hFile->tellg();
+  
     if (pos == -1 || !xfInfo.hFile) {
         
         throw std::ios_base::failure("tellg() failed");
