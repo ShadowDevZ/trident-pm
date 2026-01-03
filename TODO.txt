@@ -27,3 +27,5 @@ pkgio.cpp
             improve whole library architecture from drawn sketch
 
 mark every constructor as explicit
+trderr.cpp
+            all errors should have optional field with passable error code

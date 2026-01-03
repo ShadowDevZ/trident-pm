@@ -52,6 +52,7 @@ target_include_directories(${TRDLIB} PUBLIC
     src/libtrident/sdesc
     src/libtrident/utils/uid/suid
     src/libtrident/utils/uid
+    src/libtrident/systemspecific/common/include/
 )
 ###target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 ###target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)

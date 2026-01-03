@@ -30,7 +30,8 @@ namespace LibTrident::Err {
             UnalignedData,
             UnsupportedPlatform,
             BadObject,
-            ReferenceExpired
+            ReferenceExpired,
+            OSFunctionCallFailed
             
     };
     

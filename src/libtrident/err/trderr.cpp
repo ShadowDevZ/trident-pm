@@ -40,7 +40,8 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {eCode::FunctionNotImplemented, "Function not implemented. Do not use"},
     {eCode::UnalignedData, "Data was not properly aligned before written. Alignment violated"},
     {eCode::BadObject, "Object does not hold correct size/data"},
-    {eCode::ReferenceExpired, "Reference object has expired"}
+    {eCode::ReferenceExpired, "Reference object has expired"},
+    {eCode::OSFunctionCallFailed, "Call to operating system function/syscall or routine failed"}
 };
 
 std::string_view Err::TrdError::TranslateError(LibTrident::Err::Code code) noexcept {

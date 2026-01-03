@@ -104,7 +104,7 @@ void TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
     FileOperations::WriteLeData(xfInfo.hFile, data, size);
 
     if (increment) {
-        xfInfo.fSize += size;
+        xfInfo.checksumSize += size;
     }
 }
 void TStreamInfo::ReadTStream(char* s, u64 size) const {

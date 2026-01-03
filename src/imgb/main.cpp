@@ -55,6 +55,26 @@ void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
     dbgprintf("\tReserved: %lu\n", sd._reserved0);
     dbgprintf("[SD_END]\n\n");
 }
+
+void print_stat(const PortableTypes::PortableStat& ps) {
+    u32 perms = static_cast<u32>(ps.permissions) & 0777;
+    auto aux = ps.auxiliary.value();
+
+    auto to_time_t = [](auto tp) -> std::time_t {
+        return std::chrono::system_clock::to_time_t(tp);
+    };
+    //ugly debug print, i still dont know how to use std::print, i always get
+    //kilometres of unreadable template errors
+    //size is expected to be 0 here as we are creating fresh file and data is not written becasue of RAII
+    std::cerr << "stat() info\n"  << "Type: " << static_cast<signed char>(ps.fileType) << "\n  Size: " << 
+    ps.fileSize.value_or(0) << "\n  Perms: " << std::oct << perms 
+    << std::dec << "\n  UID: " << aux.optOwnerUID.value_or(0) << "\n  GID: "
+    << aux.optOwnerGID.value_or(0) << "\n  BTIME: " << to_time_t(aux.times.fileCreated.value())
+    << "\n  ATIME: " << to_time_t(aux.times.lastAccess) << "\n  CTIME: " 
+    << to_time_t(aux.times.lastMetadataChange) << "\n  MTIME: " 
+    << to_time_t(aux.times.lastModify) << '\n';  
+}
+
 #endif
 
 //test
@@ -119,13 +139,13 @@ void tassert(FN fnName, EXPR expr) {
     }
 }
 
-//#include "systemspecific/common/filemgmnt.h"
+#include "systemspecific/common/include/filemgmnt.h"
 
 //HEAVILY WIP, DO NOT USE THIS BRANCH TESTING ONLY, multiple things are disabled
 #warning "Testing branch only, everything is broken here, dont use"
 
 int main(void) {
-   // std::cout << SystemSpecific::CreateTemporaryFile().value() << std::endl;
+    std::cout << SystemSpecific::CreateTemporaryFile().value() << std::endl;
     PrintBuildTarget();
    
     LibTrident::TrPkg lt("./test.tpx", {IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::AllAccess, IOFLAGS::TrdXattrIO::None, IOFLAGS::_TrdInternalIO::None});
@@ -254,10 +274,10 @@ int main(void) {
     }
     printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
   }
+  
 
-
-    
-   
+    auto portStat = lt.GetTstream().GetFstreamObject().pStat;
+    print_stat(portStat);
     
   //lt.fstrInfo->WritePadding(32, 0xCCCC);
    

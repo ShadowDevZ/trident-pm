@@ -14,8 +14,6 @@
 //todo add most basic IO function here
 namespace LibTrident::PkgIO {
    namespace FileOperations {
-            //throws std::ios_base::failure on failure 
-            std::streamsize GetFstreamSize(std::weak_ptr<std::fstream> fsx);
             
             ///The following 2 functions format the buffer and WriteHeader it as Little endian
             //does not increment fSize
@@ -28,8 +26,7 @@ namespace LibTrident::PkgIO {
             //throws std::ios::base, std::bad_alloc, std::runtime_error on failure
             void ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
            
-            //throws std::system_error on failure
-            struct stat64 GetFileStats(const std::filesystem::path& file);
+           
 
             
     };

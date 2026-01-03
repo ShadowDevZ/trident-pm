@@ -7,6 +7,7 @@
 #include "ioflags.h"
 #include <filesystem>
 #include <expected>
+#include "filemgmnt.h"
 //#include "ioflags.h"
 namespace LibTrident::Tstream {
 
@@ -15,10 +16,10 @@ typedef struct {
     std::filesystem::path absolutePath;
     std::shared_ptr<std::fstream> hFile;
     //does not represent actual file size, but sizeof(whole file - header), not utilized yet
-    std::streamsize fSize;
+    u64 checksumSize;
     IOFLAGS::TRDAccessModel acccessModel;
     //for future use, atime
-    struct stat64 fileStat;
+    PortableTypes::PortableStat pStat;
     //struct stat64 fileStat;
     bool fileOpened;
 

@@ -5,54 +5,13 @@
 #include "ccattribs.h"
 #include <cerrno>
 #include <format>
+#include "filemgmnt.h"
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
 using namespace LibTrident::PkgIO::FileOperations;
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
 #endif
-
-
-std::streamsize FileOperations::GetFstreamSize(std::weak_ptr<std::fstream> fsx) {
-    auto fs = fsx.lock();
-    if (!fs) {
-        throw std::runtime_error("Expired reference");
-    }
-    if (!fs->is_open()) {
-        throw std::ios_base::failure("Failed to open fd");
-    }
-    std::streampos orignalPosition = fs->tellg();
-    std::streampos fileSize;
-    if (orignalPosition == -1) {
-        throw std::ios_base::failure("tellg() failure");
-    }
-    fs->seekg(0, std::ios::end);
-    if (!fs) {
-         throw std::ios_base::failure("seekg() failure");
-         
-    }
-    fileSize = fs->tellg();
-    if (fileSize == -1) {
-        throw std::ios_base::failure("tellg() failure");
-    }
-    //reset to the original state
-    fs->seekg(orignalPosition, std::ios::beg);
-    if (!fs) {
-        throw std::ios_base::failure("seekg() failure");
-    }
-    return fileSize;
-  
-}
-struct stat64 FileOperations::GetFileStats(const std::filesystem::path& file) {
-    //yes i know on x86 stat is always evaluated to stat64, better be safe then sorry
-    struct stat64 fileStat {};
-    if (stat64(file.c_str(), &fileStat) == 0) {
-        
-        return fileStat;
-        
-    };
-    throw std::system_error(errno, std::generic_category(), "stat64() failed on " + file.string());
-}
 
 
 

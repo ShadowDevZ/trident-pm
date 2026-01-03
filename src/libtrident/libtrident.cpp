@@ -55,30 +55,32 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFL
     }
     
     
-    std::streampos fileSize = FileOperations::GetFstreamSize(fsPkg);
-    if (fileSize == -1) {
-        throw std::runtime_error("Failed to determine the file size");
-    }
+    
+   
     //We are creating copy instead of simply moving is because if error occurs the original stream must remain unchanged
     Tstream::TRDFstreamObject fInfo;
     
     fInfo.acccessModel = accessModel;
-    fInfo.fSize = fileSize;
+    fInfo.checksumSize = std::filesystem::file_size(path);
 
    // fInfo.hFile->seekg(0, std::ios::beg); 
     
     dbgprintf("Seek offset %lu\n", static_cast<u64>(fsPkg->tellg())); 
-    dbgprintf("File size %luB\n", static_cast<u64>(fInfo.fSize)); 
+    dbgprintf("File size %luB\n", static_cast<u64>(fInfo.checksumSize)); 
    
     fInfo.hFile = fsPkg;
     
-    fInfo.fileOpened = true;
     fInfo.absolutePath = absolutePath;
     dbgprintf("name: %s\n", fInfo.absolutePath.filename().c_str()); 
     dbgprintf("dir: %s\n", fInfo.absolutePath.parent_path().c_str()); 
-    fInfo.fileStat = FileOperations::GetFileStats(path);
-
+    auto fileStat = LibTrident::SystemSpecific::StatFile(path);
+    if (!fileStat.has_value()) {
+        throw std::runtime_error("failed to stat() file");
+    }
+    fInfo.pStat = fileStat.value();
+    
+    fInfo.fileOpened = true;
     fstrInfo.SetFileStreamInfo(fInfo);
-
+    
 }
 //ClosePkg, reset context, filestream close fd
