@@ -35,3 +35,7 @@ namespace LibTrident::Consts::Binary {
     constexpr u16 BSERIALIZE_DATA_ALIGN = 8;
 }
 
+namespace LibTrident::Consts::Err {
+    //maximum size of the user specified extended error message
+    constexpr u16 SECONDARY_ERROR_MAXSIZE = 256;
+};

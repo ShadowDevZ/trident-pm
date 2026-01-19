@@ -212,6 +212,7 @@ int main(void) {
     
     */
 
+    /*
     {
     PkgIO::BinarySerializer bSer;
    //int oox = 0xbeefc;
@@ -276,15 +277,16 @@ int main(void) {
   }
   
 
+  
+  //lt.fstrInfo->WritePadding(32, 0xCCCC);
+  
+  // lt.fstrInfo->WritePadding(32, 0xCCCC);
+  
+  //ClosePkg() not needed because of RAII
+  //  lt.ClosePkg();
+  */
     auto portStat = lt.GetTstream().GetFstreamObject().pStat;
     print_stat(portStat);
-    
-  //lt.fstrInfo->WritePadding(32, 0xCCCC);
-   
-   // lt.fstrInfo->WritePadding(32, 0xCCCC);
-   
-//ClosePkg() not needed because of RAII
-  //  lt.ClosePkg();
     std::cout << "Exit(0)\n";
     return 0;
     

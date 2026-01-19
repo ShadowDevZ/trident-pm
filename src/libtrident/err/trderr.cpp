@@ -44,10 +44,10 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {eCode::OSFunctionCallFailed, "Call to operating system function/syscall or routine failed"}
 };
 
-std::string_view Err::TrdError::TranslateError(LibTrident::Err::Code code) noexcept {
+std::string_view Err::TrdError::TranslateError(LibTrident::Err::Code primary) noexcept {
    
    for (const auto&  x: gErrorMessages)  {
-        if (x.first == code) {
+        if (x.first == primary) {
             
             return x.second;
         }

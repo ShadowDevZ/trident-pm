@@ -26,7 +26,7 @@ std::expected<LibTrident::PortableTypes::AuxiliaryStat, LibTrident::Err::TrdErro
 
 std::expected<LibTrident::PortableTypes::PortableStat, LibTrident::Err::TrdError> LibTrident::SystemSpecific::StatObject(const std::filesystem::path& file) {
     if (!fs::exists(file)) {
-        return std::unexpected(Err::Code::FileMissing);
+        return std::unexpected(Err::TrdError{Err::Code::FileMissing});
     }
     auto status = fs::symlink_status(file);
     

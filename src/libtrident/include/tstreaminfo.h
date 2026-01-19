@@ -11,7 +11,7 @@
 //#include "ioflags.h"
 namespace LibTrident::Tstream {
 
-typedef struct {
+struct TRDFstreamObject{
     //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation
     std::filesystem::path absolutePath;
     std::shared_ptr<std::fstream> hFile;
@@ -23,7 +23,7 @@ typedef struct {
     //struct stat64 fileStat;
     bool fileOpened;
 
-}TRDFstreamObject;
+};
 
 
 

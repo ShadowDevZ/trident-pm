@@ -9,8 +9,9 @@ using namespace LibTrident::Tstream;
 
 std::expected<void, Err::TrdError> Tstream::TStreamInfo::CheckFileStreamInfo() const {
     //check if pointer was allocated usiong OpenPkg()
+    
     if (!TStreamInfo::IsOpen() || !xfInfo.hFile) {
-        return std::unexpected(Err::Code::FileOpenFailure);
+        return std::unexpected(Err::TrdError{Err::Code::FileOpenFailure});
     }
     return {};
 }
@@ -33,7 +34,7 @@ Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
 std::expected<void, Err::TrdError> Tstream::TStreamInfo::IsOpen() const {
     Err::Code status = StreamRemoteIsOpen(xfInfo);
     if (status != Err::Code::Success) {
-        return std::unexpected(status);
+        return std::unexpected(Err::TrdError{status});
     }
     return {};
 }

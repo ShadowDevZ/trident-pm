@@ -12,7 +12,7 @@ namespace LibTrident::SystemSpecific {
 
     inline std::expected<LibTrident::PortableTypes::PortableStat, LibTrident::Err::TrdError> StatFile(const std::filesystem::path& file) {
         if (!std::filesystem::is_regular_file(file)) {
-            return std::unexpected(LibTrident::Err::Code::ObjectNotFile);
+            return std::unexpected(Err::TrdError{Err::Code::ObjectNotFile});
         }
         return StatObject(file);
     }

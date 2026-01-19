@@ -21,7 +21,7 @@ std::expected<LibTrident::PortableTypes::AuxiliaryStat, LibTrident::Err::TrdErro
                     STATX_BASIC_STATS| STATX_BTIME, &stx);
     if (ret != 0) {
         //again in future we need to pass the error code
-        return std::unexpected(Err::Code::OSFunctionCallFailed);
+        return std::unexpected(Err::TrdError{Err::Code::OSFunctionCallFailed});
     }
     AuxiliaryStat extStat {};
     
