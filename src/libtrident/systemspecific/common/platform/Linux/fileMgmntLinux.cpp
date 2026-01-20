@@ -6,7 +6,7 @@
 using namespace LibTrident;
 using namespace LibTrident::PortableTypes;
 
-std::expected<std::filesystem::path, LibTrident::Err::TrdError> LinuxSpecific::CreateTemporaryFile() {
+std::expected<std::filesystem::path, LibTrident::Err::TrdError> LinuxSpecific::createTemporaryFile() {
         char templatePath[] = "/tmp/.tmp_tridentpkgXXXXXX";
         int fd = mkstemp(templatePath);
         if (fd == -1) {
@@ -15,7 +15,7 @@ std::expected<std::filesystem::path, LibTrident::Err::TrdError> LinuxSpecific::C
         return std::filesystem::path(templatePath);
 }
 
-std::expected<LibTrident::PortableTypes::AuxiliaryStat, LibTrident::Err::TrdError> LinuxSpecific::GetAuxiliaryStat(const std::filesystem::path& path) {
+std::expected<LibTrident::PortableTypes::AuxiliaryStat, LibTrident::Err::TrdError> LinuxSpecific::getAuxiliaryStat(const std::filesystem::path& path) {
     struct statx stx {};
     int ret = statx(AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, 
                     STATX_BASIC_STATS| STATX_BTIME, &stx);

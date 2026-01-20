@@ -60,20 +60,20 @@ public:
     explicit TrdError(Err::Code primary) : primaryError(primary) {};
 
     explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg)  {
-        SetError(primary, extErr, extErrMsg);
+        setError(primary, extErr, extErrMsg);
     };
    
-    LibTrident::Err::Code GetError() const noexcept {
+    LibTrident::Err::Code getError() const noexcept {
         return primaryError;
     }
-    std::optional<SecondaryErrorInfo> GetSecondaryError() const noexcept {
+    std::optional<SecondaryErrorInfo> getSecondaryError() const noexcept {
         return secondaryError;
     }
 
-    void SetError(Err::Code primary) {
+    void setError(Err::Code primary) {
         primaryError = primary;
     }
-    void SetError(Err::Code primary, u32 extErr=0, std::string extErrMsg="") {
+    void setError(Err::Code primary, u32 extErr=0, std::string extErrMsg="") {
         if (extErrMsg.size() > LibTrident::Consts::Err::SECONDARY_ERROR_MAXSIZE) {
             throw std::length_error("Error message exceeded max allowed size");
         }
@@ -85,29 +85,29 @@ public:
         };
         
     }
-    bool IsOK() const noexcept {
+    bool isOK() const noexcept {
         return (primaryError == Err::Code::Success);
     }
-    void SetSuccess() {
+    void setSuccess() {
         primaryError = Err::Code::Success;
         //unset any other flags as secondaryError is not available for all errors
         secondaryError.reset();
     }
     //stringview is nonowning, so no reference
-    std::string_view GetErrorAsString() const noexcept {
-        return TrdError::TranslateError(primaryError);
+    std::string_view getErrorAsString() const noexcept {
+        return TrdError::translateError(primaryError);
     }
-    static std::string_view TranslateError(LibTrident::Err::Code primary) noexcept;
+    static std::string_view translateError(LibTrident::Err::Code primary) noexcept;
 
-    static std::string_view TranslateError(const TrdError& trdErr) noexcept {
-        return TranslateError(trdErr.primaryError);
+    static std::string_view translateError(const TrdError& trdErr) noexcept {
+        return translateError(trdErr.primaryError);
     }
     friend std::ostream& operator<<(std::ostream& os, const TrdError& m)  {
-        os << m.TranslateError(m.primaryError);
+        os << m.translateError(m.primaryError);
         return os;
     }
     operator bool() const {
-        return IsOK();
+        return isOK();
     }
 
 };

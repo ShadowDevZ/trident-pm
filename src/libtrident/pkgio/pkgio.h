@@ -20,11 +20,11 @@ namespace LibTrident::PkgIO {
            
             //throws std::ios::base on failure
             //todo rewrite this shared ptr mess, bad code
-            void WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
+            void writeLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
             
             //increments fSize by bytes written by default, if updating alReadHeadery written variable INCREMENT MUST BE FALSE
             //throws std::ios::base, std::bad_alloc, std::runtime_error on failure
-            void ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
+            void readLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
            
            
 
@@ -36,9 +36,9 @@ namespace LibTrident::PkgIO {
         public:
             virtual ~Descriptor() = default;
             //beg=true mean beginning of section, beg=false end of section
-            virtual std::expected<void, Err::TrdError> WriteDescriptorSUID() = 0;
-            virtual std::expected<void, Err::TrdError> ReadDescriptorSUID() = 0;
-            virtual bool  IsValidSUID() = 0;
+            virtual std::expected<void, Err::TrdError> writeDescriptorSUID() = 0;
+            virtual std::expected<void, Err::TrdError> readDescriptorSUID() = 0;
+            virtual bool  isValidSUID() = 0;
            
     };
     template <typename T>
@@ -55,7 +55,7 @@ private:
 public:
         //checks if the whole project is little endian
         //can only be overriden at compile time for debugging
-        static bool IsLittleEndian() {
+        static bool isLittleEndian() {
             #if LT_DEBUG_ENDIAN_FORCE == 1
                 return true;
             #elif LT_DEBUG_ENDIAN_FORCE == 2
@@ -66,7 +66,7 @@ public:
         }
         //checks if the current BinarySerializer class is little endian
         //can be overriden through constructor
-        bool IsInstanceLittleEndian() {
+        bool isInstanceLittleEndian() {
             #if LT_DEBUG_ENDIAN_FORCE == 1
                 return true;
             #elif LT_DEBUG_ENDIAN_FORCE == 2
@@ -89,7 +89,7 @@ public:
             
     
     template <ConTriviablyCopyable T>
-    constexpr T ReverseByteOrder(T var) {
+    constexpr T reverseByteOrder(T var) {
         if constexpr (std::is_integral_v<T>) {
             return std::byteswap(var);
         }
@@ -120,7 +120,7 @@ public:
         
         //make the datatype 8 byte aligned
             
-    static size_t GetByteAlignment(size_t varSize) {
+    static size_t getByteAlignment(size_t varSize) {
               
         constexpr auto alignBytes = Consts::Binary::BSERIALIZE_DATA_ALIGN;
                 
@@ -136,16 +136,16 @@ public:
     Why wont we use this always instead of killing on failure ? Well if malformed data enters 
     the function we could possibly write bad data
     */
-    static constexpr bool IsDataSizeAligned(size_t size) {
+    static constexpr bool isDataSizeAligned(size_t size) {
         return size % LibTrident::Consts::Binary::BSERIALIZE_DATA_ALIGN == 0;
     }
 
     //If data is ok returns true otherwise false
     //same as IsDataSizeAligned except that this leaves no room for fixing the size by padding it
     //kills program if size is not properly aligned
-    static inline bool ExpectAlignedDataOrDie(size_t size) {
+    static inline bool expectAlignedDataOrDie(size_t size) {
         //normal assert used because this condition simply cant happen
-        bool aligned = IsDataSizeAligned(size);
+        bool aligned = isDataSizeAligned(size);
         if (!aligned) {
             throw std::runtime_error("Passed data was not properly aligned");
         }
@@ -154,26 +154,26 @@ public:
 
     } 
     
-    const std::vector<uint8_t>& GetData() const {
+    const std::vector<uint8_t>& getData() const {
         return bufferData;
     }
-    std::vector<uint8_t>& GetData() {
+    std::vector<uint8_t>& getData() {
         return bufferData;
     }
-    inline void EmptyData() {
+    inline void emptyData() {
         bufferData.clear();
     }
     //Warning this method DOES NOT check nor modify endianness
     //Do not use this method unless no other override is available
     //When calling this function you are responsible for passing data in correct endianness
     //throws std::invalid_argument on failure
-    LT_UNSAFE_API void AddRaw(const void*  data, size_t size);
+    LT_UNSAFE_API void addRaw(const void*  data, size_t size);
     
    
     //C styled array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <ConTriviablyCopyable T, std::size_t N>
-    void AddType(const T (&arr)[N]) {
+    void addType(const T (&arr)[N]) {
         if (N < 1) {
             throw std::invalid_argument("Array is empty");
         }
@@ -185,7 +185,7 @@ public:
     //std::array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <ConTriviablyCopyable T, std::size_t N>
-    void AddType(const std::array<T, N>& arr) {
+    void addType(const std::array<T, N>& arr) {
         if (N < 1) {
             throw std::invalid_argument("Array is empty");
         }
@@ -198,7 +198,7 @@ public:
     //std::vector override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <ConTriviablyCopyable T>
-    void AddType(const std::vector<T>& vec) {
+    void addType(const std::vector<T>& vec) {
         if (vec.empty()) {
             throw std::invalid_argument("Vector is empty");
         }
@@ -213,12 +213,12 @@ public:
     
     template <typename T>
     //returns number of bytes read
-    size_t ReadTrivial(T* t, size_t offset=0) {
+    size_t readTrivial(T* t, size_t offset=0) {
         static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
         //nulllptr handlerd here
-        size_t readSize = ReadRaw(t, sizeof(*t), offset);
-        if (!IsInstanceLittleEndian()) {
-            *t = ReverseByteOrder(*t);
+        size_t readSize = readRaw(t, sizeof(*t), offset);
+        if (!isInstanceLittleEndian()) {
+            *t = reverseByteOrder(*t);
            // *t = std::byteswap(*t);
         }
         return readSize;
@@ -228,7 +228,7 @@ public:
     //Do not use this method unless no other override is available
     //When calling this function you are responsible for passing data in correct endianness
     //throws std::invalid_argument on failure
-    LT_UNSAFE_API size_t ReadRaw(void*  dataOut, size_t size, size_t offset=0);
+    LT_UNSAFE_API size_t readRaw(void*  dataOut, size_t size, size_t offset=0);
 
 
 
@@ -241,14 +241,14 @@ public:
     }
     
     template <ConTriviablyCopyable T>
-    void AddTrivial(T t) {
+    void addTrivial(T t) {
         static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
-        if (!IsInstanceLittleEndian()) {
-            t = ReverseByteOrder(t);
+        if (!isInstanceLittleEndian()) {
+            t = reverseByteOrder(t);
             
             //t = std::byteswap(t);
         }
-        AddRaw(&t, sizeof(t));
+        addRaw(&t, sizeof(t));
     }
     /*
     if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
@@ -257,12 +257,12 @@ public:
       this is confusing to anyone reading the function, instead if you have information that
       doesnt match the data add _reserved or _padding field
     */
-    std::optional<std::vector<u8>> GetFormattedData(bool autoAlign=false);
+    std::optional<std::vector<u8>> getFormattedData(bool autoAlign=false);
 
-    static void WriteDataToTStream(LibTrident::Tstream::TStreamInfo& tStream,
+    static void writeDataToTStream(LibTrident::Tstream::TStreamInfo& tStream,
                 const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
 
-    static std::vector<u8> ReadDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos,
+    static std::vector<u8> readDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos,
                 u64 size, bool checkAlignment=true);
 };
 

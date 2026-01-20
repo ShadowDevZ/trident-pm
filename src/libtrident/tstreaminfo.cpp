@@ -7,16 +7,16 @@ using namespace LibTrident;
 using namespace PkgIO;
 using namespace LibTrident::Tstream;
 
-std::expected<void, Err::TrdError> Tstream::TStreamInfo::CheckFileStreamInfo() const {
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::checkFileStreamInfo() const {
     //check if pointer was allocated usiong OpenPkg()
     
-    if (!TStreamInfo::IsOpen() || !xfInfo.hFile) {
+    if (!TStreamInfo::isOpen() || !xfInfo.hFile) {
         return std::unexpected(Err::TrdError{Err::Code::FileOpenFailure});
     }
     return {};
 }
 
-Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
+Err::Code streamRemoteIsOpen(const TRDFstreamObject& info) {
     if (info.acccessModel._internal == IOFLAGS::_TrdInternalIO::IoClosed) {
         return Err::Code::FileOpenFailure;
     }
@@ -31,8 +31,8 @@ Err::Code StreamRemoteIsOpen(const TRDFstreamObject& info) {
 
 
 
-std::expected<void, Err::TrdError> Tstream::TStreamInfo::IsOpen() const {
-    Err::Code status = StreamRemoteIsOpen(xfInfo);
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::isOpen() const {
+    Err::Code status = streamRemoteIsOpen(xfInfo);
     if (status != Err::Code::Success) {
         return std::unexpected(Err::TrdError{status});
     }
@@ -44,7 +44,7 @@ Err::Code TStreamInfo::CloseRemoteStream(TRDFstreamObject& info) {
     return Err::Code::SUCCESS;
 } 
 */
-std::expected<void, Err::TrdError> Tstream::TStreamInfo::CloseStream() {
+std::expected<void, Err::TrdError> Tstream::TStreamInfo::closeStream() {
     xfInfo.acccessModel._internal = IOFLAGS::_TrdInternalIO::IoClosed;
     return {};
 }
@@ -77,8 +77,8 @@ Err::Code Tstream::TStreamInfo::ValidateRemoteFileStreamInfo(const TRDFstreamObj
 }
 */
 
-void Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
-    if (StreamRemoteIsOpen(info) != Err::Code::Success) {
+void Tstream::TStreamInfo::setFileStreamInfo(const TRDFstreamObject& info) {
+    if (streamRemoteIsOpen(info) != Err::Code::Success) {
         throw std::runtime_error("Stream remote is closed");
     }
   
@@ -89,12 +89,12 @@ void Tstream::TStreamInfo::SetFileStreamInfo(const TRDFstreamObject& info) {
 
 
 
-void TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
-    if (!CheckFileStreamInfo())  {
+void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
+    if (!checkFileStreamInfo())  {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     //for compatibility across different CPUS and to improve performance on x86/64
-    if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
+    if (!BinarySerializer::expectAlignedDataOrDie(size)) {
         return;
     }
     if (size == 0) {
@@ -102,28 +102,28 @@ void TStreamInfo::WriteTStream(const char* data, u64 size, bool increment) {
     }
     
     //throws exception on failure, no need to check
-    FileOperations::WriteLeData(xfInfo.hFile, data, size);
+    FileOperations::writeLeData(xfInfo.hFile, data, size);
 
     if (increment) {
         xfInfo.checksumSize += size;
     }
 }
-void TStreamInfo::ReadTStream(char* s, u64 size) const {
+void TStreamInfo::readTStream(char* s, u64 size) const {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
-    if (!CheckFileStreamInfo())  {
+    if (!checkFileStreamInfo())  {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
-    if (!BinarySerializer::ExpectAlignedDataOrDie(size)) {
+    if (!BinarySerializer::expectAlignedDataOrDie(size)) {
         return;
     }
 
-    FileOperations::ReadLeData(xfInfo.hFile, s, size);
+    FileOperations::readLeData(xfInfo.hFile, s, size);
 }
 
 
-void TStreamInfo::SetSeekPos(u64 pos, std::ios_base::seekdir seekd) {
+void TStreamInfo::setSeekPos(u64 pos, std::ios_base::seekdir seekd) {
     xfInfo.hFile->seekg(pos, seekd);
     xfInfo.hFile->seekp(pos, seekd);
     if (!xfInfo.hFile) {
@@ -133,7 +133,7 @@ void TStreamInfo::SetSeekPos(u64 pos, std::ios_base::seekdir seekd) {
         throw std::ios_base::failure("seekg() failure");
     }
 }
-i64 TStreamInfo::GetSeekPos() const {
+i64 TStreamInfo::getSeekPos() const {
     i64 pos = xfInfo.hFile->tellg();
   
     if (pos == -1 || !xfInfo.hFile) {
@@ -143,11 +143,11 @@ i64 TStreamInfo::GetSeekPos() const {
     return pos;
 }
 
-void TStreamInfo::WritePadding(u16 size, int value, bool increment) {
+void TStreamInfo::writePadding(u16 size, int value, bool increment) {
     //char padding[size];
     std::vector<char> padding(size);
     std::fill(padding.begin(), padding.end(), value);
    // std::memset(padding, value, sizeof(padding));
-    WriteTStream(reinterpret_cast<const char*>(padding.data()), padding.size(), increment);
+    writeTStream(reinterpret_cast<const char*>(padding.data()), padding.size(), increment);
 }
 

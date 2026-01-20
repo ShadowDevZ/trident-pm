@@ -22,28 +22,30 @@ public:
    TrPkg()  {};
 
    ~TrPkg() {
-    dbgprintf("~Destructor called\n");
-    ClosePkg();
+      dbgprintf("~Destructor called\n");
+      closePkg();
    }
+
    TRDPkgHeader header();
-   const LibTrident::Tstream::TStreamInfo& GetTstream() const {
-    return fstrInfo;
+
+   const LibTrident::Tstream::TStreamInfo& getTstream() const {
+        return fstrInfo;
    }
-   LibTrident::Tstream::TStreamInfo& GetTstream(){
-    return fstrInfo;
+   LibTrident::Tstream::TStreamInfo& getTstream(){
+        return fstrInfo;
    }
 
    explicit TrPkg(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& access)  {
-    OpenPackage(path, access);
+        openPackage(path, access);
    }
    explicit TrPkg(const std::filesystem::path& path, IOFLAGS::TrdOpenIO open, IOFLAGS::TrdAccessIO access, 
     IOFLAGS::TrdXattrIO xattr = IOFLAGS::TrdXattrIO::None)  {
     
-      OpenPackage(path, {open, access, xattr, IOFLAGS::_TrdInternalIO::None});
+        openPackage(path, {open, access, xattr, IOFLAGS::_TrdInternalIO::None});
    }
 
-  void OpenPackage(const std::filesystem::path& path, const IOFLAGS::TRDAccessModel& accessModel);
-  void ClosePkg();
+  void openPackage(const std::filesystem::path& path, const IOFLAGS::TRDAccessModel& accessModel);
+  void closePkg();
 
 
 

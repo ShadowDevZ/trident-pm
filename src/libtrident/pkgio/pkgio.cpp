@@ -16,7 +16,7 @@ using namespace LibTrident::PkgIO::FileOperations;
 
 
 
-void FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
+void FileOperations::writeLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
     if (!stream->is_open() || !data || size < 1) {
         throw std::ios_base::failure("WriteLeData() Failed");
     }
@@ -24,7 +24,7 @@ void FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char
     //WE NEED TO SERIALIZE THE STRUCT BEFORE WRITING IT, OTHERWISE IT PRODUCES GARBAGE
 
      ///endian operations will be moved entirely to BinarySerializer class
-    if (BinarySerializer::IsLittleEndian()) {
+    if (BinarySerializer::isLittleEndian()) {
         stream->write(data, size);
     }
     else {
@@ -50,7 +50,7 @@ void FileOperations::WriteLeData(std::shared_ptr<std::fstream> stream,const char
             
 
 
-void FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
+void FileOperations::readLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
     if (!stream->is_open() || !s || size < 1) {
         throw std::ios_base::failure("ReadLeStream() Failed\n");
     }
@@ -59,7 +59,7 @@ void FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, s
         throw std::bad_alloc();
     }
     ///endian operations will be moved entirely to BinarySerializer class
-    if (BinarySerializer::IsLittleEndian()) {
+    if (BinarySerializer::isLittleEndian()) {
         stream->read(data, size);
     }
     else {
@@ -83,7 +83,7 @@ void FileOperations::ReadLeData(std::shared_ptr<std::fstream> stream, char* s, s
 }
 
 
-void BinarySerializer::AddRaw(const void*  data, size_t size) {
+void BinarySerializer::addRaw(const void*  data, size_t size) {
     if (!data || size == 0) {
         throw std::invalid_argument("AddRaw() failed. Data or size is 0");
     }
@@ -92,7 +92,7 @@ void BinarySerializer::AddRaw(const void*  data, size_t size) {
 
 }
 #include <cstring>
-size_t BinarySerializer::ReadRaw(void*  dataOut, size_t size, size_t offset) {
+size_t BinarySerializer::readRaw(void*  dataOut, size_t size, size_t offset) {
     if (dataOut == nullptr) {
         throw std::invalid_argument("nullptr was passed");
     }
@@ -112,45 +112,45 @@ size_t BinarySerializer::ReadRaw(void*  dataOut, size_t size, size_t offset) {
 
 }
 
-std::vector<u8> BinarySerializer::ReadDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos, u64 size, bool checkAlignment) {
+std::vector<u8> BinarySerializer::readDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos, u64 size, bool checkAlignment) {
    
-    if (!checkAlignment || !IsDataSizeAligned(size)) {
+    if (!checkAlignment || !isDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
     }
-    if (!tStream.CheckFileStreamInfo()) {
+    if (!tStream.checkFileStreamInfo()) {
         throw std::runtime_error("CheckFileStreamInfo() failed");
     }
-    i64 ogSeek = tStream.GetSeekPos();
-    tStream.SetSeekPos(seekPos);
+    i64 ogSeek = tStream.getSeekPos();
+    tStream.setSeekPos(seekPos);
     std::vector<u8> data(size);
    // data.reserve(size);
 
-    tStream.ReadTStream(reinterpret_cast<char*>(data.data()),  size);
-    tStream.SetSeekPos(ogSeek);
+    tStream.readTStream(reinterpret_cast<char*>(data.data()),  size);
+    tStream.setSeekPos(ogSeek);
     return data;
 
 }
-void BinarySerializer::WriteDataToTStream(LibTrident::Tstream::TStreamInfo& tStream, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {
+void BinarySerializer::writeDataToTStream(LibTrident::Tstream::TStreamInfo& tStream, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {
     //todo make this boilerplate in all classes a function
     if (data.empty()) {
         throw std::invalid_argument("Empty buffer was passed");
     }
-    if (!tStream.CheckFileStreamInfo()) {
+    if (!tStream.checkFileStreamInfo()) {
         throw std::runtime_error("CheckFileStreamInfo() failed");
     }
-    i64 ogSeek = tStream.GetSeekPos();
+    i64 ogSeek = tStream.getSeekPos();
 
-    tStream.SetSeekPos(seekPos, seekDir);
-    if (!ExpectAlignedDataOrDie(data.size())) {
+    tStream.setSeekPos(seekPos, seekDir);
+    if (!expectAlignedDataOrDie(data.size())) {
         throw std::invalid_argument("Unaligned data");
     }
 
-    tStream.WriteTStream(reinterpret_cast<const char*>(data.data()), data.size(),  true);
-    tStream.SetSeekPos(ogSeek);
+    tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size(),  true);
+    tStream.setSeekPos(ogSeek);
 
 }
 
-std::optional<std::vector<u8>> BinarySerializer::GetFormattedData(bool autoAlign) {
+std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign) {
     if (bufferData.empty()) {
         return std::nullopt;
     }
@@ -159,18 +159,18 @@ std::optional<std::vector<u8>> BinarySerializer::GetFormattedData(bool autoAlign
 
     if (autoAlign) {
         const auto& vSize = bufferData.size();
-        if (!IsDataSizeAligned(vSize)) {
-            alignSize = GetByteAlignment(vSize) - vSize;
+        if (!isDataSizeAligned(vSize)) {
+            alignSize = getByteAlignment(vSize) - vSize;
             dbgprintf("--Unaligned data serialized\nog:%luB new: %luB\n", vSize, alignSize+vSize);
         }
     }
 
     bufferData.insert(bufferData.end(), alignSize, 0);
-    if (!ExpectAlignedDataOrDie(bufferData.size())) {
+    if (!expectAlignedDataOrDie(bufferData.size())) {
             return std::nullopt;
     }
     dbgprintf("--Serializing data size %luB\n\n", bufferData.size());
-   // bool st = tStream->WriteTStream(reinterpret_cast<const char*>(bufferData.data()), bufferData.size(),  true);
+   // bool st = tStream->writeTStream(reinterpret_cast<const char*>(bufferData.data()), bufferData.size(),  true);
     
     return bufferData;
 

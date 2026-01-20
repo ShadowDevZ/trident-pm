@@ -9,7 +9,7 @@
 #include "portableTypes.h"
 namespace LinuxSpecific {
     
-    std::expected<std::filesystem::path, LibTrident::Err::TrdError> CreateTemporaryFile();
-    std::expected<LibTrident::PortableTypes::AuxiliaryStat, LibTrident::Err::TrdError> GetAuxiliaryStat(const std::filesystem::path& path);
+    std::expected<std::filesystem::path, LibTrident::Err::TrdError> createTemporaryFile();
+    std::expected<LibTrident::PortableTypes::AuxiliaryStat, LibTrident::Err::TrdError> getAuxiliaryStat(const std::filesystem::path& path);
 }
 #endif

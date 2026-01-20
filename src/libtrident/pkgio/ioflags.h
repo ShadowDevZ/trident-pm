@@ -73,7 +73,7 @@ namespace LibTrident::IOFLAGS {
     TrdAccessIO::CreateFromMembuff returns nullopt. For attributes like TrdXattrIO or _TrdReserved nothing happens
     TrdOpenIO and TRDAccessIO are mandatory.
     */
-    std::optional<std::ios::openmode> TranslateAccessModel(const IOFLAGS::TRDAccessModel& accessModel); 
+    std::optional<std::ios::openmode> translateAccessModel(const IOFLAGS::TRDAccessModel& accessModel); 
      //all attributes without X prefix can be translated
      //if an attribute with X prefix is passed, returns 0;
    // std::ios::openmode IOFlags2FsBase(IO_OpenFlag flags);

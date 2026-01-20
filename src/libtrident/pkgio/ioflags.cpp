@@ -3,7 +3,7 @@
 using namespace LibTrident;
 using namespace LibTrident::IOFLAGS;
 
-std::optional<std::ios::openmode> IOFLAGS::TranslateAccessModel(const TRDAccessModel& accessModel) {
+std::optional<std::ios::openmode> IOFLAGS::translateAccessModel(const TRDAccessModel& accessModel) {
     //if we don't provide default value we cannot use OR. 
     //Unfortunately ios::openmode doesn't contain 0 value
     std::ios::openmode iosOpen = static_cast<std::ios::openmode>(0); //NOLINT

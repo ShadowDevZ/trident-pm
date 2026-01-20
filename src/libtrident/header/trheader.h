@@ -18,24 +18,24 @@ class TRDPkgHeader /*final : public LibTrident::Sections::SectionCommon<TRD_HEAD
 public:
     
 
-    std::expected<void, LibTrident::Err::TrdError> Write() /*override*/;
-    std::expected<void, LibTrident::Err::TrdError> Read() /*override*/;
-    static std::expected<TRD_HEADER, LibTrident::Err::TrdError> ReadBack(Tstream::TStreamInfo& tStream)/*override*/;
-    bool IsValid() /*override*/;
+    std::expected<void, LibTrident::Err::TrdError> write() /*override*/;
+    std::expected<void, LibTrident::Err::TrdError> read() /*override*/;
+    static std::expected<TRD_HEADER, LibTrident::Err::TrdError> readBack(Tstream::TStreamInfo& tStream)/*override*/;
+    bool isValid() /*override*/;
     
-    const TRD_HEADER& GetHeader() const;
+    const TRD_HEADER& getHeader() const;
     
-    std::expected<void, LibTrident::Err::TrdError> Create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
-    std::expected<void, LibTrident::Err::TrdError> UpdateHeader(const TRD_HDRFIELD_UPDATE& update);
-    std::expected<void, LibTrident::Err::TrdError> Create(const TRD_HDRFIELD_UPDATE& field);
-    std::expected<void, LibTrident::Err::TrdError> UpdateIoctrlProp(u16 ioctrl);
-    std::expected<void, LibTrident::Err::TrdError> UpdateFileLenProp(u64 len);
+    std::expected<void, LibTrident::Err::TrdError> create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
+    std::expected<void, LibTrident::Err::TrdError> create(const TRD_HDRFIELD_UPDATE& field);
+    std::expected<void, LibTrident::Err::TrdError> updateHeader(const TRD_HDRFIELD_UPDATE& update);
+    std::expected<void, LibTrident::Err::TrdError> updateIoctrlProp(u16 ioctrl);
+    std::expected<void, LibTrident::Err::TrdError> updateFileLenProp(u64 len);
     
     
-    static std::expected<u16, LibTrident::Err::TrdError> FormatHeaderVersion(u8 major, u8 minor, u8 revision);
-    static std::expected<std::string, LibTrident::Err::TrdError> HeaderVersionFormatToString(u16 fmt, bool abRevision=true);
+    static std::expected<u16, LibTrident::Err::TrdError> formatHeaderVersion(u8 major, u8 minor, u8 revision);
+    static std::expected<std::string, LibTrident::Err::TrdError> headerVersionFormatToString(u16 fmt, bool abRevision=true);
     
-    static std::expected<void, LibTrident::Err::TrdError> IsHeaderPresent(LibTrident::Tstream::TStreamInfo& fStreamInfo);
+    static std::expected<void, LibTrident::Err::TrdError> isHeaderPresent(LibTrident::Tstream::TStreamInfo& fStreamInfo);
     
     explicit TRDPkgHeader(TrPkg& pkg) : trpkg(pkg) {};
     

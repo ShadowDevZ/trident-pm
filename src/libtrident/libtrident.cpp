@@ -12,12 +12,12 @@ TRDPkgHeader TrPkg::header() {
     return TRDPkgHeader(*this);
 }
 
-void LibTrident::TrPkg::ClosePkg() {
+void LibTrident::TrPkg::closePkg() {
     //we do not perform any checks so RAII can take care of it
-    Tstream::TRDFstreamObject& closeInfo =  fstrInfo.GetFstreamObject();
+    Tstream::TRDFstreamObject& closeInfo =  fstrInfo.getFstreamObject();
     closeInfo.absolutePath.clear();
     closeInfo.fileOpened = false;
-    fstrInfo.CloseStream();
+    fstrInfo.closeStream();
     if (closeInfo.hFile && closeInfo.hFile->is_open()) {
         closeInfo.hFile->close();
     }
@@ -25,13 +25,13 @@ void LibTrident::TrPkg::ClosePkg() {
 }
 
 
-void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& accessModel) {
-    if (fstrInfo.GetFstreamObject().fileOpened) {
+void LibTrident::TrPkg::openPackage(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& accessModel) {
+    if (fstrInfo.getFstreamObject().fileOpened) {
         throw std::runtime_error("Package was already opened using current instance");
     }
     
     //std::ios::openmode openMode = IOFLAGS::IOFlags2FsBase(openFlags);
-    auto optOpenMode = IOFLAGS::TranslateAccessModel(accessModel);
+    auto optOpenMode = IOFLAGS::translateAccessModel(accessModel);
     if (!optOpenMode.has_value()) {
         throw std::invalid_argument("Incorrect access model used");
     }
@@ -73,14 +73,14 @@ void LibTrident::TrPkg::OpenPackage(const std::filesystem::path& path,const IOFL
     fInfo.absolutePath = absolutePath;
     dbgprintf("name: %s\n", fInfo.absolutePath.filename().c_str()); 
     dbgprintf("dir: %s\n", fInfo.absolutePath.parent_path().c_str()); 
-    auto fileStat = LibTrident::SystemSpecific::StatFile(path);
+    auto fileStat = LibTrident::SystemSpecific::statFile(path);
     if (!fileStat.has_value()) {
         throw std::runtime_error("failed to stat() file");
     }
     fInfo.pStat = fileStat.value();
     
     fInfo.fileOpened = true;
-    fstrInfo.SetFileStreamInfo(fInfo);
+    fstrInfo.setFileStreamInfo(fInfo);
     
 }
 //ClosePkg, reset context, filestream close fd
