@@ -84,7 +84,7 @@ struct NTC_INFO_TEST : PkgIO::SerializableData{
     uint16_t z = 0;
 
     size_t size() const override {
-        return PkgIO::BinarySerializer::ElementSize(x,y,z);
+        return PkgIO::BinarySerializer::elementSize(x,y,z);
     }
     //std::array<uint32_t,2> c{};
 
@@ -222,20 +222,20 @@ int main(void) {
    //unsigned char oox[] = {0xff, 0xaa};
     std::vector<uchar> oox = {0xff, 0xaa,0xfc,0xff, 0xaa,0xfc,0xff, 0xaa};
  
-    bSer.EmptyData();
-    bSer.AddType(oox);
+    bSer.emptyData();
+    bSer.addType(oox);
    
    // tassert("BSWData() ", bSer.WriteData(true, 0, std::ios::end));
-    auto haveCtx = bSer.GetFormattedData(true);
+    auto haveCtx = bSer.getFormattedData(false);
     if (haveCtx.has_value()) {
         const auto& vec = haveCtx.value();
       
-        bSer.WriteDataToTStream(ltTrPkg.GetTstream(), vec, 0, std::ios::end);
+        bSer.writeDataToTStream(ltTrPkg.getTstream(), vec, 0, std::ios::end);
        // tassert("BSWData() ",  == Err::Code::SUCCESS);
         
     }
     else {
-        dbgprintf("BSWfail\n");
+        throw std::runtime_error("BSWfail");
     }
      //std::cout << PkgIO::BinarySerializer::GetByteAlignment(sizeof(ccc)) << std::endl;
     //todo fr add those asserts
@@ -247,7 +247,7 @@ int main(void) {
  
   
   //const auto& currentSeek = ltTrPkg.GetTstream().GetSeekPos();
-  ltTrPkg.GetTstream().SetSeekPos(0, std::ios::end);
+  ltTrPkg.getTstream().setSeekPos(0, std::ios::end);
   {
     NTC_INFO_TEST ntc;
     ntc.x = 0xfde2;
@@ -256,25 +256,28 @@ int main(void) {
    // ntc.c = {UINT32_MAX, UINT32_MAX};
    // ntc.c = 'A';
     //later called using template 
-    const auto& haveNtc = ntc.Serialize();
+    const auto& haveNtc = ntc.serialize();
     if (haveNtc.has_value()) {
         const auto& val = haveNtc.value();
-        PkgIO::BinarySerializer::WriteDataToTStream(ltTrPkg.GetTstream(), val, 0, std::ios::end);
+        PkgIO::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), val, 0, std::ios::end);
+    }
+    else {
+        throw std::runtime_error("BSWfail");
     }
   }
   //read
-  const auto& currentSeek = ltTrPkg.GetTstream().GetSeekPos();
+  const auto& currentSeek = ltTrPkg.getTstream().getSeekPos();
   {
     NTC_INFO_TEST ntcRead;
     ntcRead.x = 0;
     ntcRead.y = 0;
     ntcRead.z = 0;
-    const auto& ntcReadSize = ntcRead.Sizeof();
+    const auto ntcReadSize = ntcRead.size();
     std::cout << "ntc size: " << ntcReadSize << "\n";
-    const auto readData =  PkgIO::BinarySerializer::ReadDataFromTStream(ltTrPkg.GetTstream(), currentSeek, ntcReadSize);
+    const auto readData =  PkgIO::BinarySerializer::readDataFromTStream(ltTrPkg.getTstream(), currentSeek, ntcReadSize);
     
-    if(!ntcRead.Deserialize(readData)) {
-        return 1;
+    if(!ntcRead.deserialize(readData)) {
+        throw std::runtime_error("BSWfail");
     }
     printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
   }
@@ -287,7 +290,7 @@ int main(void) {
   
   //ClosePkg() not needed because of RAII
   //  ltTrPkg.ClosePkg();
-  */
+    */
     auto portStat = ltTrPkg.getTstream().getFstreamObject().pStat;
     print_stat(portStat);
     std::cout << "Exit(0)\n";

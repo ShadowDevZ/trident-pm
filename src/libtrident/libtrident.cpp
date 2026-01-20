@@ -58,7 +58,7 @@ void LibTrident::TrPkg::openPackage(const std::filesystem::path& path,const IOFL
     
    
     //We are creating copy instead of simply moving is because if error occurs the original stream must remain unchanged
-    Tstream::TRDFstreamObject fInfo;
+    Tstream::TRDFstreamObject fInfo {};
     
     fInfo.acccessModel = accessModel;
     fInfo.checksumSize = std::filesystem::file_size(path);

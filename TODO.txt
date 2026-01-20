@@ -29,3 +29,15 @@ pkgio.cpp
 mark every constructor as explicit
 trderr.cpp
             all errors should have optional field with passable error code
+
+
+current goal
+            utilize TStream for parsing data/performing IO operations, ignore SDESC for now until
+            we have rewritten the header to utilize TStream fully without it needing to access raw fstream
+
+            FileOperations::XXXXXXXLeData should not exist at all as all information that needs to be converted
+            to LE is already handled by BinarySerializer class, at this point just use raw fstream. It doesnt make
+            sense to keep those functions there. Originally i planned that the buffer will be flipped on write/read
+            but I decided that BinarySerializer should handle it as its being passed to the buffer. The BinarySerializer
+            GetFormattedData() functions should give us the whole vector already reversed and we should just write it to TStream
+            which is just thin wrapper around fstream with extra checks and future compatibility for byte checksum field

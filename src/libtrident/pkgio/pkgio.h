@@ -12,26 +12,9 @@
 #include <vector>
 
 //todo add most basic IO function here
+//internal functions used by TStream
 namespace LibTrident::PkgIO {
-   namespace FileOperations {
-            
-            ///The following 2 functions format the buffer and WriteHeader it as Little endian
-            //does not increment fSize
-           
-            //throws std::ios::base on failure
-            //todo rewrite this shared ptr mess, bad code
-            void writeLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size);
-            
-            //increments fSize by bytes written by default, if updating alReadHeadery written variable INCREMENT MUST BE FALSE
-            //throws std::ios::base, std::bad_alloc, std::runtime_error on failure
-            void readLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size);
-           
-           
-
-            
-    };
    
-
     class Descriptor {
         public:
             virtual ~Descriptor() = default;
@@ -204,7 +187,7 @@ public:
         }
 
         for (const auto& v : vec) {
-            AddTrivial(v);
+            addTrivial(v);
         }
     }
 
@@ -232,12 +215,12 @@ public:
 
 
 
-    constexpr static std::size_t ElementSize() {
+    constexpr static std::size_t elementSize() {
         return 0;
     }
     template <typename T, typename... Ts>
-    constexpr static std::size_t ElementSize(const T&, const Ts&... args) {
-        return sizeof(T) + ElementSize(args...);
+    constexpr static std::size_t elementSize(const T&, const Ts&... args) {
+        return sizeof(T) + elementSize(args...);
     }
     
     template <ConTriviablyCopyable T>

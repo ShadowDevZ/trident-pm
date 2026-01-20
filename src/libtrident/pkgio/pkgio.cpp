@@ -8,79 +8,11 @@
 #include "filemgmnt.h"
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
-using namespace LibTrident::PkgIO::FileOperations;
+
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
 #endif
 
-
-
-
-void FileOperations::writeLeData(std::shared_ptr<std::fstream> stream,const char* data, std::streamsize size){
-    if (!stream->is_open() || !data || size < 1) {
-        throw std::ios_base::failure("WriteLeData() Failed");
-    }
-    //THIS WONT WORK ON BIG ENDIAN AT ALL, IT ONLY WORKS FOR TRIVIAL TYPES NOT FOR STRUCTS
-    //WE NEED TO SERIALIZE THE STRUCT BEFORE WRITING IT, OTHERWISE IT PRODUCES GARBAGE
-
-     ///endian operations will be moved entirely to BinarySerializer class
-    if (BinarySerializer::isLittleEndian()) {
-        stream->write(data, size);
-    }
-    else {
-        //failsafe
-        assert(0 && "Unsupported operation on BE");
-    }
-    /* BROKEN
-    else {
-        char* buffer = new char[size];
-        if (!buffer) {
-            return false;
-        }
-        std::copy(data, data + size, buffer);
-        ReverseByteOrder(buffer, size);
-        stream->write(buffer, size);
-        delete[] buffer;
-    }
-    */
-    if (!stream) {
-        throw std::ios_base::failure("WriteLeData() Failed");
-    }
-}
-            
-
-
-void FileOperations::readLeData(std::shared_ptr<std::fstream> stream, char* s, std::streamsize size) {
-    if (!stream->is_open() || !s || size < 1) {
-        throw std::ios_base::failure("ReadLeStream() Failed\n");
-    }
-    char* data = new char[size];
-    if (!data) {
-        throw std::bad_alloc();
-    }
-    ///endian operations will be moved entirely to BinarySerializer class
-    if (BinarySerializer::isLittleEndian()) {
-        stream->read(data, size);
-    }
-    else {
-        //failsafe
-        assert(0 && "Unsupported operation on BE");
-    }
-    /*BROKEN
-    else {
-        stream->read(data, size);
-        ReverseByteOrder(data, size);
-        
-    }
-    */
-
-      if (!stream) {
-        delete[] data;
-        throw std::ios_base::failure("Error: ReadLeStream() Failed\n");
-    }
-    std::copy(data, data + size, s);
-    delete[] data;
-}
 
 
 void BinarySerializer::addRaw(const void*  data, size_t size) {

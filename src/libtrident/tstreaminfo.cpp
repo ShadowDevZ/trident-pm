@@ -10,7 +10,7 @@ using namespace LibTrident::Tstream;
 std::expected<void, Err::TrdError> Tstream::TStreamInfo::checkFileStreamInfo() const {
     //check if pointer was allocated usiong OpenPkg()
     
-    if (!TStreamInfo::isOpen() || !xfInfo.hFile) {
+    if (!TStreamInfo::isOpen() || !xfInfo.hFile || !xfInfo.hFile->is_open()) {
         return std::unexpected(Err::TrdError{Err::Code::FileOpenFailure});
     }
     return {};
@@ -88,9 +88,9 @@ void Tstream::TStreamInfo::setFileStreamInfo(const TRDFstreamObject& info) {
 
 
 
-
+//does not check for endianness, the data should already be passed in as LE object
 void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
-    if (!checkFileStreamInfo())  {
+    if (!checkFileStreamInfo() || !data || size < 1)  {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     //for compatibility across different CPUS and to improve performance on x86/64
@@ -101,25 +101,31 @@ void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
         throw std::invalid_argument("Size was 0");
     }
     
-    //throws exception on failure, no need to check
-    FileOperations::writeLeData(xfInfo.hFile, data, size);
+    xfInfo.hFile->write(data, size);
+    if (!xfInfo.hFile) {
+        throw std::ios_base::failure("WriteLeData() Failed");
+    }
 
     if (increment) {
         xfInfo.checksumSize += size;
     }
 }
+//does not check for endianness, the data is retrieved as native endianness
 void TStreamInfo::readTStream(char* s, u64 size) const {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
-    if (!checkFileStreamInfo())  {
+    if (!checkFileStreamInfo() || !s || size < 1)  {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     if (!BinarySerializer::expectAlignedDataOrDie(size)) {
         return;
     }
 
-    FileOperations::readLeData(xfInfo.hFile, s, size);
+    xfInfo.hFile->read(s, size);
+    if (!xfInfo.hFile) {
+        throw std::ios_base::failure("WriteLeData() Failed");
+    }
 }
 
 

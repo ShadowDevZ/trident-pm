@@ -16,12 +16,12 @@ struct TRDFstreamObject{
     std::filesystem::path absolutePath;
     std::shared_ptr<std::fstream> hFile;
     //does not represent actual file size, but sizeof(whole file - header), not utilized yet
-    u64 checksumSize;
-    IOFLAGS::TRDAccessModel acccessModel;
+    u64 checksumSize {0};
+    IOFLAGS::TRDAccessModel acccessModel {};
     //for future use, atime
-    PortableTypes::PortableStat pStat;
+    PortableTypes::PortableStat pStat {};
     //struct stat64 fileStat;
-    bool fileOpened;
+    bool fileOpened {false};
 
 };
 
@@ -29,7 +29,7 @@ struct TRDFstreamObject{
 
 class TStreamInfo{
 private:
-    TRDFstreamObject xfInfo;
+    TRDFstreamObject xfInfo {};
 public:
     
 
@@ -88,5 +88,5 @@ public:
 };
 
 
-
+//todo remove
 };

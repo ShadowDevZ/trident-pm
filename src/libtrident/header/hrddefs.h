@@ -17,12 +17,12 @@ PACKED_STRUCT {
 }TRD_HEADER;
 
 
-typedef struct {
+struct TRD_HDRFIELD_UPDATE{
     u16 fmtVersion;
     u8 compression;
     u32 buildFlags;
     u8 architecture;
-}TRD_HDRFIELD_UPDATE;
+};
 
 
 typedef enum {

@@ -63,12 +63,12 @@ namespace LibTrident::IOFLAGS {
         IoClosed = ((1 << 8) - 1)
 
     };
-    typedef struct {
-        TrdOpenIO open;
-        TrdAccessIO access;
-        TrdXattrIO xattr;
-        _TrdInternalIO _internal;
-    }TRDAccessModel;
+    struct TRDAccessModel{
+        TrdOpenIO open {TrdOpenIO::None};
+        TrdAccessIO access {TrdAccessIO::None};
+        TrdXattrIO xattr {TrdXattrIO::None};
+        _TrdInternalIO _internal {_TrdInternalIO::None};
+    };
     /*Translates AccessModel into std::ios:openmode. If mode cannot be translated like for example
     TrdAccessIO::CreateFromMembuff returns nullopt. For attributes like TrdXattrIO or _TrdReserved nothing happens
     TrdOpenIO and TRDAccessIO are mandatory.
