@@ -313,6 +313,8 @@ int main(void) {
   //ClosePkg() not needed because of RAII
   //  ltTrPkg.ClosePkg();
     */
+    ltTrPkg.getTstream().writePadding(64);
+    
     auto portStat = ltTrPkg.getTstream().getFstreamObject().pStat;
     print_stat(portStat);
 
@@ -321,12 +323,12 @@ int main(void) {
    
     xtrd.exSignature = Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
     xtrd.fmtVersion = TRDPkgHeader::formatHeaderVersion(3,3,3).value();
-    xtrd.compression = 5;
-    xtrd.buildFlags = 16;
-    xtrd.architecture = 250;
-    xtrd.hdrChksum = UINT32_MAX;
-    xtrd.fileLen = UINT64_MAX - UINT16_MAX;
-    xtrd.ioCtrl = 2;
+    xtrd.compression = 0xcc;
+    xtrd.buildFlags = 0xaaaaaaaa;
+    xtrd.architecture = 0;
+    xtrd.hdrChksum = 0xC0ffeeee;
+    xtrd.fileLen = UINT64_MAX;
+    xtrd.ioCtrl = 0XDDDD;
 
     const auto& haveXtrd = xtrd.serialize();
     if (haveXtrd.has_value()) {
@@ -337,7 +339,7 @@ int main(void) {
         throw std::runtime_error("BSWfail ser");
     }
 
-    const auto& currentSeek = ltTrPkg.getTstream().getSeekPos();
+    const auto currentSeek = ltTrPkg.getTstream().getSeekPos();
   
     XTRD_HEADER xtrdRead {};
     

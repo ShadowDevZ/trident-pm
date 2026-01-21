@@ -153,22 +153,9 @@ public:
     LT_UNSAFE_API void addRaw(const void*  data, size_t size);
     
    
-    //C styled array override, only for fundamental types
-    //if your arrays uses non fundamental type please define your own serialize method
-    template <ConTriviablyCopyable T, std::size_t N>
-    void addType(const T (&arr)[N]) {
-        if (N < 1) {
-            throw std::invalid_argument("Array is empty");
-        }
-
-        for (std::size_t i = 0; i < N; ++i) {
-            addTrivial(arr[i]);
-        }
-    }
-    //std::array override, only for fundamental types
-    //if your arrays uses non fundamental type please define your own serialize method
-    template <ConTriviablyCopyable T, std::size_t N>
-    void addType(const std::array<T, N>& arr) {
+    //
+    template <ConTriviablyCopyable T>
+    void addContainer(const std::span<const T> arr) {
         if (arr.empty()) {
             throw std::invalid_argument("Array is empty");
         }
@@ -178,22 +165,6 @@ public:
         }
        
     }
-    //std::vector override, only for fundamental types
-    //if your arrays uses non fundamental type please define your own serialize method
-    template <ConTriviablyCopyable T>
-    void addType(const std::vector<T>& vec) {
-        if (vec.empty()) {
-            throw std::invalid_argument("Vector is empty");
-        }
-
-        for (const auto& v : vec) {
-            addTrivial(v);
-        }
-    }
-
-    //todo
-    //reads sizeof T from bufferData and writes to ptrOut
-    
     template <ConTriviablyCopyable T>
     //returns number of bytes read
     size_t readTrivial(T* t, size_t offset=0) {
@@ -209,7 +180,7 @@ public:
 
 
     template <ConTriviablyCopyable T>
-    size_t readType(std::span<T> arr, size_t offset=0) {
+    size_t readContainer(std::span<T> arr, size_t offset=0) {
    
         if (arr.empty()) {
             throw std::invalid_argument("Array is empty");
@@ -221,7 +192,7 @@ public:
             size_t readSize = readTrivial(&arr[i], bytePos);
             bytePos += readSize;
             bytesRead += readSize;
-            dbgprintf("dd:%X\n", arr[i]);
+           
             
         }
         return bytesRead;

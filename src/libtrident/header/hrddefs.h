@@ -3,6 +3,7 @@
 #include "ccattribs.h"
 #include "serdatacommon.h"
 #include "pkgio.h"
+#include <span>
 namespace LibTrident {
 
 struct __attribute__((packed)) TRD_HEADER{
@@ -39,9 +40,10 @@ struct XTRD_HEADER : PkgIO::SerializableData {
     }
     std::optional<std::vector<u8>> serialize() const override {
         LibTrident::PkgIO::BinarySerializer bs;
-        // bs.addTrivial(magic);
+       
+    
         bs.addTrivial(exSignature);
-        bs.addType(magic);
+        bs.addContainer(std::span<const u8>(magic));
         bs.addTrivial(fmtVersion);
         bs.addTrivial(compression);
         bs.addTrivial(buildFlags);
@@ -60,7 +62,7 @@ struct XTRD_HEADER : PkgIO::SerializableData {
         size_t xsize = 0;
        
         xsize += bs.readTrivial<u16>(&exSignature, xsize);
-        xsize += bs.readType(std::span<u8>(magic), xsize);
+        xsize += bs.readContainer(std::span<u8>(magic), xsize);
         xsize += bs.readTrivial<u16>(&fmtVersion, xsize);
         xsize += bs.readTrivial<u8>(&compression, xsize);
         xsize += bs.readTrivial<u32>(&buildFlags, xsize);
