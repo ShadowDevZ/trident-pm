@@ -1,5 +1,5 @@
 #pragma once
-#include "libtrident.h"
+
 #include "ioflags.h"
 #include <fstream>
 #include <string>
@@ -162,19 +162,19 @@ public:
         }
 
         for (std::size_t i = 0; i < N; ++i) {
-            AddTrivial(arr[i]);
+            addTrivial(arr[i]);
         }
     }
     //std::array override, only for fundamental types
     //if your arrays uses non fundamental type please define your own serialize method
     template <ConTriviablyCopyable T, std::size_t N>
     void addType(const std::array<T, N>& arr) {
-        if (N < 1) {
+        if (arr.empty()) {
             throw std::invalid_argument("Array is empty");
         }
 
         for (const auto& v : arr) {
-            AddTrivial(v);
+            addTrivial(v);
         }
        
     }
@@ -194,7 +194,7 @@ public:
     //todo
     //reads sizeof T from bufferData and writes to ptrOut
     
-    template <typename T>
+    template <ConTriviablyCopyable T>
     //returns number of bytes read
     size_t readTrivial(T* t, size_t offset=0) {
         static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
@@ -205,6 +205,26 @@ public:
            // *t = std::byteswap(*t);
         }
         return readSize;
+    }
+
+
+    template <ConTriviablyCopyable T>
+    size_t readType(std::span<T> arr, size_t offset=0) {
+   
+        if (arr.empty()) {
+            throw std::invalid_argument("Array is empty");
+        }
+        size_t bytesRead = 0;
+        size_t bytePos = offset;
+        
+        for (std::size_t i = 0; i < arr.size(); ++i) {
+            size_t readSize = readTrivial(&arr[i], bytePos);
+            bytePos += readSize;
+            bytesRead += readSize;
+            dbgprintf("dd:%X\n", arr[i]);
+            
+        }
+        return bytesRead;
     }
     
     //Warning this method DOES NOT check nor modify endianness

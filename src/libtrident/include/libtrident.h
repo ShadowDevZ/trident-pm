@@ -12,7 +12,7 @@
 #include <filesystem>
 
 namespace LibTrident {
-
+     
 
 class TRDPkgHeader;
 

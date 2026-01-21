@@ -9,7 +9,7 @@
 #include <expected>
 #include "hrddefs.h"
 namespace LibTrident {
-
+    
 
 
 class TrPkg;

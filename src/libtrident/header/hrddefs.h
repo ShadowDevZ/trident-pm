@@ -1,9 +1,11 @@
 #pragma once
 #include "trdconsts.h"
 #include "ccattribs.h"
-
+#include "serdatacommon.h"
+#include "pkgio.h"
 namespace LibTrident {
-PACKED_STRUCT {
+
+struct __attribute__((packed)) TRD_HEADER{
     byte magic[8];
     u16 exSignature;
     u16 fmtVersion;
@@ -14,8 +16,71 @@ PACKED_STRUCT {
     u64 fileLen;
     u16 ioCtrl;
 
-}TRD_HEADER;
+};
 
+struct XTRD_HEADER : PkgIO::SerializableData {
+    //we are not using byte or unsigned char as ive read that its somehow not well standardized
+    //and on different compilers we could get different results
+    //u8 magic[8];
+    //u64 magic;
+    std::array<u8,8> magic {{0x93, 0x54, 0x52, 0x44, 0x21, 0x12, 0x2E, 0x53}};
+    u16 exSignature;
+    u16 fmtVersion;
+    u8 compression;
+    u32 buildFlags;
+    u8 architecture;
+    u32 hdrChksum;
+    u64 fileLen;
+    u16 ioCtrl;
+
+    size_t size() const override {
+        return PkgIO::BinarySerializer::elementSize(magic, exSignature,
+        fmtVersion, compression, buildFlags, architecture, hdrChksum, fileLen, ioCtrl);
+    }
+    std::optional<std::vector<u8>> serialize() const override {
+        LibTrident::PkgIO::BinarySerializer bs;
+        // bs.addTrivial(magic);
+        bs.addTrivial(exSignature);
+        bs.addType(magic);
+        bs.addTrivial(fmtVersion);
+        bs.addTrivial(compression);
+        bs.addTrivial(buildFlags);
+        bs.addTrivial(architecture);
+        bs.addTrivial(hdrChksum);
+        bs.addTrivial(fileLen);
+        bs.addTrivial(ioCtrl);
+        
+        return bs.getFormattedData();
+
+    }
+
+    
+    bool deserialize(const std::vector<u8>& dataIn) override {
+        PkgIO::BinarySerializer bs(dataIn);
+        size_t xsize = 0;
+       
+        xsize += bs.readTrivial<u16>(&exSignature, xsize);
+        xsize += bs.readType(std::span<u8>(magic), xsize);
+        xsize += bs.readTrivial<u16>(&fmtVersion, xsize);
+        xsize += bs.readTrivial<u8>(&compression, xsize);
+        xsize += bs.readTrivial<u32>(&buildFlags, xsize);
+        xsize += bs.readTrivial<u8>(&architecture, xsize);
+        xsize += bs.readTrivial<u32>(&hdrChksum, xsize);
+        xsize += bs.readTrivial<u64>(&fileLen, xsize);
+        xsize += bs.readTrivial<u16>(&ioCtrl, xsize);
+        
+        
+        if (xsize != this->size()){
+            return false;
+        }
+      
+       // xsize += bs.ReadRaw(&x, sizeof(x), xsize);
+      //  xsize += bs.ReadRaw(&y, sizeof(y), xsize);
+        //xsize += bs.ReadRaw(&z, sizeof(z), xsize);
+        return true;
+    }
+
+};
 
 struct TRD_HDRFIELD_UPDATE{
     u16 fmtVersion;

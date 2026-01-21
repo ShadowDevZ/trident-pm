@@ -24,6 +24,28 @@ std::cout << "Target: Release\n";
 
 
 #if defined(_LIBTRIDENT_DEBUG)
+void print_xtrd(const LibTrident::XTRD_HEADER& hdr) {
+    dbgprintf("[HEADER_START]\n");
+     dbgprintf("\tMagic: ");
+    for (auto const& it: hdr.magic) {
+        dbgprintf("%X ", it);
+    }
+    dbgprintf("\n");
+    dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
+    auto hdrFmtVal = TRDPkgHeader::headerVersionFormatToString(hdr.fmtVersion);
+    if (!hdrFmtVal.has_value()) {
+        abort();
+    }
+    
+    dbgprintf("\tVersion Format %s\n", hdrFmtVal.value().c_str());
+    dbgprintf("\tCompression: %u\n", hdr.compression);
+    dbgprintf("\tBuild flags %u\n", hdr.buildFlags);
+    dbgprintf("\tArchitecture %u\n", hdr.architecture);
+    dbgprintf("\tChecksum 0x%X\n", hdr.hdrChksum);
+    dbgprintf("\tFile length 0x%lXB\n", hdr.fileLen);
+    dbgprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
+    dbgprintf("[HEADER_END]\n");
+}
 void print_header(const LibTrident::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
@@ -293,6 +315,62 @@ int main(void) {
     */
     auto portStat = ltTrPkg.getTstream().getFstreamObject().pStat;
     print_stat(portStat);
+
+    XTRD_HEADER xtrd;
+    std::copy(std::begin(Consts::HeaderConsts::TRD_HDR_MAGIC), std::end(Consts::HeaderConsts::TRD_HDR_MAGIC), std::begin(xtrd.magic));
+   
+    xtrd.exSignature = Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
+    xtrd.fmtVersion = TRDPkgHeader::formatHeaderVersion(3,3,3).value();
+    xtrd.compression = 5;
+    xtrd.buildFlags = 16;
+    xtrd.architecture = 250;
+    xtrd.hdrChksum = UINT32_MAX;
+    xtrd.fileLen = UINT64_MAX - UINT16_MAX;
+    xtrd.ioCtrl = 2;
+
+    const auto& haveXtrd = xtrd.serialize();
+    if (haveXtrd.has_value()) {
+        const auto& val = haveXtrd.value();
+        PkgIO::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), val, 0, std::ios::end);
+    }
+    else {
+        throw std::runtime_error("BSWfail ser");
+    }
+
+    const auto& currentSeek = ltTrPkg.getTstream().getSeekPos();
+  
+    XTRD_HEADER xtrdRead {};
+    
+    const auto xtrdReadSize = xtrdRead.size();
+    std::cout << "xtrd size: " << xtrdReadSize << "\n";
+    const auto readData =  PkgIO::BinarySerializer::readDataFromTStream(ltTrPkg.getTstream(), currentSeek, xtrdReadSize);
+    
+    dbgprintf("Raw data dump:\n\x1B[31m{");
+    for (const auto& x: haveXtrd.value()) {
+            dbgprintf("%x,", x);
+    }
+    dbgprintf("}\x1B[0m\n");
+
+    if(!xtrdRead.deserialize(readData)) {
+        throw std::runtime_error("BSWfail deser");
+    }
+    
+    
+    print_xtrd(xtrdRead);
+    
+   // std::array<int,3> arr {{3,4,3}};
+    
+   // PkgIO::BinarySerializer::readArr(arr);
+   // for (const auto& x: arr) {
+   //     dbgprintf("%u,", x);
+   // }
+    dbgprintf("\n");
+    //printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
+  
+  
+
+
+    std::cout << xtrd.size() << '\n';
     std::cout << "Exit(0)\n";
     return 0;
     
