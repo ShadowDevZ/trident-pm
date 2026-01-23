@@ -162,6 +162,11 @@ public:
         }
        
     }
+    template <typename... Ts>
+    void addContainer(const Ts&... args) {
+        (addContainer(args),...);
+    }
+
     template <ConTriviablyCopyable T>
     //returns number of bytes read
     size_t readTrivial(T* t, size_t offset=0) {
@@ -221,6 +226,11 @@ public:
         }
         addRaw(&t, sizeof(t));
     }
+
+    template <typename... Ts>
+    void addTrivial(const Ts&... args) {
+        (addTrivial(args),...);
+    }
     /*
     if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
       bool autoalign aligns elements to the correct size but this should not be used because
@@ -246,6 +256,11 @@ public:
     }
     void reset() {
         crc = 0;
+    }
+    
+    template <typename... Ts>
+    void addData(const Ts&... args) {
+        (addData(args),...);
     }
 
     //override for trivial data types

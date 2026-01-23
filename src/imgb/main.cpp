@@ -197,7 +197,11 @@ int main(void) {
     tassert("ModifyIOCTRL()", trPkgHdr.updateIoctrlProp(IOCTRL_DESC_WLOCK));
     tassert("ValidateHeader()", trPkgHdr.isValid());
 #if defined(_LIBTRIDENT_DEBUG)
-    print_header(trPkgHdr.getHeader());   
+    auto vxa = trPkgHdr.getHeader();
+    auto crcRet = vxa.checksumCRC32().value();
+    print_header(vxa);
+  //  dbgprintf("%u\n",crcRet); 
+  //  assert(1368045319 == crcRet);  //value from generated crc to test functionality, delete 
 #endif
 
 /*

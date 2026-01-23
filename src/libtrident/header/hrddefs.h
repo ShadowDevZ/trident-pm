@@ -26,9 +26,10 @@ struct TRD_HEADER : PkgIO::SerializableData {
     std::array<u8,8> magic = std::to_array(LibTrident::Consts::HeaderConsts::TRD_HDR_MAGIC);
     u16 exSignature = LibTrident::Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
     u16 fmtVersion;
+    //todo use enum classes for supported dt's and convert it in serialize/deserialize
     u8 compression;
     u32 buildFlags;
-    u8 architecture;
+    u8 architecture; 
     u32 dynHdrChksum;
     u64 dynFileLen;
     u16 dynIoCtrl;
@@ -42,14 +43,8 @@ struct TRD_HEADER : PkgIO::SerializableData {
        
     
         bs.addContainer(std::span<const u8>(magic));
-        bs.addTrivial(exSignature);
-        bs.addTrivial(fmtVersion);
-        bs.addTrivial(compression);
-        bs.addTrivial(buildFlags);
-        bs.addTrivial(architecture);
-        bs.addTrivial(dynHdrChksum);
-        bs.addTrivial(dynFileLen);
-        bs.addTrivial(dynIoCtrl);
+        bs.addTrivial(exSignature,fmtVersion,compression, buildFlags,
+                        architecture, dynHdrChksum, dynFileLen, dynIoCtrl);
         
         return bs.getFormattedData();
 
@@ -78,15 +73,8 @@ struct TRD_HEADER : PkgIO::SerializableData {
     }
     std::optional<u32> checksumCRC32() const override {
         PkgIO::Crc32Gen crc;
-        crc.addData(magic);
-        crc.addData(exSignature);
-        crc.addData(fmtVersion);
-        crc.addData(compression);
-        crc.addData(buildFlags);
-        crc.addData(architecture);
-        
-        
-        
+        crc.addData(magic, exSignature,fmtVersion,
+                        compression,buildFlags,architecture);
         return crc.getCrc32();
     }
 
