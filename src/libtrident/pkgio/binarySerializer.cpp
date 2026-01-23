@@ -1,4 +1,4 @@
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include <sys/stat.h>
 #include <stdio.h>
 #include "ccattribs.h"
@@ -6,6 +6,7 @@
 #include <cerrno>
 #include <format>
 #include "filemgmnt.h"
+#include <zlib.h>
 using namespace LibTrident;
 using namespace LibTrident::PkgIO;
 
@@ -43,7 +44,7 @@ size_t BinarySerializer::readRaw(void*  dataOut, size_t size, size_t offset) {
     return size;
 
 }
-
+//todo use std expected instead of exceptions
 std::vector<u8> BinarySerializer::readDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos, u64 size, bool checkAlignment) {
    
     if (!checkAlignment || !isDataSizeAligned(size)) {

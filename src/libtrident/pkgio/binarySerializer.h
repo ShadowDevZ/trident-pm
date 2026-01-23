@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <vector>
-
+#include <zlib.h>
 //todo add most basic IO function here
 //internal functions used by TStream
 namespace LibTrident::PkgIO {
@@ -38,7 +38,7 @@ private:
 public:
         //checks if the whole project is little endian
         //can only be overriden at compile time for debugging
-        static bool isLittleEndian() {
+        static bool isLittleEndian() noexcept{
             #if LT_DEBUG_ENDIAN_FORCE == 1
                 return true;
             #elif LT_DEBUG_ENDIAN_FORCE == 2
@@ -49,7 +49,7 @@ public:
         }
         //checks if the current BinarySerializer class is little endian
         //can be overriden through constructor
-        bool isInstanceLittleEndian() {
+        bool isInstanceLittleEndian() const noexcept{
             #if LT_DEBUG_ENDIAN_FORCE == 1
                 return true;
             #elif LT_DEBUG_ENDIAN_FORCE == 2
@@ -72,7 +72,10 @@ public:
             
     
     template <ConTriviablyCopyable T>
-    constexpr T reverseByteOrder(T var) {
+    //reverses byte order of variable
+    //we are intentionally passing by value as we modify the original variable
+    //the bitcast creates copy as well
+    static constexpr T reverseByteOrder(T var) {
         if constexpr (std::is_integral_v<T>) {
             return std::byteswap(var);
         }
@@ -82,25 +85,19 @@ public:
             return std::bit_cast<T>(bytes);
         }
      }
+    template <ConTriviablyCopyable T>
+    static constexpr void reverseByteOrderInPlace(T& var) {
+        if constexpr (std::is_integral_v<T>) {
+            var = std::byteswap(var);
+        }
+        else {
+            auto* bytes = reinterpret_cast<std::byte*>(&var);
+            std::reverse(bytes, bytes + sizeof(T));
+        }
+     }
      
      
-    /*
-    template <typename T>
-    static T ReverseByteOrder(T var) {
-        static_assert(std::is_trivially_copyable_v<T>,
-            "Cannot reverse non-trivial type. For non-trivial types, implement serialize().");
-
-        T reversed;
-
-        const unsigned char* src = reinterpret_cast<const unsigned char*>(&var);
-        unsigned char* dst = reinterpret_cast<unsigned char*>(&reversed);
-        
-        std::reverse_copy(src, src + sizeof(T), dst);
-        return reversed;
-
-    }
-    */
-        
+   
         //make the datatype 8 byte aligned
             
     static size_t getByteAlignment(size_t varSize) {
@@ -238,6 +235,62 @@ public:
 
     static std::vector<u8> readDataFromTStream(LibTrident::Tstream::TStreamInfo& tStream, i64 seekPos,
                 u64 size, bool checkAlignment=true);
+};
+
+class Crc32Gen {
+private:
+    u32 crc {};
+public:
+    u32 getCrc32() const {
+        return crc;
+    }
+    void reset() {
+        crc = 0;
+    }
+
+    //override for trivial data types
+    template <ConTriviablyCopyable T>
+    void addData(T v) {
+        addData(std::span<const T>{&v,1});
+    }
+
+    //addData override for std::vector
+    template <ConTriviablyCopyable T>
+    void addData(const std::vector<T>& v) {
+        addData(std::span<const T>{v});
+    }
+    //addData override for std::array
+    template <ConTriviablyCopyable T, size_t N>
+    void addData(const std::array<T, N>& arr) {
+        addData(std::span<const T>{arr});
+    }
+    //addData override for C styled array
+    template <ConTriviablyCopyable T, size_t N>
+    void addData(const T (&arr)[N]) {
+        addData(std::span<const T>{arr});
+    }
+
+    template <ConTriviablyCopyable T>
+    void addData(const std::span<const T> bytes) {
+        //BE, reverse  byte order
+        if (!BinarySerializer::isLittleEndian()) {
+            std::vector<T> data;
+            //resize instead of reserve, this is not mistake
+            //because begin iterator wont work otherwise
+            data.resize(bytes.size());
+            std::copy(bytes.begin(), bytes.end(), data.begin());
+            for (auto& x : data){
+                BinarySerializer::reverseByteOrderInPlace(x);
+            }
+            crc = ::crc32(crc, reinterpret_cast<const Bytef*>(data.data()), 
+                                static_cast<u32>(data.size() * sizeof(T)));
+        }
+        else {
+            crc = ::crc32(crc, reinterpret_cast<const Bytef*>(bytes.data()), static_cast<u32>(bytes.size_bytes()));
+        }
+    }
+
+
 };
 
 };

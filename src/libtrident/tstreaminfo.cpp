@@ -1,7 +1,7 @@
 #include "tstreaminfo.h"
 //#include "fileOperations.h"
 #include "ioflags.h"
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include <cstring>
 using namespace LibTrident;
 using namespace PkgIO;

@@ -8,7 +8,7 @@
 #include <ccattribs.h>
 #include "tstreaminfo.h"
 #include "trheader.h"
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include <algorithm>
 #include <vector>
 #include <functional>

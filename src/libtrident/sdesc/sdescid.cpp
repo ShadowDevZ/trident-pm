@@ -5,7 +5,7 @@
 #include "trheader.h"
 #include "tstreaminfo.h"
 #include "suid.h"
-#include "pkgio.h"
+#include "binarySerializer.h"
 
 
 using namespace LibTrident::Tstream;

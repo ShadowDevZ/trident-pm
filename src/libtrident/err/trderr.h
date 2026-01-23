@@ -33,7 +33,8 @@ namespace LibTrident::Err {
             UnsupportedPlatform,
             BadObject,
             ReferenceExpired,
-            OSFunctionCallFailed
+            OSFunctionCallFailed,
+            SerializerFailure
             
     };
     /*

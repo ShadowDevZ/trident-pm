@@ -24,28 +24,7 @@ std::cout << "Target: Release\n";
 
 
 #if defined(_LIBTRIDENT_DEBUG)
-void print_xtrd(const LibTrident::XTRD_HEADER& hdr) {
-    dbgprintf("[HEADER_START]\n");
-     dbgprintf("\tMagic: ");
-    for (auto const& it: hdr.magic) {
-        dbgprintf("%X ", it);
-    }
-    dbgprintf("\n");
-    dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
-    auto hdrFmtVal = TRDPkgHeader::headerVersionFormatToString(hdr.fmtVersion);
-    if (!hdrFmtVal.has_value()) {
-        abort();
-    }
-    
-    dbgprintf("\tVersion Format %s\n", hdrFmtVal.value().c_str());
-    dbgprintf("\tCompression: %u\n", hdr.compression);
-    dbgprintf("\tBuild flags %u\n", hdr.buildFlags);
-    dbgprintf("\tArchitecture %u\n", hdr.architecture);
-    dbgprintf("\tChecksum 0x%X\n", hdr.hdrChksum);
-    dbgprintf("\tFile length 0x%lXB\n", hdr.fileLen);
-    dbgprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
-    dbgprintf("[HEADER_END]\n");
-}
+
 void print_header(const LibTrident::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
@@ -63,9 +42,9 @@ void print_header(const LibTrident::TRD_HEADER& hdr) {
     dbgprintf("\tCompression: %u\n", hdr.compression);
     dbgprintf("\tBuild flags %u\n", hdr.buildFlags);
     dbgprintf("\tArchitecture %u\n", hdr.architecture);
-    dbgprintf("\tChecksum 0x%X\n", hdr.hdrChksum);
-    dbgprintf("\tFile length 0x%lXB\n", hdr.fileLen);
-    dbgprintf("\tIoControl 0x%X\n", hdr.ioCtrl);
+    dbgprintf("\tChecksum 0x%X\n", hdr.dynHdrChksum);
+    dbgprintf("\tFile length 0x%lXB\n", hdr.dynFileLen);
+    dbgprintf("\tIoControl 0x%X\n", hdr.dynIoCtrl);
     dbgprintf("[HEADER_END]\n");
 }
 void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
@@ -199,7 +178,8 @@ int main(void) {
 // NOLINTNEXTLINE
     tassert("WriteHeader()" , trPkgHdr.write());
   // std::cout << "HeaderRBValid() " << trPkgHdr.IsWrittenHeaderValid() << std::endl;
-    tassert("ReadHeader()", trPkgHdr.read());
+
+  tassert("ReadHeader()", trPkgHdr.read());
     
     TRD_HDRFIELD_UPDATE updateField;
     updateField.architecture = ARCHT_AARCH64;
@@ -219,6 +199,7 @@ int main(void) {
 #if defined(_LIBTRIDENT_DEBUG)
     print_header(trPkgHdr.getHeader());   
 #endif
+
 /*
     TRDSecDesc sectionDesc(ltTrPkg.fstrInfo);
     tassert("WriteBlankSD() ", sectionDesc.WriteBlankSD());
@@ -235,93 +216,14 @@ int main(void) {
      print_sd(sectionDesc.GetObject());
 #endif
     
-    */
-
-    /*
-    {
-    PkgIO::BinarySerializer bSer;
-   //int oox = 0xbeefc;
-   //unsigned char oox[] = {0xff, 0xaa};
-    std::vector<uchar> oox = {0xff, 0xaa,0xfc,0xff, 0xaa,0xfc,0xff, 0xaa};
- 
-    bSer.emptyData();
-    bSer.addType(oox);
-   
-   // tassert("BSWData() ", bSer.WriteData(true, 0, std::ios::end));
-    auto haveCtx = bSer.getFormattedData(false);
-    if (haveCtx.has_value()) {
-        const auto& vec = haveCtx.value();
-      
-        bSer.writeDataToTStream(ltTrPkg.getTstream(), vec, 0, std::ios::end);
-       // tassert("BSWData() ",  == Err::Code::SUCCESS);
-        
-    }
-    else {
-        throw std::runtime_error("BSWfail");
-    }
-     //std::cout << PkgIO::BinarySerializer::GetByteAlignment(sizeof(ccc)) << std::endl;
-    //todo fr add those asserts
-    //std::cout << "WritePadding()" << ltTrPkg.fstrInfo->WritePadding(32, 0xCCCC) << std::endl;
-    }
-   
-  
-  //write 
- 
-  
-  //const auto& currentSeek = ltTrPkg.GetTstream().GetSeekPos();
-  ltTrPkg.getTstream().setSeekPos(0, std::ios::end);
-  {
-    NTC_INFO_TEST ntc;
-    ntc.x = 0xfde2;
-    ntc.y = 0xfad13333;
-    ntc.z = 0x2edf;
-   // ntc.c = {UINT32_MAX, UINT32_MAX};
-   // ntc.c = 'A';
-    //later called using template 
-    const auto& haveNtc = ntc.serialize();
-    if (haveNtc.has_value()) {
-        const auto& val = haveNtc.value();
-        PkgIO::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), val, 0, std::ios::end);
-    }
-    else {
-        throw std::runtime_error("BSWfail");
-    }
-  }
-  //read
-  const auto& currentSeek = ltTrPkg.getTstream().getSeekPos();
-  {
-    NTC_INFO_TEST ntcRead;
-    ntcRead.x = 0;
-    ntcRead.y = 0;
-    ntcRead.z = 0;
-    const auto ntcReadSize = ntcRead.size();
-    std::cout << "ntc size: " << ntcReadSize << "\n";
-    const auto readData =  PkgIO::BinarySerializer::readDataFromTStream(ltTrPkg.getTstream(), currentSeek, ntcReadSize);
-    
-    if(!ntcRead.deserialize(readData)) {
-        throw std::runtime_error("BSWfail");
-    }
-    printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
-  }
-  
-
-  
-  //ltTrPkg.fstrInfo->WritePadding(32, 0xCCCC);
-  
-  // ltTrPkg.fstrInfo->WritePadding(32, 0xCCCC);
-  
-  //ClosePkg() not needed because of RAII
-  //  ltTrPkg.ClosePkg();
-    */
+   */
+/*
     ltTrPkg.getTstream().writePadding(64);
-    
+
     auto portStat = ltTrPkg.getTstream().getFstreamObject().pStat;
     print_stat(portStat);
 
-    XTRD_HEADER xtrd;
-    std::copy(std::begin(Consts::HeaderConsts::TRD_HDR_MAGIC), std::end(Consts::HeaderConsts::TRD_HDR_MAGIC), std::begin(xtrd.magic));
-   
-    xtrd.exSignature = Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
+    XTRD_HEADER xtrd {};
     xtrd.fmtVersion = TRDPkgHeader::formatHeaderVersion(3,3,3).value();
     xtrd.compression = 0xcc;
     xtrd.buildFlags = 0xaaaaaaaa;
@@ -359,20 +261,13 @@ int main(void) {
     
     
     print_xtrd(xtrdRead);
-    
-   // std::array<int,3> arr {{3,4,3}};
-    
-   // PkgIO::BinarySerializer::readArr(arr);
-   // for (const auto& x: arr) {
-   //     dbgprintf("%u,", x);
-   // }
+   
     dbgprintf("\n");
-    //printf("ntc:%X/%X/%X\n", ntcRead.x, ntcRead.y, ntcRead.z);
-  
-  
+  */
+    
+    
 
-
-    std::cout << xtrd.size() << '\n';
+    //std::cout << xtrd.size() << '\n';
     std::cout << "Exit(0)\n";
     return 0;
     

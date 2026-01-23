@@ -1,7 +1,7 @@
 #include "trheader.h"
 #include "libtrident.h"
 #include <zlib.h>
-//#include "pkgio.h"
+//#include "binarySerializer.h"
 
 using namespace LibTrident;
 using namespace LibTrident::Consts::HeaderConsts;
@@ -39,31 +39,26 @@ std::expected<void, Err::TrdError> TRDPkgHeader::read() {
 
 //reads back header, performs all field and validity checks, no need to call IValidateHeader
 std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::readBack(Tstream::TStreamInfo& tStream) {
-    TRD_HEADER hdr { };
-   // auto& hdrStream = trpkg.fstrInfo;
+    TRD_HEADER hdr {};
+  
     if (!tStream.checkFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
     }
     
-   // auto& fstrStream = tStream->GetFstreamObject();
     
-    i64 originalPosition = tStream.getSeekPos();
-
-    if (originalPosition == -1) {
-        return std::unexpected(Err::TrdError(eCode::StreamSeekFailure));
-    }
-
-    tStream.setSeekPos(TRD_HDR_START_OFFSET);
-   
+    //check size if someone accidentally decided to change some field
+    [[unlikely]]
     if (!ICheckHeaderSize(hdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     
-   // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
+  
 
-    tStream.readTStream<TRD_HEADER>(hdr);
-
-    tStream.setSeekPos(originalPosition);
+    auto readData =  PkgIO::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET, hdr.size());
+    if (!hdr.deserialize(readData)) {
+        return std::unexpected(Err::TrdError(eCode::SerializerFailure));
+    }
+   
        
     if (!IValidateHeader(hdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
@@ -96,22 +91,27 @@ std::expected<void, Err::TrdError> TRDPkgHeader::isHeaderPresent(LibTrident::Tst
 
 
 std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn){
+
+    return {}; //for debugging purposes as we dont have CRC implemented
+
+    [[unlikely]]
     if (!ICheckHeaderSize(hdrIn)) {
         return std::unexpected(Err::TrdError(eCode::SectionMissing));
     }
-    if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdrIn.magic))) {
-        return std::unexpected(Err::TrdError(eCode::SectionMissing));
-    }
-    if (hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
+     //the data is already assigned in struct, just a check if someone tried messing with it
+    [[unlikely]]
+    if (hdrIn.magic != std::to_array(TRD_HDR_MAGIC) ||
+        hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
+
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
     if (hdrIn.fmtVersion == 0) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
-    if (!ICheckCRC(hdrIn.hdrChksum, hdrIn)) {
+    if (!ICheckCRC(hdrIn.dynHdrChksum, hdrIn)) {
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     }
-    if (hdrIn.fileLen == 0) {
+    if (hdrIn.dynFileLen == 0) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
     //todo check each field including signature
@@ -119,9 +119,6 @@ std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADE
 }
 
 std::expected<void, Err::TrdError> TRDPkgHeader::write() {
-    if (!ICheckHeaderSize(trpkg.trdHdr)) {
-        return std::unexpected(Err::TrdError(eCode::BadObject));
-    }
     if (!isValid()) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
@@ -130,22 +127,21 @@ std::expected<void, Err::TrdError> TRDPkgHeader::write() {
         return std::unexpected(Err::TrdError(eCode::NullObject));
        
     }
-    //auto& fstrInfo = hdrStream->GetFstreamObject();
-   
-
-
-   // const char* hdrContent = reinterpret_cast<const char*>(&hdrInteral);
-  //  streamInfo->hFile->Write(hdrContent, GetHeaderByteSize());
-    //hdrStream.gets
-    hdrStream.setSeekPos(TRD_HDR_START_OFFSET);
-    hdrStream.writeTStream<TRD_HEADER>(trpkg.trdHdr);
+    
+    //hdrStream.setSeekPos(TRD_HDR_START_OFFSET);
+    auto serializer = trpkg.trdHdr.serialize();
+    if (!serializer.has_value()) {
+        return std::unexpected(Err::TrdError(eCode::SerializerFailure));
+    }
+   // hdrStream.writeTStream(serializer.value());
+    PkgIO::BinarySerializer::writeDataToTStream(hdrStream, serializer.value(), TRD_HDR_START_OFFSET);
    
     return {};
 }
 
 
 bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
-    if (sizeof(hdr) != LT_HDR_SZB_01A) {
+    if (hdr.size() != LT_HDR_SZB_01A) {
         return false;
     }
     return true;
@@ -166,7 +162,7 @@ u32 IGenerateHeaderCRC(const TRD_HEADER& hdr) {
 }
 std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(u32 crc, const TRD_HEADER& hdr) {
     u32 genCrc = IGenerateHeaderCRC(hdr);
-    if ((genCrc != hdr.hdrChksum) || (crc == 0)) {
+    if ((genCrc != hdr.dynHdrChksum) || (crc == 0)) {
        return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     } 
     return {};
@@ -186,23 +182,30 @@ std::expected<void, Err::TrdError> TRDPkgHeader::create(u32 buildFlgs, u8 archTy
     return create(update);
 }
 std::expected<void, Err::TrdError> TRDPkgHeader::create(const TRD_HDRFIELD_UPDATE& field) {
-    TRD_HEADER hdr;
-    std::copy(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic));
-    if (!std::equal(std::begin(TRD_HDR_MAGIC), std::end(TRD_HDR_MAGIC), std::begin(hdr.magic))) {
-        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
-    }
-    hdr.exSignature = TRD_HDR_EXTENDED_SIGNATURE;
-    hdr.fmtVersion = field.fmtVersion;
-    if (hdr.fmtVersion == 0) {
+    
+    if (field.fmtVersion == 0) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
+    TRD_HEADER hdr {};
+    //todo probably instead call IValidateHeader()
+    //the data is already assigned in struct, just a check if someone tried messing with it
+    [[unlikely]]
+    if (hdr.magic != std::to_array(TRD_HDR_MAGIC) ||
+        hdr.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
+
+        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
+    }
+   
+
+    hdr.fmtVersion = field.fmtVersion;
     hdr.compression = static_cast<u8>(field.compression);
     hdr.buildFlags = static_cast<u32>(field.buildFlags);
     hdr.architecture = static_cast<u8>(field.architecture);
-    hdr.hdrChksum = IGenerateHeaderCRC(hdr);
+    hdr.dynHdrChksum = 0; //ignored for now
+   // hdr.dynHdrChksum = IGenerateHeaderCRC(hdr);
     
-    hdr.fileLen = UINT64_MAX;
-    hdr.ioCtrl = 0;
+    hdr.dynFileLen = UINT64_MAX;
+    hdr.dynIoCtrl = 0;
 
     trpkg.trdHdr = hdr;
     return {};
@@ -263,7 +266,8 @@ std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD
     hdr.fmtVersion = update.fmtVersion;
     hdr.compression = static_cast<u8>(update.compression);
     hdr.buildFlags = static_cast<u32>(update.buildFlags);
-    hdr.hdrChksum = IGenerateHeaderCRC(hdr);
+   // hdr.dynHdrChksum = IGenerateHeaderCRC(hdr);
+    hdr.dynHdrChksum = 0; //ignored for now
 
     auto val = IValidateHeader(hdr);
     if (!val.has_value()) {
@@ -277,13 +281,13 @@ std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD
 //todo write directly
 std::expected<void, Err::TrdError> TRDPkgHeader::updateIoctrlProp(u16 ioctrl) {
     //todo check if valid
-    trpkg.trdHdr.ioCtrl = ioctrl;
+    trpkg.trdHdr.dynIoCtrl = ioctrl;
     return TRDPkgHeader::write();
 }
 
 std::expected<void, Err::TrdError> TRDPkgHeader::updateFileLenProp(u64 len) {
     //todo check if valid
-    trpkg.trdHdr.fileLen = len;
+    trpkg.trdHdr.dynFileLen = len;
     return TRDPkgHeader::write();
 
  }

@@ -2,10 +2,10 @@
 #include "trdconsts.h"
 #include "ccattribs.h"
 #include "serdatacommon.h"
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include <span>
 namespace LibTrident {
-
+/*
 struct __attribute__((packed)) TRD_HEADER{
     byte magic[8];
     u16 exSignature;
@@ -18,39 +18,38 @@ struct __attribute__((packed)) TRD_HEADER{
     u16 ioCtrl;
 
 };
-
-struct XTRD_HEADER : PkgIO::SerializableData {
+*/
+struct TRD_HEADER : PkgIO::SerializableData {
     //we are not using byte or unsigned char as ive read that its somehow not well standardized
     //and on different compilers we could get different results
-    //u8 magic[8];
-    //u64 magic;
-    std::array<u8,8> magic {{0x93, 0x54, 0x52, 0x44, 0x21, 0x12, 0x2E, 0x53}};
-    u16 exSignature;
+   
+    std::array<u8,8> magic = std::to_array(LibTrident::Consts::HeaderConsts::TRD_HDR_MAGIC);
+    u16 exSignature = LibTrident::Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
     u16 fmtVersion;
     u8 compression;
     u32 buildFlags;
     u8 architecture;
-    u32 hdrChksum;
-    u64 fileLen;
-    u16 ioCtrl;
+    u32 dynHdrChksum;
+    u64 dynFileLen;
+    u16 dynIoCtrl;
 
-    size_t size() const override {
+    constexpr size_t size() const override {
         return PkgIO::BinarySerializer::elementSize(magic, exSignature,
-        fmtVersion, compression, buildFlags, architecture, hdrChksum, fileLen, ioCtrl);
+        fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, dynIoCtrl);
     }
     std::optional<std::vector<u8>> serialize() const override {
         LibTrident::PkgIO::BinarySerializer bs;
        
     
-        bs.addTrivial(exSignature);
         bs.addContainer(std::span<const u8>(magic));
+        bs.addTrivial(exSignature);
         bs.addTrivial(fmtVersion);
         bs.addTrivial(compression);
         bs.addTrivial(buildFlags);
         bs.addTrivial(architecture);
-        bs.addTrivial(hdrChksum);
-        bs.addTrivial(fileLen);
-        bs.addTrivial(ioCtrl);
+        bs.addTrivial(dynHdrChksum);
+        bs.addTrivial(dynFileLen);
+        bs.addTrivial(dynIoCtrl);
         
         return bs.getFormattedData();
 
@@ -61,25 +60,34 @@ struct XTRD_HEADER : PkgIO::SerializableData {
         PkgIO::BinarySerializer bs(dataIn);
         size_t xsize = 0;
        
-        xsize += bs.readTrivial<u16>(&exSignature, xsize);
         xsize += bs.readContainer(std::span<u8>(magic), xsize);
+        xsize += bs.readTrivial<u16>(&exSignature, xsize);
         xsize += bs.readTrivial<u16>(&fmtVersion, xsize);
         xsize += bs.readTrivial<u8>(&compression, xsize);
         xsize += bs.readTrivial<u32>(&buildFlags, xsize);
         xsize += bs.readTrivial<u8>(&architecture, xsize);
-        xsize += bs.readTrivial<u32>(&hdrChksum, xsize);
-        xsize += bs.readTrivial<u64>(&fileLen, xsize);
-        xsize += bs.readTrivial<u16>(&ioCtrl, xsize);
+        xsize += bs.readTrivial<u32>(&dynHdrChksum, xsize);
+        xsize += bs.readTrivial<u64>(&dynFileLen, xsize);
+        xsize += bs.readTrivial<u16>(&dynIoCtrl, xsize);
         
         
         if (xsize != this->size()){
             return false;
         }
-      
-       // xsize += bs.ReadRaw(&x, sizeof(x), xsize);
-      //  xsize += bs.ReadRaw(&y, sizeof(y), xsize);
-        //xsize += bs.ReadRaw(&z, sizeof(z), xsize);
         return true;
+    }
+    std::optional<u32> checksumCRC32() const override {
+        PkgIO::Crc32Gen crc;
+        crc.addData(magic);
+        crc.addData(exSignature);
+        crc.addData(fmtVersion);
+        crc.addData(compression);
+        crc.addData(buildFlags);
+        crc.addData(architecture);
+        
+        
+        
+        return crc.getCrc32();
     }
 
 };

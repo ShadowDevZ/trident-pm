@@ -1,6 +1,6 @@
 //internal, not to be exposed to the end user/dev
 #pragma once
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include "trderr.h"
 #include "trdconsts.h"
 

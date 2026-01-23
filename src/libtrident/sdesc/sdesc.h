@@ -3,7 +3,7 @@
 #include "datatypes.h"
 #include "ccattribs.h"
 #include "tstreaminfo.h"
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include "sectioncommon.h"
 namespace LibTrident::SectionDescriptor {
 

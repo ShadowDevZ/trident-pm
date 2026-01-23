@@ -32,4 +32,4 @@ mark every constructor as explicit
 current goal
 
 TEST ENDIANNESS ON PPC EMULATOR
-make addType use span
+read/write-DataFromTStream use std::expected instead of exceptions

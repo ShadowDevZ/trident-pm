@@ -6,7 +6,7 @@
 #include "hrddefs.h"
 
 #include "trderr.h"
-#include "pkgio.h"
+#include "binarySerializer.h"
 #include "ioflags.h"
 #include "tstreaminfo.h"
 #include <filesystem>
