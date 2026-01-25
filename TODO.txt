@@ -10,7 +10,7 @@ tstreaminfo.h
             check max_path
 DONE            more abstraction like AppendPadding()
 
-pkgio.cpp
+Impl.cpp
             make generic Little endian conversion and fix the current broken one, template it like GetLeObject<T>
 
 sdesc.cpp
@@ -21,7 +21,7 @@ sdesc.cpp
 sdescid.cpp
             read SUID inside stream
 
-pkgio.cpp
+Impl.cpp
             bettter reversing bytes
 *
             improve whole library architecture from drawn sketch
@@ -34,4 +34,4 @@ current goal
 TEST ENDIANNESS ON PPC EMULATOR
 read/write-DataFromTStream use std::expected instead of exceptions
 use enum classes for supported dt's and convert it in serialize/deserialize
-make readTrivial variadic override
+properly separate implementation details from the exposed API and include dirs

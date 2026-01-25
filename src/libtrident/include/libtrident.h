@@ -28,29 +28,29 @@ public:
 
    TRDPkgHeader header();
 
-   const LibTrident::Tstream::TStreamInfo& getTstream() const {
+   const LibTrident::Impl::TStreamInfo& getTstream() const {
         return fstrInfo;
    }
-   LibTrident::Tstream::TStreamInfo& getTstream(){
+   LibTrident::Impl::TStreamInfo& getTstream(){
         return fstrInfo;
    }
 
-   explicit TrPkg(const std::filesystem::path& path,const IOFLAGS::TRDAccessModel& access)  {
+   explicit TrPkg(const std::filesystem::path& path,const TRDAccessModel& access)  {
         openPackage(path, access);
    }
-   explicit TrPkg(const std::filesystem::path& path, IOFLAGS::TrdOpenIO open, IOFLAGS::TrdAccessIO access, 
-    IOFLAGS::TrdXattrIO xattr = IOFLAGS::TrdXattrIO::None)  {
+   explicit TrPkg(const std::filesystem::path& path, TrdOpenIO open, TrdAccessIO access, 
+    TrdXattrIO xattr = TrdXattrIO::None)  {
     
-        openPackage(path, {open, access, xattr, IOFLAGS::_TrdInternalIO::None});
+        openPackage(path, {open, access, xattr, _TrdInternalIO::None});
    }
 
-  void openPackage(const std::filesystem::path& path, const IOFLAGS::TRDAccessModel& accessModel);
+  void openPackage(const std::filesystem::path& path, const TRDAccessModel& accessModel);
   void closePkg();
 
 
 
 private:
-  LibTrident::Tstream::TStreamInfo fstrInfo {};
+  LibTrident::Impl::TStreamInfo fstrInfo {};
   LibTrident::TRD_HEADER trdHdr {};
 
   //TRDPkgHeader headerSection;

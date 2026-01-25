@@ -9,7 +9,7 @@
 #include <expected>
 #include "filemgmnt.h"
 //#include "ioflags.h"
-namespace LibTrident::Tstream {
+namespace LibTrident::Impl {
 
 struct TRDFstreamObject{
     //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation
@@ -17,9 +17,9 @@ struct TRDFstreamObject{
     std::shared_ptr<std::fstream> hFile;
     //does not represent actual file size, but sizeof(whole file - header), not utilized yet
     u64 checksumSize {0};
-    IOFLAGS::TRDAccessModel acccessModel {};
+    TRDAccessModel acccessModel {};
     //for future use, atime
-    PortableTypes::PortableStat pStat {};
+    Impl::PortableStat pStat {};
     //struct stat64 fileStat;
     bool fileOpened {false};
 

@@ -14,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -fstack-protector -fdiagnostics-color=always -Wall -Wextra -Wunreachable-code -Wfloat-equal")
+set(COMMON_FLGS "${CMAKE_CXX_FLAGS} -Wno-comment -fstack-protector -fdiagnostics-color=always -Wall -Wextra -Wunreachable-code -Wfloat-equal")
 
 ##### COMMENT TO DISABLE SANITIZERS FOR DEBUG BUILD
 set(ASANON_FLAGS "-fsanitize=address")
@@ -42,17 +42,17 @@ file(GLOB_RECURSE LIBS_EXTERNAL src/libs/*.cpp)
 # --- Library target ---
 add_library(${TRDLIB} SHARED ${LIB_TRD_SRC})
 target_include_directories(${TRDLIB} PUBLIC
+    src/libtrident/impl
     src/libtrident/include
+    src/libtrident/impl/include
     src/libtrident/err
-    src/libtrident/pkgio
     src/libtrident
-    src/libtrident/header
-    src/libtrident/utils
-    src/libtrident/utils/tuid
-    src/libtrident/sdesc
-    src/libtrident/utils/uid/suid
-    src/libtrident/utils/uid
-    src/libtrident/systemspecific/common/include/
+    src/libtrident/impl/pkgio
+    src/libtrident/impl/header
+    src/libtrident/impl/uid
+    src/libtrident/impl/uid/suid
+    src/libtrident/impl/sdesc
+    src/libtrident/impl/systemspecific/common/include/
 )
 ###target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 ###target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)

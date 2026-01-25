@@ -11,7 +11,7 @@
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace LibTrident;
 
-using namespace LibTrident::SectionDescriptor;
+
 
 void PrintBuildTarget() {
 #if defined(_LIBTRIDENT_DEBUG)
@@ -47,7 +47,7 @@ void print_header(const LibTrident::TRD_HEADER& hdr) {
     dbgprintf("\tIoControl 0x%X\n", hdr.dynIoCtrl);
     dbgprintf("[HEADER_END]\n");
 }
-void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
+void print_sd(const LibTrident::Impl::TRD_SD& sd) {
     dbgprintf("\n[SD_START]\n");
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
     dbgprintf("\tTblcount: %u\n", sd.tblCount);
@@ -57,7 +57,7 @@ void print_sd(const LibTrident::SectionDescriptor::TRD_SD& sd) {
     dbgprintf("[SD_END]\n\n");
 }
 
-void print_stat(const PortableTypes::PortableStat& ps) {
+void print_stat(const Impl::PortableStat& ps) {
     u32 perms = static_cast<u32>(ps.permissions) & 0777;
     auto aux = ps.auxiliary.value();
 
@@ -79,19 +79,19 @@ void print_stat(const PortableTypes::PortableStat& ps) {
 #endif
 
 //test
-struct NTC_INFO_TEST : PkgIO::SerializableData{
+struct NTC_INFO_TEST : Impl::SerializableData{
     uint16_t x = 0; 
     uint32_t y = 0;
     uint16_t z = 0;
 
     size_t size() const override {
-        return PkgIO::BinarySerializer::elementSize(x,y,z);
+        return Impl::BinarySerializer::elementSize(x,y,z);
     }
     //std::array<uint32_t,2> c{};
 
 //the sum of sizeof of all elements must be properly aligned
     std::optional<std::vector<u8>> serialize() const override {
-        PkgIO::BinarySerializer bs;
+        Impl::BinarySerializer bs;
         bs.addTrivial(x); //2B
         bs.addTrivial(y); //4B
         bs.addTrivial(z); //2B
@@ -106,11 +106,11 @@ struct NTC_INFO_TEST : PkgIO::SerializableData{
     //if return is false caller throws std::invalid_argument exception
     bool deserialize(const std::vector<u8>& dataIn) override {
         //on error throws exception
-        PkgIO::BinarySerializer bs(dataIn);
+        Impl::BinarySerializer bs(dataIn);
         size_t xsize = 0;
-        xsize += bs.readTrivial<u16>(&x, xsize);
-        xsize += bs.readTrivial<u32>(&y, xsize);
-        xsize += bs.readTrivial<u16>(&z, xsize);
+        xsize += bs.readTrivial<u16>(xsize, x);
+        xsize += bs.readTrivial<u32>(xsize, y);
+        xsize += bs.readTrivial<u16>(xsize, z);
         
         
         if (xsize != this->size()){
@@ -149,10 +149,10 @@ int main(void) {
    // std::cout << SystemSpecific::createTemporaryFile().value() << std::endl;
     PrintBuildTarget();
    
-    LibTrident::TrPkg ltTrPkg("./test.tpx", {IOFLAGS::TrdOpenIO::CreateNew,
-                                        IOFLAGS::TrdAccessIO::AllAccess,
-                                        IOFLAGS::TrdXattrIO::None,
-                                        IOFLAGS::_TrdInternalIO::None});
+    LibTrident::TrPkg ltTrPkg("./test.tpx", {TrdOpenIO::CreateNew,
+                                        TrdAccessIO::AllAccess,
+                                        TrdXattrIO::None,
+                                        _TrdInternalIO::None});
   //  LibTrident::TrPkg ltTrPkg("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
     //ltTrPkg.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
@@ -199,6 +199,7 @@ int main(void) {
 #if defined(_LIBTRIDENT_DEBUG)
     auto vxa = trPkgHdr.getHeader();
     auto crcRet = vxa.checksumCRC32().value();
+    (void)crcRet;
     print_header(vxa);
   //  dbgprintf("%u\n",crcRet); 
   //  assert(1368045319 == crcRet);  //value from generated crc to test functionality, delete 
@@ -239,7 +240,7 @@ int main(void) {
     const auto& haveXtrd = xtrd.serialize();
     if (haveXtrd.has_value()) {
         const auto& val = haveXtrd.value();
-        PkgIO::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), val, 0, std::ios::end);
+        Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), val, 0, std::ios::end);
     }
     else {
         throw std::runtime_error("BSWfail ser");
@@ -251,7 +252,7 @@ int main(void) {
     
     const auto xtrdReadSize = xtrdRead.size();
     std::cout << "xtrd size: " << xtrdReadSize << "\n";
-    const auto readData =  PkgIO::BinarySerializer::readDataFromTStream(ltTrPkg.getTstream(), currentSeek, xtrdReadSize);
+    const auto readData =  Impl::BinarySerializer::readDataFromTStream(ltTrPkg.getTstream(), currentSeek, xtrdReadSize);
     
     dbgprintf("Raw data dump:\n\x1B[31m{");
     for (const auto& x: haveXtrd.value()) {

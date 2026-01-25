@@ -3,6 +3,8 @@
 #include <string>
 #include "datatypes.h"
 #include "trdconsts.h"
+#include <memory>
+
 namespace LibTrident::Err {
     
     enum class Code {
