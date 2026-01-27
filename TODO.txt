@@ -33,5 +33,5 @@ current goal
 
 TEST ENDIANNESS ON PPC EMULATOR
 read/write-DataFromTStream use std::expected instead of exceptions
-use enum classes for supported dt's and convert it in serialize/deserialize
 properly separate implementation details from the exposed API and include dirs
+actually make crc validate (validation temporarily off right now)

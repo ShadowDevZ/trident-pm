@@ -179,7 +179,11 @@ public:
     template <ConTriviablyCopyable T>
     //returns number of bytes read
     size_t readTrivial(size_t offset, T& t) {
-        static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
+
+        //removed assertion because we might pass enum
+        //static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
+       
+       
         //nulllptr handlerd here
         size_t readSize = readRaw(&t, sizeof(t), offset);
         if (!isInstanceLittleEndian()) {
@@ -227,7 +231,8 @@ public:
     
     template <ConTriviablyCopyable T>
     void addTrivial(T t) {
-        static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
+        //removed assertion because we might pass enum
+       // static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
         if (!isInstanceLittleEndian()) {
             t = reverseByteOrder(t);
             

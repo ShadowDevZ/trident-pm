@@ -8,7 +8,8 @@ namespace LibTrident::Consts::HeaderConsts {
     };//\223TRD!\x12.S
     //extended signature for additional checking
     constexpr u16 TRD_HDR_EXTENDED_SIGNATURE = 0xbf97;
-
+    constexpr u16 TRD_HDR_INVALID_VERSION = 0;
+    constexpr u16 TRD_HDR_BLEEDING_EDGE = UINT16_MAX;
     //Package major, minor version and revision
     constexpr u8 TRD_HDR_VMAJOR = 1;
     constexpr u8 TRD_HDR_VMINOR = 0;

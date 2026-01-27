@@ -6,25 +6,71 @@
 #include <span>
 namespace LibTrident {
 
+
+namespace GlobalCompression {
+    enum Algorithm : u8 {
+        None,
+        LZ4,
+        GZip
+    };
+};
+namespace BuildFlags {
+    enum Flags : u32 {
+        Clear,
+        PlatformLinux = 1 << 1,
+        PlatformNT = 1 << 2,
+        Debug = 1 << 3,
+        DebugWithSymbols = 1 << 4
+    };
+};
+namespace ArchType {
+    enum Type : u8{
+        Any = 0,
+        Amd64 = 1 << 1,
+        X86 = 1 << 2,
+        Aarch64 = 1 << 3
+    };
+};
+namespace PackageIOCtrl {
+    enum Flag : u16 {
+        Clear = 0,
+        ReadHeaderLock = 1 << 1,
+        WriteHeaderLock = 1 << 2,
+        DynamicSectionReadLock = 1 << 3,
+        DynamicSectionWriteLock = 1 << 4,
+        TregReadLock = 1 << 5,
+        TregWriteLock = 1 << 6,
+
+        LockAll = 1 << 15
+};
+};
+struct TRD_HDRFIELD_UPDATE{
+    u16 fmtVersion;
+    GlobalCompression::Algorithm compression;
+    BuildFlags::Flags buildFlags;
+    ArchType::Type architecture;
+};
+
 struct TRD_HEADER : Impl::SerializableData {
     //we are not using byte or unsigned char as ive read that its somehow not well standardized
     //and on different compilers we could get different results
    
-    std::array<u8,8> magic = std::to_array(LibTrident::Consts::HeaderConsts::TRD_HDR_MAGIC);
-    u16 exSignature = LibTrident::Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
-    u16 fmtVersion;
+    std::array<u8,8> magic = std::to_array(Consts::HeaderConsts::TRD_HDR_MAGIC);
+    u16 exSignature = Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
+    u16 fmtVersion = Consts::HeaderConsts::TRD_HDR_INVALID_VERSION;
     //todo use enum classes for supported dt's and convert it in serialize/deserialize
-    u8 compression;
-    u32 buildFlags;
-    u8 architecture; 
+    GlobalCompression::Algorithm compression = GlobalCompression::None;
+    BuildFlags::Flags buildFlags = BuildFlags::Clear;
+    ArchType::Type architecture = ArchType::Any; 
     u32 dynHdrChksum;
     u64 dynFileLen;
-    u16 dynIoCtrl;
+    PackageIOCtrl::Flag dynIoCtrl = PackageIOCtrl::Clear;
 
     constexpr size_t size() const override {
         return Impl::BinarySerializer::elementSize(magic, exSignature,
         fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, dynIoCtrl);
     }
+
     std::optional<std::vector<u8>> serialize() const override {
         LibTrident::Impl::BinarySerializer bs;
        
@@ -63,44 +109,7 @@ struct TRD_HEADER : Impl::SerializableData {
 
 };
 
-struct TRD_HDRFIELD_UPDATE{
-    u16 fmtVersion;
-    u8 compression;
-    u32 buildFlags;
-    u8 architecture;
-};
 
 
-typedef enum {
-    COMMPRALG_NONE,
-    COMPRALG_LZ4,
-    COMPRALG_GZIP
-}COMPR_ALGO;
-
-typedef enum {
-    BF_CLEAR,
-    BF_PLATF_LINUX = 1 << 1,
-    BF_PLATF_NT = 1 << 2,
-    BF_DEBUG = 1 << 3,
-}BUILD_FLAGS;
-
-typedef enum {
-    ARCHF_ANY = 0,
-    ARCHT_AM64 = 1 << 1,
-    ARCHT_I386 = 1 << 2,
-    ARCHT_AARCH64 = 1 << 3
-}ARCH_TYPES;
-
-typedef enum {
-    IOCTRL_CLEAR = 0,
-    IOCTRL_ReadHeaderLKALL = 1 << 1,
-    IOCTRL_WriteHeaderLKKALL = 1 << 2,
-    IOCTRL_DSEC_RLOCK = 1 << 3,
-    IOCTRL_DESC_WLOCK = 1 << 4,
-    IOCTRL_TREG_RLOCK = 1 << 5,
-    IOCTRL_TREG_WLOCK = 1 << 6,
-
-    IOCTRL_LOCKALL = 1 << 16
-}PKG_IOCTRL;
 
 };

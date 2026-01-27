@@ -169,7 +169,9 @@ std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(u32 crc, const TRD_HE
 }
 
 
-std::expected<void, Err::TrdError> TRDPkgHeader::create(u32 buildFlgs, u8 archType, u8 comprType) {
+std::expected<void, Err::TrdError> TRDPkgHeader::create(BuildFlags::Flags buildFlgs, 
+                                                ArchType::Type archType,
+                                                GlobalCompression::Algorithm comprType) {
     TRD_HDRFIELD_UPDATE update;
     auto fmtHdr = formatHeaderVersion(TRD_HDR_VMAJOR, TRD_HDR_VMINOR, TRD_HDR_VREVISION);
     if (!fmtHdr.has_value()) {
@@ -198,14 +200,14 @@ std::expected<void, Err::TrdError> TRDPkgHeader::create(const TRD_HDRFIELD_UPDAT
    
 
     hdr.fmtVersion = field.fmtVersion;
-    hdr.compression = static_cast<u8>(field.compression);
-    hdr.buildFlags = static_cast<u32>(field.buildFlags);
-    hdr.architecture = static_cast<u8>(field.architecture);
+    hdr.compression = field.compression;
+    hdr.buildFlags = field.buildFlags;
+    hdr.architecture = field.architecture;
     hdr.dynHdrChksum = 0; //ignored for now
    // hdr.dynHdrChksum = IGenerateHeaderCRC(hdr);
     
     hdr.dynFileLen = UINT64_MAX;
-    hdr.dynIoCtrl = 0;
+    hdr.dynIoCtrl = PackageIOCtrl::Clear;
 
     trpkg.trdHdr = hdr;
     return {};
@@ -262,10 +264,10 @@ std::expected<std::string, Err::TrdError> TRDPkgHeader::headerVersionFormatToStr
 }
 std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD_UPDATE& update) {
     TRD_HEADER hdr = trpkg.trdHdr;
-    hdr.architecture = static_cast<u8>(update.architecture);
+    hdr.architecture = update.architecture;
     hdr.fmtVersion = update.fmtVersion;
-    hdr.compression = static_cast<u8>(update.compression);
-    hdr.buildFlags = static_cast<u32>(update.buildFlags);
+    hdr.compression = update.compression;
+    hdr.buildFlags = update.buildFlags;
    // hdr.dynHdrChksum = IGenerateHeaderCRC(hdr);
     hdr.dynHdrChksum = 0; //ignored for now
 
@@ -279,7 +281,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD
  }
 //CHECKSUM IS NOT UPDATED BECAUSE THESE ARE CONSIDERED DYNAMIC HEADER PROPS WHICH ARE NOT USED IN CRC FORMULA 
 //todo write directly
-std::expected<void, Err::TrdError> TRDPkgHeader::updateIoctrlProp(u16 ioctrl) {
+std::expected<void, Err::TrdError> TRDPkgHeader::updateIoctrlProp(PackageIOCtrl::Flag ioctrl) {
     //todo check if valid
     trpkg.trdHdr.dynIoCtrl = ioctrl;
     return TRDPkgHeader::write();

@@ -25,10 +25,11 @@ public:
     
     const TRD_HEADER& getHeader() const;
     
-    std::expected<void, LibTrident::Err::TrdError> create(u32 buildFlgs, u8 archType, u8 comprType = COMMPRALG_NONE);
+    std::expected<void, LibTrident::Err::TrdError> create(BuildFlags::Flags buildFlgs, ArchType::Type archType, 
+                                                         GlobalCompression::Algorithm comprType = GlobalCompression::None);
     std::expected<void, LibTrident::Err::TrdError> create(const TRD_HDRFIELD_UPDATE& field);
     std::expected<void, LibTrident::Err::TrdError> updateHeader(const TRD_HDRFIELD_UPDATE& update);
-    std::expected<void, LibTrident::Err::TrdError> updateIoctrlProp(u16 ioctrl);
+    std::expected<void, LibTrident::Err::TrdError> updateIoctrlProp(PackageIOCtrl::Flag ioctrl);
     std::expected<void, LibTrident::Err::TrdError> updateFileLenProp(u64 len);
     
     

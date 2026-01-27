@@ -171,7 +171,7 @@ int main(void) {
     
    
    //std::cout << "CreateHeader()" <<x.Create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE) << std::endl;
-    tassert("CreateHeader()",trPkgHdr.create(BF_PLATF_LINUX, ARCHT_AM64, COMMPRALG_NONE));
+    tassert("CreateHeader()",trPkgHdr.create(BuildFlags::PlatformLinux, ArchType::Amd64, GlobalCompression::None));
 #if defined(_LIBTRIDENT_DEBUG)
    print_header(trPkgHdr.getHeader());
 #endif
@@ -182,9 +182,9 @@ int main(void) {
   tassert("ReadHeader()", trPkgHdr.read());
     
     TRD_HDRFIELD_UPDATE updateField;
-    updateField.architecture = ARCHT_AARCH64;
-    updateField.buildFlags = BF_PLATF_NT;
-    updateField.compression = COMPRALG_GZIP;
+    updateField.architecture = ArchType::Aarch64;
+    updateField.buildFlags = BuildFlags::PlatformNT;
+    updateField.compression = GlobalCompression::GZip;
     updateField.fmtVersion = TRDPkgHeader::formatHeaderVersion(3,1,2).value();
     
     tassert("UpdateHeader()", trPkgHdr.updateHeader(updateField));
@@ -194,7 +194,7 @@ int main(void) {
     print_header(trPkgHdr.getHeader());   
 #endif
     tassert("ModifyLen()", trPkgHdr.updateFileLenProp(0xbeefccaa));
-    tassert("ModifyIOCTRL()", trPkgHdr.updateIoctrlProp(IOCTRL_DESC_WLOCK));
+    tassert("ModifyIOCTRL()", trPkgHdr.updateIoctrlProp(PackageIOCtrl::DynamicSectionWriteLock));
     tassert("ValidateHeader()", trPkgHdr.isValid());
 #if defined(_LIBTRIDENT_DEBUG)
     auto vxa = trPkgHdr.getHeader();
