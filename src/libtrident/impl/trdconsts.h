@@ -1,6 +1,6 @@
 #pragma once
 #include "datatypes.h"
-namespace LibTrident::Consts::HeaderConsts {
+namespace LibTrident::Consts::Header {
     //when printing dont forget to add NULL terminator
     //TRPX magic number
     constexpr u8 TRD_HDR_MAGIC[] = {
@@ -11,6 +11,7 @@ namespace LibTrident::Consts::HeaderConsts {
     constexpr u16 TRD_HDR_INVALID_VERSION = 0;
     constexpr u16 TRD_HDR_BLEEDING_EDGE = UINT16_MAX;
     //Package major, minor version and revision
+    constexpr u32 TRD_HDR_INVALID_CHKSUM = 0;
     constexpr u8 TRD_HDR_VMAJOR = 1;
     constexpr u8 TRD_HDR_VMINOR = 0;
     constexpr u8 TRD_HDR_VREVISION = 0;

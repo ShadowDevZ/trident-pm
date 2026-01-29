@@ -17,7 +17,7 @@ public:
     TRDSdToken(TRDSdToken&& other) : wFstr(std::move(other.wFstr)) {}
 
     static constexpr LibTrident::foffset_t GetOptRawSDStart() {
-        return LibTrident::Consts::HeaderConsts::LT_HDR_SZB_01A;
+        return LibTrident::Consts::Header::LT_HDR_SZB_01A;
     }
     
     static constexpr LibTrident::foffset_t GetRawSDEnd() {

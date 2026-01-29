@@ -4,7 +4,7 @@
 //#include "binarySerializer.h"
 
 using namespace LibTrident;
-using namespace LibTrident::Consts::HeaderConsts;
+using namespace LibTrident::Consts::Header;
 using eCode = Err::Code;
 //we are intentionally not using sizeof()
 //each different version of header will have different size
@@ -92,7 +92,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::isHeaderPresent(LibTrident::Imp
 
 std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn){
 
-    return {}; //for debugging purposes as we dont have CRC implemented
+   
 
     [[unlikely]]
     if (!ICheckHeaderSize(hdrIn)) {
@@ -105,10 +105,10 @@ std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADE
 
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
-    if (hdrIn.fmtVersion == 0) {
+    if (hdrIn.fmtVersion == Consts::Header::TRD_HDR_INVALID_VERSION) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
-    if (!ICheckCRC(hdrIn.dynHdrChksum, hdrIn)) {
+    if (!ICheckCRC(hdrIn).has_value()) {
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     }
     if (hdrIn.dynFileLen == 0) {
@@ -146,23 +146,11 @@ bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
     }
     return true;
 }
-//I mean we could technically dump here the raw pointer but is it really the best approach for very few fields ?
-//todo probably implement serialize() function to each section which converts all elements to std::vector so we don't have to
-//be repetetive, todo template
-u32 IGenerateHeaderCRC(const TRD_HEADER& hdr) {
-    #define _LOCAL_CRC(crc,x) crc32(((crc)), reinterpret_cast<const Bytef*>(&(x)), sizeof((x)))
-    u32 crc = ::crc32(0, Z_NULL, 0);
-    crc = _LOCAL_CRC(crc, hdr.magic);
-    crc = _LOCAL_CRC(crc, hdr.exSignature);
-    crc = _LOCAL_CRC(crc, hdr.fmtVersion);
-    crc = _LOCAL_CRC(crc, hdr.compression);
-    crc = _LOCAL_CRC(crc, hdr.buildFlags);
-    crc = _LOCAL_CRC(crc, hdr.architecture);
-    return crc;
-}
-std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(u32 crc, const TRD_HEADER& hdr) {
-    u32 genCrc = IGenerateHeaderCRC(hdr);
-    if ((genCrc != hdr.dynHdrChksum) || (crc == 0)) {
+
+std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(const TRD_HEADER& hdr) {
+    u32 genCrc = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM);
+    dbgprintf("gen %u\n:exp: %u\n", genCrc, hdr.dynHdrChksum);
+    if ((genCrc != hdr.dynHdrChksum)) {
        return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     } 
     return {};
@@ -203,8 +191,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::create(const TRD_HDRFIELD_UPDAT
     hdr.compression = field.compression;
     hdr.buildFlags = field.buildFlags;
     hdr.architecture = field.architecture;
-    hdr.dynHdrChksum = 0; //ignored for now
-   // hdr.dynHdrChksum = IGenerateHeaderCRC(hdr);
+    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM); //ignored for now
     
     hdr.dynFileLen = UINT64_MAX;
     hdr.dynIoCtrl = PackageIOCtrl::Clear;
@@ -268,8 +255,8 @@ std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD
     hdr.fmtVersion = update.fmtVersion;
     hdr.compression = update.compression;
     hdr.buildFlags = update.buildFlags;
-   // hdr.dynHdrChksum = IGenerateHeaderCRC(hdr);
-    hdr.dynHdrChksum = 0; //ignored for now
+    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM);
+    
 
     auto val = IValidateHeader(hdr);
     if (!val.has_value()) {

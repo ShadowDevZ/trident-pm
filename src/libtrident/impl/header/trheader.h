@@ -46,7 +46,7 @@ private:
     TrPkg& trpkg;
     
    
-    static std::expected<void, LibTrident::Err::TrdError> ICheckCRC(u32 crc, const TRD_HEADER& hdr);
+    static std::expected<void, LibTrident::Err::TrdError> ICheckCRC(const TRD_HEADER& hdr);
     static bool ICheckHeaderSize(const TRD_HEADER& hdr);
     static std::expected<void, LibTrident::Err::TrdError> IValidateHeader(const TRD_HEADER& hdrIn);
     //std::pair<bool,Tstream::TRDFstreamObject&> ICheckAndGetFstreamContent();

@@ -55,14 +55,14 @@ struct TRD_HEADER : Impl::SerializableData {
     //we are not using byte or unsigned char as ive read that its somehow not well standardized
     //and on different compilers we could get different results
    
-    std::array<u8,8> magic = std::to_array(Consts::HeaderConsts::TRD_HDR_MAGIC);
-    u16 exSignature = Consts::HeaderConsts::TRD_HDR_EXTENDED_SIGNATURE;
-    u16 fmtVersion = Consts::HeaderConsts::TRD_HDR_INVALID_VERSION;
+    std::array<u8,8> magic = std::to_array(Consts::Header::TRD_HDR_MAGIC);
+    u16 exSignature = Consts::Header::TRD_HDR_EXTENDED_SIGNATURE;
+    u16 fmtVersion = Consts::Header::TRD_HDR_INVALID_VERSION;
     //todo use enum classes for supported dt's and convert it in serialize/deserialize
     GlobalCompression::Algorithm compression = GlobalCompression::None;
     BuildFlags::Flags buildFlags = BuildFlags::Clear;
     ArchType::Type architecture = ArchType::Any; 
-    u32 dynHdrChksum;
+    u32 dynHdrChksum = Consts::Header::TRD_HDR_INVALID_CHKSUM;
     u64 dynFileLen;
     PackageIOCtrl::Flag dynIoCtrl = PackageIOCtrl::Clear;
 
