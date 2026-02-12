@@ -1,3 +1,9 @@
+/**
+ * @file libtrident.h
+ * @brief Main header to include
+ * 
+ * 
+ */
 #pragma once
 #include <cstdint>
 #include <cstddef>
@@ -25,9 +31,8 @@ public:
       dbgprintf("~Destructor called\n");
       closePkg();
    }
-
+   /// @brief provides API to manipulate the file header
    TRDPkgHeader header();
-
    const LibTrident::Impl::TStreamInfo& getTstream() const {
         return fstrInfo;
    }
@@ -43,8 +48,17 @@ public:
     
         openPackage(path, {open, access, xattr, _TrdInternalIO::None});
    }
-
+   /**
+    * @brief Opens the TRPX package
+    * 
+    * @param path absolute or relative path to the package
+    * @param accessModel additional flags to define access
+    */
   void openPackage(const std::filesystem::path& path, const TRDAccessModel& accessModel);
+  /**
+   * @brief Closes the package. No need to call this because of RAII
+   * 
+   */
   void closePkg();
 
 

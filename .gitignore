@@ -1,4 +1,5 @@
 # custom
+docs/doxy/*
 compile_commands.json
 .clang-tidy
 *.example

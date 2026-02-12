@@ -22,3 +22,5 @@ mark every constructor as explicit
 
 TEST ENDIANNESS ON PPC EMULATOR
 properly separate implementation details from the exposed API and include dirs
+
+updateHeader fields should be optional there should also be readDynamicXXXX

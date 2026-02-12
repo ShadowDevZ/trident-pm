@@ -1,3 +1,9 @@
+/**
+ * @file ioflags.h
+ * @brief IO flags used when opening package and provide access to sections
+ * 
+ * 
+ */
 #pragma once
 #include "datatypes.h"
 #include <optional>
@@ -26,14 +32,29 @@ namespace LibTrident {
         
     };
     */
+    
+    /**
+     * @brief Package open type
+     * 
+     */
     enum class TrdOpenIO : u8 {
+        /// none or default
         None,
+        /// always creates new file overwriting the old one if present
         CreateNew,
+        /// creates file in the system specific temporary directory
         CreateTemporary,
+        /// opens the existing file
         OpenExisting,
+        /// creates package from array of bytes or partial memory block
         CreateFromMemBuff
 
     };
+
+    /**
+     * @brief Access to package
+     * 
+     */
     enum class TrdAccessIO : u8 {
         None,
         ReadAll = 1 << 1,
@@ -49,13 +70,23 @@ namespace LibTrident {
         ReadRegion = 1 << 3,
         WriteRegion = 1 << 4
     };
+    /**
+     * @brief Extended attributes
+     * 
+     */
     enum class TrdXattrIO : u8 {
+        /// no extended attributes, default
         None,
+        /// locks the file and prevents other programs from reading and writing the data whilst open
         LockFile = 1 << 1,
+        /// Do not change the modification time
         NoTimeStamp = 1 << 2, 
         
     };
-    //reserved for internal library use. May add this byte somewhere else if needed
+    /**
+     * @brief Internal flags for library use
+     * 
+     */
     enum class _TrdInternalIO : u8 {
         //reserved internal, do not use
         None = 0,

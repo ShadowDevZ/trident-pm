@@ -1,3 +1,9 @@
+/**
+ * @file hrddefs.h
+ * @brief Header section definitions
+ * 
+ * 
+ */
 #pragma once
 #include "trdconsts.h"
 #include "ccattribs.h"
@@ -6,7 +12,10 @@
 #include <span>
 namespace LibTrident {
 
-
+/**
+ * @brief Compression algorithm referenced by data and tables
+ * 
+ */
 namespace GlobalCompression {
     enum Algorithm : u8 {
         None,
@@ -14,6 +23,10 @@ namespace GlobalCompression {
         GZip
     };
 };
+/**
+ * @brief Flags t odetermine how the package was built for quick checking
+ * 
+ */
 namespace BuildFlags {
     enum Flags : u32 {
         Clear,
@@ -23,6 +36,10 @@ namespace BuildFlags {
         DebugWithSymbols = 1 << 4
     };
 };
+/**
+ * @brief Type of architecture which is the package supposed to run on
+ * 
+ */
 namespace ArchType {
     enum Type : u8{
         Any = 0,
@@ -31,6 +48,17 @@ namespace ArchType {
         Aarch64 = 1 << 3
     };
 };
+/**
+ * @brief Internal locking flags
+ * @details Provides flags for locking certain section,tables or parts of file when
+ * working with multiple instances. For example instance 1 is accessing the header for reading
+ * whilst instance 2 is trying to read SD, this makes the work much faster when dealing with huge
+ * packages. However each operation is locked internally so we dont have race condition when modifying data
+ * so only read access is provided. This field is hint and in no way is there to physically
+ * lock the package as this warning can freely be bypassed. This also fixes the problems if instance 1
+ * is writing header as instance 2 tries to read it in this case this section is write protected.
+ * 
+ */
 namespace PackageIOCtrl {
     enum Flag : u16 {
         Clear = 0,
@@ -50,7 +78,7 @@ struct TRD_HDRFIELD_UPDATE{
     BuildFlags::Flags buildFlags;
     ArchType::Type architecture;
 };
-
+/// TRPX file header
 struct TRD_HEADER : Impl::SerializableData {
     //we are not using byte or unsigned char as ive read that its somehow not well standardized
     //and on different compilers we could get different results
@@ -58,7 +86,7 @@ struct TRD_HEADER : Impl::SerializableData {
     std::array<u8,8> magic = std::to_array(Consts::Header::TRD_HDR_MAGIC);
     u16 exSignature = Consts::Header::TRD_HDR_EXTENDED_SIGNATURE;
     u16 fmtVersion = Consts::Header::TRD_HDR_INVALID_VERSION;
-    //todo use enum classes for supported dt's and convert it in serialize/deserialize
+    
     GlobalCompression::Algorithm compression = GlobalCompression::None;
     BuildFlags::Flags buildFlags = BuildFlags::Clear;
     ArchType::Type architecture = ArchType::Any; 
