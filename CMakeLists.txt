@@ -5,7 +5,7 @@ project(trident-pm)
 find_package(ZLIB REQUIRED)
 
 set(TRDLIB "libtrdpm")
-set(TRDPM "trpm")
+
 set(TRDBLD "trdbld")
 #for clang-tidy
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -33,7 +33,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 
 file(GLOB_RECURSE LIB_TRD_SRC src/libtrident/*.cpp)
-file(GLOB_RECURSE APP_TRD_SRC src/app/*.cpp)
 file(GLOB_RECURSE TRD_IMG_BUILDER src/imgb/*.cpp)
 file(GLOB_RECURSE LIBS_EXTERNAL src/libs/*.cpp)
 
@@ -61,9 +60,6 @@ target_link_libraries(${TRDLIB} PRIVATE ZLIB::ZLIB)
 option(TRD_BUILD_LIBONLY "Do not build the trpm standalone app" OFF)
 
 if(NOT TRD_BUILD_LIBONLY)
-    add_executable(${TRDPM} ${APP_TRD_SRC} ${LIBS_EXTERNAL})
-    target_link_options(${TRDPM} PRIVATE -pie)
-
     add_executable(${TRDBLD} ${TRD_IMG_BUILDER} ${LIBS_EXTERNAL})
     target_include_directories(${TRDBLD} PRIVATE ${LIBXML2_INCLUDE_DIR})
     target_link_libraries(${TRDBLD} PRIVATE ${TRDLIB} ${LIBXML2_LIBRARIES} ZLIB::ZLIB)

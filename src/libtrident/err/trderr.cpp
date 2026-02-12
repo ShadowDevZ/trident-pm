@@ -18,7 +18,7 @@ using eCode = Err::Code;
 constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {eCode::UndefinedError, "Undefined error"},
     {eCode::Success, "Operation was successful"},
-    {eCode::GenericFailure, "The call to the specified function has failed"},
+    {eCode::CustomError, "(Custom error)"},
     {eCode::InvalidFuncArg, "Unknown or incorrect argument has been passed to the function"},
     {eCode::FileAccessFailure, "Insufficient privileges to the specified resource, access denied"},
     {eCode::NullObject, "The object was NULL"},
