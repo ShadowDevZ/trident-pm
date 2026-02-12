@@ -13,16 +13,12 @@ sdesc.cpp
 sdescid.cpp
             read SUID inside stream
 
-Impl.cpp
-            bettter reversing bytes
-*
-            improve whole library architecture from drawn sketch
+
 
 mark every constructor as explicit
 
 
-current goal
+/current goal
 
 TEST ENDIANNESS ON PPC EMULATOR
-read/write-DataFromTStream use std::expected instead of exceptions
 properly separate implementation details from the exposed API and include dirs
