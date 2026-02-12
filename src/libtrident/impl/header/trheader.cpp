@@ -149,9 +149,9 @@ bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
 
 std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(const TRD_HEADER& hdr) {
     u32 genCrc = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM);
-    dbgprintf("gen %u\n:exp: %u\n", genCrc, hdr.dynHdrChksum);
     if ((genCrc != hdr.dynHdrChksum)) {
-       return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
+        dbgprintf("[CRC] gen %u : exp: %u\n", genCrc, hdr.dynHdrChksum);
+        return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     } 
     return {};
 }

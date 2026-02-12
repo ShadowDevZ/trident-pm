@@ -4,14 +4,6 @@ trheader.cpp check eacch field individually
              serialize the fields, template the CRC32
              ?direct write??
              validate fields in update
-@@everySD.h
-DONE            inherit from SectionCommon
-tstreaminfo.h
-            check max_path
-DONE            more abstraction like AppendPadding()
-
-Impl.cpp
-            make generic Little endian conversion and fix the current broken one, template it like GetLeObject<T>
 
 sdesc.cpp
             implement functions
@@ -34,4 +26,3 @@ current goal
 TEST ENDIANNESS ON PPC EMULATOR
 read/write-DataFromTStream use std::expected instead of exceptions
 properly separate implementation details from the exposed API and include dirs
-actually make crc validate (validation temporarily off right now)

@@ -198,11 +198,7 @@ int main(void) {
     tassert("ValidateHeader()", trPkgHdr.isValid());
 #if defined(_LIBTRIDENT_DEBUG)
     auto vxa = trPkgHdr.getHeader();
-    auto crcRet = vxa.checksumCRC32().value();
-    (void)crcRet;
     print_header(vxa);
-  //  dbgprintf("%u\n",crcRet); 
-  //  assert(1368045319 == crcRet);  //value from generated crc to test functionality, delete 
 #endif
 
 /*
@@ -222,57 +218,7 @@ int main(void) {
 #endif
     
    */
-/*
-    ltTrPkg.getTstream().writePadding(64);
-
-    auto portStat = ltTrPkg.getTstream().getFstreamObject().pStat;
-    print_stat(portStat);
-
-    XTRD_HEADER xtrd {};
-    xtrd.fmtVersion = TRDPkgHeader::formatHeaderVersion(3,3,3).value();
-    xtrd.compression = 0xcc;
-    xtrd.buildFlags = 0xaaaaaaaa;
-    xtrd.architecture = 0;
-    xtrd.hdrChksum = 0xC0ffeeee;
-    xtrd.fileLen = UINT64_MAX;
-    xtrd.ioCtrl = 0XDDDD;
-
-    const auto& haveXtrd = xtrd.serialize();
-    if (haveXtrd.has_value()) {
-        const auto& val = haveXtrd.value();
-        Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), val, 0, std::ios::end);
-    }
-    else {
-        throw std::runtime_error("BSWfail ser");
-    }
-
-    const auto currentSeek = ltTrPkg.getTstream().getSeekPos();
-  
-    XTRD_HEADER xtrdRead {};
-    
-    const auto xtrdReadSize = xtrdRead.size();
-    std::cout << "xtrd size: " << xtrdReadSize << "\n";
-    const auto readData =  Impl::BinarySerializer::readDataFromTStream(ltTrPkg.getTstream(), currentSeek, xtrdReadSize);
-    
-    dbgprintf("Raw data dump:\n\x1B[31m{");
-    for (const auto& x: haveXtrd.value()) {
-            dbgprintf("%x,", x);
-    }
-    dbgprintf("}\x1B[0m\n");
-
-    if(!xtrdRead.deserialize(readData)) {
-        throw std::runtime_error("BSWfail deser");
-    }
-    
-    
-    print_xtrd(xtrdRead);
-   
-    dbgprintf("\n");
-  */
-    
-    
-
-    //std::cout << xtrd.size() << '\n';
+ 
     std::cout << "Exit(0)\n";
     return 0;
     
