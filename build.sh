@@ -7,7 +7,8 @@ if [ "$EUID" -eq 0 ]; then
     echo "This script cannot be run as root for safety reasons"
     exit 1
 fi
-
+CC=gcc
+CXX=g++
 # ==========================
 # Functions
 # ==========================
@@ -22,7 +23,7 @@ configure() {
         BUILD_TYPE="Debug"   # default if not provided
     fi
     echo "Configuring project with CMake (Build type: $BUILD_TYPE)..."
-    cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+    cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX"
 }
 
 build() {

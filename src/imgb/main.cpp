@@ -84,7 +84,7 @@ struct NTC_INFO_TEST : Impl::SerializableData{
     uint32_t y = 0;
     uint16_t z = 0;
 
-    size_t size() const override {
+    u64 size() const override {
         return Impl::BinarySerializer::elementSize(x,y,z);
     }
     //std::array<uint32_t,2> c{};
@@ -107,10 +107,10 @@ struct NTC_INFO_TEST : Impl::SerializableData{
     bool deserialize(const std::vector<u8>& dataIn) override {
         //on error throws exception
         Impl::BinarySerializer bs(dataIn);
-        size_t xsize = 0;
-        xsize += bs.readTrivial<u16>(xsize, x);
-        xsize += bs.readTrivial<u32>(xsize, y);
-        xsize += bs.readTrivial<u16>(xsize, z);
+        u64 xsize = 0;
+        xsize += bs.readTrivialEx<u16>(xsize, x);
+        xsize += bs.readTrivialEx<u32>(xsize, y);
+        xsize += bs.readTrivialEx<u16>(xsize, z);
         
         
         if (xsize != this->size()){

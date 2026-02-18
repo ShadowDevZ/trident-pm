@@ -19,7 +19,7 @@ namespace Trd::Impl {
      */
     struct SerializableData{
         /// size of all elements ideally returned by elementSize()
-        virtual constexpr size_t size() const = 0;
+        virtual constexpr u64 size() const = 0;
 
         virtual ~SerializableData() = default;
         /**

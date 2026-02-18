@@ -95,7 +95,7 @@ struct TRD_HEADER : Impl::SerializableData {
     u64 dynFileLen;
     PackageIOCtrl::Flag dynIoCtrl = PackageIOCtrl::Clear;
 
-    constexpr size_t size() const override {
+    constexpr u64 size() const override {
         return Impl::BinarySerializer::elementSize(magic, exSignature,
         fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, dynIoCtrl);
     }
@@ -115,16 +115,15 @@ struct TRD_HEADER : Impl::SerializableData {
     
     bool deserialize(const std::vector<u8>& dataIn) override {
         Impl::BinarySerializer bs(dataIn);
-        size_t xsize = 0;
-       
-        xsize += bs.readContainer(std::span<u8>(magic), xsize);
+
+        bs.readContainer(std::span<u8>(magic));
       
-        xsize += bs.readTrivial(xsize, exSignature, fmtVersion,compression,
+        bs.readTrivial(exSignature, fmtVersion,compression,
                                     buildFlags, architecture, dynHdrChksum,
                                     dynFileLen, dynIoCtrl);
        
-        dbgprintf("xsize:%ld:\n", xsize);
-        if (xsize != this->size()){
+        dbgprintf("xsize:%ld:\n", bs.getReadOffset());
+        if (bs.getReadOffset() != this->size()){
             return false;
         }
         return true;

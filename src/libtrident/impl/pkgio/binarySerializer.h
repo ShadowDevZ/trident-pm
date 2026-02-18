@@ -42,39 +42,55 @@ namespace Trd::Impl {
 private:
     std::vector<uint8_t> bufferData {};
     std::endian emulEndianness{std::endian::native};
+    u64 readOffset = 0;
+    
+    template <ConTriviablyCopyable T>
+    //returns number of bytes read
+    u64 iReadTrivialEx(u64 offset, T& t) {
+        //removed assertion because we might pass enum
+        //static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
+        //nulllptr handlerd here
+        u64 readSize = readRaw(&t, sizeof(t), offset);
+        if (!isInstanceLittleEndian()) {
+            t = reverseByteOrder(t);
+        }
+        return readSize;
+    }
+    template <ConTriviablyCopyable T>
+    void iAddContainer(const std::span<const T> arr) {
+        if (arr.empty()) {
+            throw std::invalid_argument("Array is empty");
+        }
+
+        for (const auto& v : arr) {
+            addTrivial(v);
+        }
+       
+    }
+    template <ConTriviablyCopyable T>
+    void iAddTrivial(T t) {
+        //removed assertion because we might pass enum
+       // static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
+        if (!isInstanceLittleEndian()) {
+            t = reverseByteOrder(t);
+            
+            //t = std::byteswap(t);
+        }
+        addRaw(&t, sizeof(t));
+    }
   //  std::weak_ptr<Trd::Tstream::TStreamInfo> wFstr;
 public:
         /// compile time constant way of checking the host endianness 
-        static bool isLittleEndian() noexcept{
-            #if LT_DEBUG_ENDIAN_FORCE == 1
-                return true;
-            #elif LT_DEBUG_ENDIAN_FORCE == 2
-                return false;
-            #else
-                return std::endian::native == std::endian::little;
-            #endif
-        }
+        static bool isLittleEndian() noexcept;
         /// dynamically checks the host endianness
-        bool isInstanceLittleEndian() const noexcept{
-            #if LT_DEBUG_ENDIAN_FORCE == 1
-                return true;
-            #elif LT_DEBUG_ENDIAN_FORCE == 2
-                return false;
-            #else
-                return emulEndianness == std::endian::little;
-            #endif
-        }
+        bool isInstanceLittleEndian() const noexcept;
   
     BinarySerializer(std::endian emulated = std::endian::native) : emulEndianness(emulated) {}
     //second constructor for deserialize()
-    BinarySerializer(const std::vector<uint8_t>& data, std::endian emulated = std::endian::native
-    ) : bufferData(data), emulEndianness(emulated) {}
+    BinarySerializer(const std::vector<uint8_t>& data, std::endian emulated = std::endian::native, u64 xOffset=0
+    ) : bufferData(data), emulEndianness(emulated), readOffset(xOffset)  {}
     
-    BinarySerializer(const BinarySerializer& other) : bufferData(other.bufferData),
-    emulEndianness(other.emulEndianness) {}
-
-    BinarySerializer(BinarySerializer&& other) : bufferData(other.bufferData),
-    emulEndianness(other.emulEndianness) {}
+   
             
     
     template <ConTriviablyCopyable T>
@@ -105,16 +121,7 @@ public:
      
    
     //make the datatype 8 byte aligned        
-    static size_t getByteAlignment(size_t varSize) {
-              
-        constexpr auto alignBytes = Consts::Binary::BSERIALIZE_DATA_ALIGN;
-                
-        if (varSize % alignBytes) {
-            varSize += (alignBytes - (varSize % alignBytes));
-        }
-
-        return varSize;
-    }
+    static u64 getByteAlignment(u64 varSize);
     /*
     /if data size is no aligned the function manipulating the data needs to fix it
     by calling GetByteAlignment()
@@ -129,7 +136,7 @@ public:
      * @return true 
      * @return false 
      */
-    static constexpr bool isDataSizeAligned(size_t size) {
+    static constexpr bool isDataSizeAligned(u64 size) {
         return size % Trd::Consts::Binary::BSERIALIZE_DATA_ALIGN == 0;
     }
 
@@ -140,16 +147,14 @@ public:
      * @return true 
      * @return false 
      */
-    static inline bool expectAlignedDataOrDie(size_t size) {
-        //normal assert used because this condition simply cant happen
-        bool aligned = isDataSizeAligned(size);
-        if (!aligned) {
-            throw std::runtime_error("Passed data was not properly aligned");
-        }
-        //just in case the assertion fails
-        return aligned;
-
-    } 
+    static bool expectAlignedDataOrDie(u64 size);
+    u64 getReadOffset() const {
+        return readOffset;
+    }
+    void setReadOffset(u64 offset) {
+        if (offset != UINT64_MAX) 
+            readOffset = offset;
+    }
     
     const std::vector<uint8_t>& getData() const {
         return bufferData;
@@ -170,62 +175,46 @@ public:
      * @param data non null and valid pointer to the block of data to add
      * @param size size of the data
      */
-    LT_UNSAFE_API void addRaw(const void*  data, size_t size);
+    LT_UNSAFE_API void addRaw(const void*  data, u64 size);
     
    
+    
+    
     /**
      * @brief Serializes data containers and STL types passed as std::span
      * @param arr data to be serialized
      */
-    template <ConTriviablyCopyable T>
-    void addContainer(const std::span<const T> arr) {
-        if (arr.empty()) {
-            throw std::invalid_argument("Array is empty");
-        }
-
-        for (const auto& v : arr) {
-            addTrivial(v);
-        }
-       
-    }
     template <typename... Ts>
     void addContainer(const Ts&... args) {
-        (addContainer(args),...);
+        (iAddContainer(args),...);
     }
-    
-    template <typename... Ts>
-    size_t readTrivial(size_t offset, Ts&... args) {
-        size_t zOffset = offset;
-        ((zOffset += readTrivial(zOffset, args)), ...);
-        //we have to substract from the original offset otherwise we may misleading results
-        //when offset is nonzero
-        return zOffset - offset;
-    }
-
-    /**
+     /**
      * @brief 
      * 
      * @param offset offset which to start reading from. This field has to be correct
      * and is obtained by adding the return of previous readXXXX function call
      * @param t variable which receives the data
-     * @return size_t offset to increase the readSize by
+     * @return u64 offset to increase the readSize by
      */
-    template <ConTriviablyCopyable T>
-    //returns number of bytes read
-    size_t readTrivial(size_t offset, T& t) {
-
-        //removed assertion because we might pass enum
-        //static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
-       
-       
-        //nulllptr handlerd here
-        size_t readSize = readRaw(&t, sizeof(t), offset);
-        if (!isInstanceLittleEndian()) {
-            t = reverseByteOrder(t);
-           // *t = std::byteswap(*t);
-        }
-        return readSize;
+    template <typename... Ts>
+    u64 readTrivialEx(u64 offset, Ts&... args) {
+        u64 zOffset = offset;
+        ((zOffset += iReadTrivialEx(zOffset, args)), ...);
+        //we have to substract from the original offset otherwise we may misleading results
+        //when offset is nonzero
+        return zOffset - offset;
     }
+    template <typename... Ts>
+    void readTrivial(Ts&... args) {
+        ((readOffset += readTrivialEx(readOffset, args)), ...);
+    }
+
+
+   
+    
+
+
+    
 
     /**
      * @brief Reads to STL containers and data passed as std::span 
@@ -233,19 +222,19 @@ public:
      * @tparam T trivially copyable object
      * @param arr 
      * @param offset offset where to start reading from
-     * @return size_t offset to increase the readSize by
+     * @return u64 offset to increase the readSize by
      */
     template <ConTriviablyCopyable T>
-    size_t readContainer(std::span<T> arr, size_t offset=0) {
+    u64 readContainerEx(std::span<T> arr, u64 offset=0) {
    
         if (arr.empty()) {
             throw std::invalid_argument("Array is empty");
         }
-        size_t bytesRead = 0;
-        size_t bytePos = offset;
+        u64 bytesRead = 0;
+        u64 bytePos = offset;
         
-        for (std::size_t i = 0; i < arr.size(); ++i) {
-            size_t readSize = readTrivial(bytePos, arr[i]);
+        for (u64 i = 0; i < arr.size(); ++i) {
+            u64 readSize = readTrivialEx(bytePos, arr[i]);
             bytePos += readSize;
             bytesRead += readSize;
            
@@ -253,6 +242,11 @@ public:
         }
         return bytesRead;
     }
+    template <ConTriviablyCopyable T>
+    void readContainer(std::span<T> arr) {
+        readOffset += readContainerEx(std::move(arr), readOffset);
+    }
+
     
     //Warning this method DOES NOT check nor modify endianness
     //Do not use this method unless no other override is available
@@ -269,45 +263,35 @@ public:
      * This function doesn't do any endianness checking nor handling. Do not pass data with improper
      * endianness otherwise the written data will get corrupted 
      */
-    LT_UNSAFE_API size_t readRaw(void*  dataOut, size_t size, size_t offset=0);
+    LT_UNSAFE_API u64 readRaw(void*  dataOut, u64 size, u64 offset=0);
 
 
 
-    constexpr static std::size_t elementSize() {
+    constexpr static u64 elementSize() {
         return 0;
     }
     /**
      * @brief Simple way to get size of multiple elements 
      * @warning For complex data structures without sizeof override you cannot use this function
      * @param args list of variables
-     * @return constexpr std::size_t sum of all elements
+     * @return constexpr u64 sum of all elements
      */
     template <typename T, typename... Ts>
-    constexpr static std::size_t elementSize(const T&, const Ts&... args) {
+    constexpr static u64 elementSize(const T&, const Ts&... args) {
         return sizeof(T) + elementSize(args...);
     }
     
-    /**
+   
+    
+     /**
      * @brief Adds data for serialization
      * 
      * @tparam T trivially copyable object
      * @param t data to be serialized
      */
-    template <ConTriviablyCopyable T>
-    void addTrivial(T t) {
-        //removed assertion because we might pass enum
-       // static_assert(std::is_fundamental_v<T>, "Only fundamental types are supported.");
-        if (!isInstanceLittleEndian()) {
-            t = reverseByteOrder(t);
-            
-            //t = std::byteswap(t);
-        }
-        addRaw(&t, sizeof(t));
-    }
-
     template <typename... Ts>
     void addTrivial(const Ts&... args) {
-        (addTrivial(args),...);
+        (iAddTrivial(args),...);
     }
     /*
     if autoalign is set then we align all bytes to the Consts::Binary::BSERIALIZE_DATA_ALIGN
@@ -382,12 +366,12 @@ public:
         addData(std::span<const T>{v});
     }
     /// addData override for std::array
-    template <ConTriviablyCopyable T, size_t N>
+    template <ConTriviablyCopyable T, u64 N>
     void addData(const std::array<T, N>& arr) {
         addData(std::span<const T>{arr});
     }
     /// addData override for C styled array
-    template <ConTriviablyCopyable T, size_t N>
+    template <ConTriviablyCopyable T, u64 N>
     void addData(const T (&arr)[N]) {
         addData(std::span<const T>{arr});
     }

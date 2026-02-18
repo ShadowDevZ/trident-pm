@@ -7,6 +7,7 @@
 #include <format>
 #include "filemgmnt.h"
 #include <zlib.h>
+#include <cstring>
 using namespace Trd;
 using namespace Trd::Impl;
 
@@ -16,7 +17,7 @@ using namespace Trd::Impl;
 
 
 
-void BinarySerializer::addRaw(const void*  data, size_t size) {
+void BinarySerializer::addRaw(const void*  data, u64 size) {
     if (!data || size == 0) {
         throw std::invalid_argument("AddRaw() failed. Data or size is 0");
     }
@@ -24,8 +25,8 @@ void BinarySerializer::addRaw(const void*  data, size_t size) {
     bufferData.insert(bufferData.end(), bytes, bytes + size);
 
 }
-#include <cstring>
-size_t BinarySerializer::readRaw(void*  dataOut, size_t size, size_t offset) {
+
+u64 BinarySerializer::readRaw(void*  dataOut, u64 size, u64 offset) {
     if (dataOut == nullptr) {
         throw std::invalid_argument("nullptr was passed");
     }
@@ -92,7 +93,7 @@ std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign
         return std::nullopt;
     }
    
-    size_t alignSize = 0;
+    u64 alignSize = 0;
 
     if (autoAlign) {
         const auto& vSize = bufferData.size();
@@ -116,5 +117,40 @@ std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign
 
 }
 
+u64 BinarySerializer::getByteAlignment(u64 varSize) {
+    constexpr auto alignBytes = Consts::Binary::BSERIALIZE_DATA_ALIGN;
+                
+    if (varSize % alignBytes) {
+        varSize += (alignBytes - (varSize % alignBytes));
+    }
 
+    return varSize;
+}
+bool BinarySerializer::isLittleEndian() noexcept {
+    #if LT_DEBUG_ENDIAN_FORCE == 1
+        return true;
+    #elif LT_DEBUG_ENDIAN_FORCE == 2
+        return false;
+    #else
+        return std::endian::native == std::endian::little;
+    #endif
+}
+bool BinarySerializer::isInstanceLittleEndian() const noexcept {
+    #if LT_DEBUG_ENDIAN_FORCE == 1
+        return true;
+    #elif LT_DEBUG_ENDIAN_FORCE == 2
+        return false;
+    #else
+        return emulEndianness == std::endian::little;
+    #endif
+}
+bool BinarySerializer::expectAlignedDataOrDie(u64 size) {
+    //normal assert used because this condition simply cant happen
+    bool aligned = isDataSizeAligned(size);
+    if (!aligned) {
+        throw std::runtime_error("Passed data was not properly aligned");
+    }
+    //just in case the assertion fails
+    return aligned;
+}
 //todo use ReadLeStream()

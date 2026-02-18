@@ -54,7 +54,7 @@ std::optional<std::vector<u8>> UID::SUID::GetUIDPattern(const std::string_view s
     }
     std::vector<u8> pattern = {};
     pattern.reserve(Consts::SUID::SUID_MAX_LENGTH);
-    for (size_t i =0; i < str.length(); ++i) {
+    for (u64 i =0; i < str.length(); ++i) {
         pattern.emplace_back(str[i]);
     }
     return pattern;
