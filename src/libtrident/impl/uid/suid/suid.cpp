@@ -13,10 +13,10 @@
 #include <vector>
 #include <functional>
 #include <string_view>
-using namespace LibTrident;
-using namespace LibTrident::UID;
-using namespace LibTrident::Consts::SUID;
-using namespace LibTrident::Impl;
+using namespace Trd;
+using namespace Trd::UID;
+using namespace Trd::Consts::SUID;
+using namespace Trd::Impl;
 constexpr std::pair<SUID::SUIDS,const std::string_view> gTuidList [] = {
     //SUIDS are in following format (XXX-UUID) where XXX is shorthand name
     {SUID::SUIDS::SECTION_DESCR,"SDR-7a153cca-f082-4837-9f8b-10905d006261"}
@@ -34,7 +34,7 @@ const std::optional<std::string_view> SUID::GetSUIDString(SUID::SUIDS id) {
 }
 
 bool SUID::IsValidSUID(const std::string_view& suid) {
-    if (suid.length() != LibTrident::Consts::SUID::SUID_MAX_LENGTH) {
+    if (suid.length() != Trd::Consts::SUID::SUID_MAX_LENGTH) {
         return false;
     }
     for (const auto& x: gTuidList) {
@@ -76,7 +76,7 @@ std::expected<void, Err::TrdError> SUID::WriteSUIDAt(std::shared_ptr<Tstream::TS
 
 
     //stream.WriteHeader(static_cast<const char*>(SUID), SUID::SUID_MAX_LENGTH);
-    streamInfo->WriteTStream(suidString.data(), LibTrident::Consts::SUID::SUID_MAX_LENGTH, true);
+    streamInfo->WriteTStream(suidString.data(), Trd::Consts::SUID::SUID_MAX_LENGTH, true);
     return {};
 } 
 

@@ -17,7 +17,7 @@
 #include "tstreaminfo.h"
 #include <filesystem>
 
-namespace LibTrident {
+namespace Trd {
      
 
 class TRDPkgHeader;
@@ -33,10 +33,10 @@ public:
    }
    /// @brief provides API to manipulate the file header
    TRDPkgHeader header();
-   const LibTrident::Impl::TStreamInfo& getTstream() const {
+   const Trd::Impl::TStreamInfo& getTstream() const {
         return fstrInfo;
    }
-   LibTrident::Impl::TStreamInfo& getTstream(){
+   Trd::Impl::TStreamInfo& getTstream(){
         return fstrInfo;
    }
 
@@ -64,8 +64,8 @@ public:
 
 
 private:
-  LibTrident::Impl::TStreamInfo fstrInfo {};
-  LibTrident::TRD_HEADER trdHdr {};
+  Trd::Impl::TStreamInfo fstrInfo {};
+  Trd::TRD_HEADER trdHdr {};
 
   //TRDPkgHeader headerSection;
   friend class TRDPkgHeader;

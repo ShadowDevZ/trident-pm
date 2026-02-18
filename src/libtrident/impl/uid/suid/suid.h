@@ -5,7 +5,7 @@
 #include "tstreaminfo.h"
 #include "uid.h"
 #include <optional>
-namespace LibTrident::UID {
+namespace Trd::UID {
 
 namespace SUID {
     //maximum size of TUID, excluding NULL terminator

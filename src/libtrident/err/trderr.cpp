@@ -3,8 +3,8 @@
 #include <string>
 #include <string_view>
 #include <ccattribs.h>
-using namespace LibTrident;
-using namespace LibTrident::Err;
+using namespace Trd;
+using namespace Trd::Err;
 
 //we cannot use std::string as it occupies heap
 /*Originally I wanted to use unordered_map, but it uses dynamic allocations and cannot be marked with constexpr
@@ -45,7 +45,7 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {eCode::SerializerFailure, "Failed to serialize/deserialize binary data object"}
 };
 
-std::string_view Err::TrdError::translateError(LibTrident::Err::Code primary) noexcept {
+std::string_view Err::TrdError::translateError(Trd::Err::Code primary) noexcept {
    
    for (const auto&  x: gErrorMessages)  {
         if (x.first == primary) {

@@ -9,7 +9,7 @@
 #include "trheader.h"
 #include <cstdlib>
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
-using namespace LibTrident;
+using namespace Trd;
 
 
 
@@ -25,7 +25,7 @@ std::cout << "Target: Release\n";
 
 #if defined(_LIBTRIDENT_DEBUG)
 
-void print_header(const LibTrident::TRD_HEADER& hdr) {
+void print_header(const Trd::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START]\n");
     dbgprintf("\tMagic: ");
     for (auto const& it: hdr.magic) {
@@ -47,7 +47,7 @@ void print_header(const LibTrident::TRD_HEADER& hdr) {
     dbgprintf("\tIoControl 0x%X\n", hdr.dynIoCtrl);
     dbgprintf("[HEADER_END]\n");
 }
-void print_sd(const LibTrident::Impl::TRD_SD& sd) {
+void print_sd(const Trd::Impl::TRD_SD& sd) {
     dbgprintf("\n[SD_START]\n");
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
     dbgprintf("\tTblcount: %u\n", sd.tblCount);
@@ -149,11 +149,11 @@ int main(void) {
    // std::cout << SystemSpecific::createTemporaryFile().value() << std::endl;
     PrintBuildTarget();
    
-    LibTrident::TrPkg ltTrPkg("./test.tpx", {TrdOpenIO::CreateNew,
+    Trd::TrPkg ltTrPkg("./test.tpx", {TrdOpenIO::CreateNew,
                                         TrdAccessIO::AllAccess,
                                         TrdXattrIO::None,
                                         _TrdInternalIO::None});
-  //  LibTrident::TrPkg ltTrPkg("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
+  //  Trd::TrPkg ltTrPkg("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
     //ltTrPkg.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
 

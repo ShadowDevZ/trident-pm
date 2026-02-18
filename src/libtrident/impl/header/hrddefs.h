@@ -10,7 +10,7 @@
 #include "serdatacommon.h"
 #include "binarySerializer.h"
 #include <span>
-namespace LibTrident {
+namespace Trd {
 
 /**
  * @brief Compression algorithm referenced by data and tables
@@ -32,8 +32,9 @@ namespace BuildFlags {
         Clear,
         PlatformLinux = 1 << 1,
         PlatformNT = 1 << 2,
-        Debug = 1 << 3,
-        DebugWithSymbols = 1 << 4
+        PlatformyAny = 1 << 3,
+        Debug = 1 << 4,
+        DebugWithSymbols = 1 << 5
     };
 };
 /**
@@ -100,7 +101,7 @@ struct TRD_HEADER : Impl::SerializableData {
     }
 
     std::optional<std::vector<u8>> serialize() const override {
-        LibTrident::Impl::BinarySerializer bs;
+        Trd::Impl::BinarySerializer bs;
        
     
         bs.addContainer(std::span<const u8>(magic));

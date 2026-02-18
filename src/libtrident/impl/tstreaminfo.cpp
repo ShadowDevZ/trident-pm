@@ -3,8 +3,8 @@
 #include "ioflags.h"
 #include "binarySerializer.h"
 #include <cstring>
-using namespace LibTrident;
-using namespace LibTrident::Impl;
+using namespace Trd;
+using namespace Trd::Impl;
 
 std::expected<void, Err::TrdError> TStreamInfo::checkFileStreamInfo() const {
     //check if pointer was allocated usiong OpenPkg()

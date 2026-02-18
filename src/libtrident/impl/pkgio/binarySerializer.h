@@ -19,7 +19,7 @@
 #include <zlib.h>
 //todo add most basic IO function here
 //internal functions used by TStream
-namespace LibTrident::Impl {
+namespace Trd::Impl {
    
     class Descriptor {
         public:
@@ -42,7 +42,7 @@ namespace LibTrident::Impl {
 private:
     std::vector<uint8_t> bufferData {};
     std::endian emulEndianness{std::endian::native};
-  //  std::weak_ptr<LibTrident::Tstream::TStreamInfo> wFstr;
+  //  std::weak_ptr<Trd::Tstream::TStreamInfo> wFstr;
 public:
         /// compile time constant way of checking the host endianness 
         static bool isLittleEndian() noexcept{
@@ -130,7 +130,7 @@ public:
      * @return false 
      */
     static constexpr bool isDataSizeAligned(size_t size) {
-        return size % LibTrident::Consts::Binary::BSERIALIZE_DATA_ALIGN == 0;
+        return size % Trd::Consts::Binary::BSERIALIZE_DATA_ALIGN == 0;
     }
 
     /**
@@ -333,7 +333,7 @@ public:
      * @param seekPos fseek position where to sttart writing
      * @param seekDir seek direction
      */
-    static void writeDataToTStream(LibTrident::Impl::TStreamInfo& tStream,
+    static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
                 const std::vector<u8>& data, i64 seekPos=0, std::ios_base::seekdir seekDir= std::ios::beg);
     
     /**
@@ -344,7 +344,7 @@ public:
      * @param checkAlignment throws std::invalid_argument if data is misaligned
      * @return std::vector<u8> unserialized raw data from file
      */
-    static std::vector<u8> readDataFromTStream(LibTrident::Impl::TStreamInfo& tStream, i64 seekPos,
+    static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
                 u64 size, bool checkAlignment=true);
 };
 /**

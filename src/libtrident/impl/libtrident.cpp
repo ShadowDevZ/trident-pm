@@ -5,14 +5,14 @@
 #include <sys/stat.h>
 #include <stdexcept>
 #include "trheader.h"
-using namespace LibTrident;
-using namespace LibTrident::Impl;
+using namespace Trd;
+using namespace Trd::Impl;
 
 TRDPkgHeader TrPkg::header() {
     return TRDPkgHeader(*this);
 }
 
-void LibTrident::TrPkg::closePkg() {
+void Trd::TrPkg::closePkg() {
     //we do not perform any checks so RAII can take care of it
     TRDFstreamObject& closeInfo =  fstrInfo.getFstreamObject();
     closeInfo.absolutePath.clear();
@@ -25,7 +25,7 @@ void LibTrident::TrPkg::closePkg() {
 }
 
 
-void LibTrident::TrPkg::openPackage(const std::filesystem::path& path,const TRDAccessModel& accessModel) {
+void Trd::TrPkg::openPackage(const std::filesystem::path& path,const TRDAccessModel& accessModel) {
     if (fstrInfo.getFstreamObject().fileOpened) {
         throw std::runtime_error("Package was already opened using current instance");
     }
@@ -73,7 +73,7 @@ void LibTrident::TrPkg::openPackage(const std::filesystem::path& path,const TRDA
     fInfo.absolutePath = absolutePath;
     dbgprintf("name: %s\n", fInfo.absolutePath.filename().c_str()); 
     dbgprintf("dir: %s\n", fInfo.absolutePath.parent_path().c_str()); 
-    auto fileStat = LibTrident::Impl::statFile(path);
+    auto fileStat = Trd::Impl::statFile(path);
     if (!fileStat.has_value()) {
         throw std::runtime_error("failed to stat() file");
     }

@@ -9,7 +9,7 @@
 #include <expected>
 #include "filemgmnt.h"
 //#include "ioflags.h"
-namespace LibTrident::Impl {
+namespace Trd::Impl {
 
 struct TRDFstreamObject{
     //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation

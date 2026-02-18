@@ -10,7 +10,7 @@
 #include <optional>
 #include <vector>
 #include "datatypes.h"
-namespace LibTrident::Impl {
+namespace Trd::Impl {
     
     /**
      * @brief struct data to be serialized using BinarySerializer class

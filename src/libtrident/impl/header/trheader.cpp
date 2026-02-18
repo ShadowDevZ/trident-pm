@@ -3,8 +3,8 @@
 #include <zlib.h>
 //#include "binarySerializer.h"
 
-using namespace LibTrident;
-using namespace LibTrident::Consts::Header;
+using namespace Trd;
+using namespace Trd::Consts::Header;
 using eCode = Err::Code;
 //we are intentionally not using sizeof()
 //each different version of header will have different size
@@ -74,7 +74,7 @@ bool TRDPkgHeader::isValid() {
 }
 
 
-std::expected<void, Err::TrdError> TRDPkgHeader::isHeaderPresent(LibTrident::Impl::TStreamInfo& streamInfo) {
+std::expected<void, Err::TrdError> TRDPkgHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
    
     if (!streamInfo.checkFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));

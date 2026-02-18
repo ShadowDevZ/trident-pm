@@ -7,7 +7,7 @@
  */
 #pragma once
 #include "datatypes.h"
-namespace LibTrident::Consts::Header {
+namespace Trd::Consts::Header {
     //when printing dont forget to add NULL terminator
     /// TRPX magic number
     constexpr u8 TRD_HDR_MAGIC[] = {
@@ -34,15 +34,15 @@ namespace LibTrident::Consts::Header {
     constexpr u16 LT_HDR_SZB_01A = 32;
 };
 
-namespace LibTrident::Consts::SD {
+namespace Trd::Consts::SD {
     /// size of SD section as defined by the documentation
     constexpr u16 TRD_SECTIONSD_SIZE = 32;
 };
-namespace LibTrident::Consts::SUID {
+namespace Trd::Consts::SUID {
     /// maximum length of the SUID string containing the predefined UUID of a specific section without NULL terminator
     constexpr u8 SUID_MAX_LENGTH = 40;
 };
-namespace LibTrident::Consts::Binary {
+namespace Trd::Consts::Binary {
     /**
      * @brief data alignment size in bytes when manipulating TStreams
      * @details alignemnt is by default 8 for 64 bit platforms
@@ -52,7 +52,7 @@ namespace LibTrident::Consts::Binary {
     constexpr u16 BSERIALIZE_DATA_ALIGN = 8;
 }
 
-namespace LibTrident::Consts::Err {
+namespace Trd::Consts::Err {
     /// maximum size of the user specified extended error message
     constexpr u16 SECONDARY_ERROR_MAXSIZE = 256;
 };

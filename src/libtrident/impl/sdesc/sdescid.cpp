@@ -8,19 +8,19 @@
 #include "binarySerializer.h"
 
 
-using namespace LibTrident::Tstream;
-using namespace LibTrident::UID;
-using namespace LibTrident;
+using namespace Trd::Tstream;
+using namespace Trd::UID;
+using namespace Trd;
 using eCode = Err::Code;
 
 //address right after header
 
 constexpr foffset_t GetSDAddress() { 
     //todo actually find the TUID inside the stream and get its position to check presence start
-    return TRDSdToken::GetOptRawSDStart() + LibTrident::Consts::SUID::SUID_MAX_LENGTH + 1;
+    return TRDSdToken::GetOptRawSDStart() + Trd::Consts::SUID::SUID_MAX_LENGTH + 1;
 }
 constexpr foffset_t GetSDEnd() {
-    return GetSDAddress() + TRDSdToken::GetRawSDEnd() + LibTrident::Consts::SUID::SUID_MAX_LENGTH + 1;
+    return GetSDAddress() + TRDSdToken::GetRawSDEnd() + Trd::Consts::SUID::SUID_MAX_LENGTH + 1;
 }
 
 

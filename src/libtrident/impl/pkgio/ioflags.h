@@ -8,7 +8,7 @@
 #include "datatypes.h"
 #include <optional>
 #include <memory>
-namespace LibTrident {
+namespace Trd {
 
    /*
     enum FileFlags : IO_OpenFlag {

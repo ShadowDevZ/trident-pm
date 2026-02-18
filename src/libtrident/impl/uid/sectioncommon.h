@@ -2,7 +2,7 @@
 #include <expected>
 #include "trderr.h"
 #pragma once
-namespace LibTrident::Sections {
+namespace Trd::Sections {
     template <typename T>
     class  SectionCommon {
         public:

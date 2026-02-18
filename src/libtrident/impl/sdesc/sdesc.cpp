@@ -10,10 +10,10 @@
 #include <cstring>
 #include "trderr.h"
 #include <zlib.h>
-using namespace LibTrident::SectionDescriptor;
+using namespace Trd::SectionDescriptor;
 
-//using namespace LibTrident::UID;
-using namespace LibTrident;
+//using namespace Trd::UID;
+using namespace Trd;
 using eCode = Err::Code;
 u32 IGenerateChecksum(const TRD_SD& sd);
 
@@ -25,10 +25,10 @@ u32 IGenerateChecksum(const TRD_SD& sd);
 //todo fix repetetiveness
 constexpr foffset_t TRDSecDesc::GetSDAddress() noexcept { 
     //todo actually find the TUID inside the stream and get its position to check presence start
-   return TRDSdToken::GetOptRawSDStart() + LibTrident::Consts::SUID::SUID_MAX_LENGTH;
+   return TRDSdToken::GetOptRawSDStart() + Trd::Consts::SUID::SUID_MAX_LENGTH;
 }
 constexpr foffset_t TRDSecDesc::GetSDEnd()  noexcept{
-    return GetSDAddress() + LibTrident::Consts::SD::TRD_SECTIONSD_SIZE;
+    return GetSDAddress() + Trd::Consts::SD::TRD_SECTIONSD_SIZE;
 }
 //todo for normal write lookup the SUID using bmh algo from uid.cpp in future
 std::expected<void, Err::TrdError> TRDSecDesc::WriteBlankSD() {
@@ -84,7 +84,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::IWriteSD(bool blankWrite) {
     //todo check
  //  return IRwAccessible(wFstr);
 //}
-std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(LibTrident::Tstream::TStreamInfo& fstr) {
+std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(Trd::Tstream::TStreamInfo& fstr) {
     //todo check
     auto hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
     if (!hdrStatus.has_value()) {

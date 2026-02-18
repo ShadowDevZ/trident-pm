@@ -1,7 +1,7 @@
 #pragma once
 #include "datatypes.h"
 #include <filesystem>
-namespace LibTrident::Impl {
+namespace Trd::Impl {
 
     struct AccessTimes
     {

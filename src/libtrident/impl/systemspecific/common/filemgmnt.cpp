@@ -1,10 +1,10 @@
 #include "include/filemgmnt.h"
 #include "../platform/Linux/include/linuxSpecific.h"
 #include <filesystem>
-using namespace LibTrident;
+using namespace Trd;
 
 namespace fs = std::filesystem;
-std::expected<std::filesystem::path, LibTrident::Err::TrdError> Impl::createTemporaryFile() {
+std::expected<std::filesystem::path, Trd::Err::TrdError> Impl::createTemporaryFile() {
     #if defined(__linux__) || defined(__unix__) 
         return LinuxSpecific::createTemporaryFile();
     #elif defined(_WIN32_)
@@ -14,7 +14,7 @@ std::expected<std::filesystem::path, LibTrident::Err::TrdError> Impl::createTemp
     #endif
 
 }
-std::expected<LibTrident::Impl::AuxiliaryStat, LibTrident::Err::TrdError> LibTrident::Impl::getAuxiliaryStat(const std::filesystem::path& path) {
+std::expected<Trd::Impl::AuxiliaryStat, Trd::Err::TrdError> Trd::Impl::getAuxiliaryStat(const std::filesystem::path& path) {
     #if defined(__linux__) || defined(__unix__) 
         return LinuxSpecific::getAuxiliaryStat(path);
     #elif defined(_WIN32_)
@@ -24,7 +24,7 @@ std::expected<LibTrident::Impl::AuxiliaryStat, LibTrident::Err::TrdError> LibTri
     #endif
 }
 
-std::expected<LibTrident::Impl::PortableStat, LibTrident::Err::TrdError> LibTrident::Impl::statObject(const std::filesystem::path& file) {
+std::expected<Trd::Impl::PortableStat, Trd::Err::TrdError> Trd::Impl::statObject(const std::filesystem::path& file) {
     if (!fs::exists(file)) {
         return std::unexpected(Err::TrdError{Err::Code::FileMissing});
     }

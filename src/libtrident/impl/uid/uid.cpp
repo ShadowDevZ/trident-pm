@@ -6,7 +6,7 @@
 #include "trdconsts.h"
 #include "suid.h"
 #include <memory.h>
-using namespace LibTrident;
+using namespace Trd;
 //todo move to other source file
 std::optional<std::vector<u64>> UID::FindStreamUIDS(const std::vector<u8> blob, const std::vector<u8>& pattern, u32 maxOccurences) {
     if (blob.empty() || pattern.empty()) {
@@ -49,7 +49,7 @@ std::optional<u64> UID::FindFirstUID(const std::vector<u8> blob, const std::vect
 }
 
 std::optional<std::vector<u8>> UID::SUID::GetUIDPattern(const std::string_view str) {
-    if (!LibTrident::UID::SUID::IsValidSUID(str)) {
+    if (!Trd::UID::SUID::IsValidSUID(str)) {
         return std::nullopt;
     }
     std::vector<u8> pattern = {};

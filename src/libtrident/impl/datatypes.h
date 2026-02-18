@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "ccattribs.h"
-namespace LibTrident {
+namespace Trd {
 
 //basic datatypes
 using u8 = uint8_t;

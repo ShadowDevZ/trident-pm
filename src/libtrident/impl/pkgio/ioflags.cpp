@@ -1,8 +1,8 @@
 #include "ioflags.h"
 #include <optional>
 
-using namespace LibTrident;
-using namespace LibTrident::Impl;
+using namespace Trd;
+using namespace Trd::Impl;
 
 std::optional<std::ios::openmode> Impl::translateAccessModel(const TRDAccessModel& accessModel) {
     //if we don't provide default value we cannot use OR. 

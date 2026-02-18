@@ -11,7 +11,7 @@
 #include "trdconsts.h"
 #include <memory>
 #include <optional>
-namespace LibTrident::Err {
+namespace Trd::Err {
     /**
      * @brief Errorcodes when additional information is needed
      * 
@@ -111,7 +111,7 @@ namespace LibTrident::Err {
     
 class TrdError {
 protected:
-    LibTrident::Err::Code primaryError {LibTrident::Err::Code::Success};
+    Trd::Err::Code primaryError {Trd::Err::Code::Success};
     std::optional<SecondaryErrorInfo> secondaryError;
 
 public:
@@ -121,7 +121,7 @@ public:
     explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg)  {
         setError(primary, extErr, extErrMsg);
     };
-    LibTrident::Err::Code getError() const noexcept {
+    Trd::Err::Code getError() const noexcept {
         return primaryError;
     }
     /// @brief returns stored secondary error info
@@ -134,7 +134,7 @@ public:
         primaryError = primary;
     }
     void setError(Err::Code primary, u32 extErr=0, std::string extErrMsg="") {
-        if (extErrMsg.size() > LibTrident::Consts::Err::SECONDARY_ERROR_MAXSIZE) {
+        if (extErrMsg.size() > Trd::Consts::Err::SECONDARY_ERROR_MAXSIZE) {
             throw std::length_error("Error message exceeded max allowed size");
         }
         primaryError = primary;
@@ -162,7 +162,7 @@ public:
     /// @brief translates primary error code to string
     /// @param primary primary error code
     /// @return translated string
-    static std::string_view translateError(LibTrident::Err::Code primary) noexcept;
+    static std::string_view translateError(Trd::Err::Code primary) noexcept;
 
     static std::string_view translateError(const TrdError& trdErr) noexcept {
         return translateError(trdErr.primaryError);

@@ -5,7 +5,7 @@
 #include "tstreaminfo.h"
 #include "binarySerializer.h"
 #include "sectioncommon.h"
-namespace LibTrident::Impl {
+namespace Trd::Impl {
 
 PACKED_STRUCT {
     u32 crc; 
@@ -25,14 +25,14 @@ typedef struct {
 
 
 
-class TRDSecDesc : public LibTrident::Sections::SectionCommon<TRD_SD> {
+class TRDSecDesc : public Trd::Sections::SectionCommon<TRD_SD> {
 private:
-    std::weak_ptr<LibTrident::Impl::TStreamInfo> wFstr;
+    std::weak_ptr<Trd::Impl::TStreamInfo> wFstr;
     TRD_SD secDescInternal;
 
 public:
    
-    TRDSecDesc(std::shared_ptr<LibTrident::Impl::TStreamInfo> fStreamInfo) :
+    TRDSecDesc(std::shared_ptr<Trd::Impl::TStreamInfo> fStreamInfo) :
     wFstr(fStreamInfo) {}
     TRDSecDesc(const TRDSecDesc& other) : wFstr(other.wFstr) {}
     TRDSecDesc(TRDSecDesc&& other) : wFstr(std::move(other.wFstr)) {}
@@ -74,7 +74,7 @@ private:
     bool IChecksumValid(u32 crc, const TRD_SD& sd);
     std::expected<void, Err::TrdError> IWriteSD(bool blankWrite=false);
  //   std::expected<void, Err::TrdError> IRwAccessible();
-    std::expected<void, Err::TrdError> IRwAccessible(LibTrident::Impl::TStreamInfo& fstr);
+    std::expected<void, Err::TrdError> IRwAccessible(Trd::Impl::TStreamInfo& fstr);
     std::expected<void, Err::TrdError> IValidateSDContent(const TRD_SD& sd);
     std::expected<void, Err::TrdError> IValidateTblAddr(const TRD_SD& sd); 
     

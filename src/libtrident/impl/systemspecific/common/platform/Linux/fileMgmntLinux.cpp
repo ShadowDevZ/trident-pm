@@ -3,19 +3,19 @@
 #include "include/linuxSpecific.h"
 #include <unistd.h>
 #include <fcntl.h>
-using namespace LibTrident;
-using namespace LibTrident;
+using namespace Trd;
+using namespace Trd;
 
-std::expected<std::filesystem::path, LibTrident::Err::TrdError> LinuxSpecific::createTemporaryFile() {
+std::expected<std::filesystem::path, Trd::Err::TrdError> LinuxSpecific::createTemporaryFile() {
         char templatePath[] = "/tmp/.tmp_tridentpkgXXXXXX";
         int fd = mkstemp(templatePath);
         if (fd == -1) {
-            return std::unexpected(LibTrident::Err::TrdError(LibTrident::Err::Code::FileWriteFailure));
+            return std::unexpected(Trd::Err::TrdError(Trd::Err::Code::FileWriteFailure));
         }
         return std::filesystem::path(templatePath);
 }
 
-std::expected<Impl::AuxiliaryStat, LibTrident::Err::TrdError> LinuxSpecific::getAuxiliaryStat(const std::filesystem::path& path) {
+std::expected<Impl::AuxiliaryStat, Trd::Err::TrdError> LinuxSpecific::getAuxiliaryStat(const std::filesystem::path& path) {
     struct statx stx {};
     int ret = statx(AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, 
                     STATX_BASIC_STATS| STATX_BTIME, &stx);

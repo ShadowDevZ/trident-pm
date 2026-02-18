@@ -7,8 +7,8 @@
 #include <format>
 #include "filemgmnt.h"
 #include <zlib.h>
-using namespace LibTrident;
-using namespace LibTrident::Impl;
+using namespace Trd;
+using namespace Trd::Impl;
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
@@ -45,7 +45,7 @@ size_t BinarySerializer::readRaw(void*  dataOut, size_t size, size_t offset) {
 
 }
 //todo use std expected instead of exceptions
-std::vector<u8> BinarySerializer::readDataFromTStream(LibTrident::Impl::TStreamInfo& tStream, i64 seekPos, 
+std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos, 
                                                         u64 size, bool checkAlignment) 
                                                         {
    
@@ -65,7 +65,7 @@ std::vector<u8> BinarySerializer::readDataFromTStream(LibTrident::Impl::TStreamI
     return data;
 
 }
-void BinarySerializer::writeDataToTStream(LibTrident::Impl::TStreamInfo& tStream, const std::vector<u8>& data,
+void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, const std::vector<u8>& data,
                                           i64 seekPos, std::ios_base::seekdir seekDir) 
                                             {
     //todo make this boilerplate in all classes a function
