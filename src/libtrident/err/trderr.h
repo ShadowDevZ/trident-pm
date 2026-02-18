@@ -10,7 +10,7 @@
 #include "datatypes.h"
 #include "trdconsts.h"
 #include <memory>
-
+#include <optional>
 namespace LibTrident::Err {
     /**
      * @brief Errorcodes when additional information is needed
