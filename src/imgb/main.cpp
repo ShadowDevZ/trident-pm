@@ -2,7 +2,6 @@
 #include <cstring> 
 #include <iostream>
 #include "libtrident.h"
-#include "suid.h"
 #include "sdesc.h"
 #include <array>
 #include "serdatacommon.h"

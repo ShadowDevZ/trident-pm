@@ -74,10 +74,10 @@ namespace PackageIOCtrl {
 };
 };
 struct TRD_HDRFIELD_UPDATE{
-    u16 fmtVersion;
-    GlobalCompression::Algorithm compression;
-    BuildFlags::Flags buildFlags;
-    ArchType::Type architecture;
+    std::optional<u16> fmtVersion;
+    std::optional<GlobalCompression::Algorithm> compression;
+    std::optional<BuildFlags::Flags> buildFlags;
+    std::optional<ArchType::Type> architecture;
 };
 /// TRPX file header
 struct TRD_HEADER : Impl::SerializableData {

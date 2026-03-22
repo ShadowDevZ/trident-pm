@@ -11,7 +11,6 @@
 #include "ccattribs.h"
 #include "tstreaminfo.h"
 #include "trdconsts.h"
-#include "sectioncommon.h"
 #include <expected>
 #include "hrddefs.h"
 namespace Trd {

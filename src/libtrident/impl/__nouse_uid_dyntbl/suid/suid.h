@@ -1,3 +1,4 @@
+/*
 #pragma once
 #include <cstdint>
 #include "datatypes.h"
@@ -21,3 +22,4 @@ namespace SUID {
 
 
 }};
+*/
