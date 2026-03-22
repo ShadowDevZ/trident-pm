@@ -19,7 +19,7 @@ namespace Trd {
 
 class TrPkg;
 //todo each SECTION should inherit from something like SectionCommon, standardize the functions
-class TRDPkgHeader /*final : public Trd::Sections::SectionCommon<TRD_HEADER> */  {
+class TrFileHeader /*final : public Trd::Sections::SectionCommon<TRD_HEADER> */  {
 public:
     
     /**
@@ -89,7 +89,7 @@ public:
      */
     static std::expected<void, Trd::Err::TrdError> isHeaderPresent(Trd::Impl::TStreamInfo& fStreamInfo);
     
-    explicit TRDPkgHeader(TrPkg& pkg) : trpkg(pkg) {};
+    explicit TrFileHeader(TrPkg& pkg) : trpkg(pkg) {};
     
     
 private:

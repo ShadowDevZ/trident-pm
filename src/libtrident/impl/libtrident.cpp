@@ -8,8 +8,8 @@
 using namespace Trd;
 using namespace Trd::Impl;
 
-TRDPkgHeader TrPkg::header() {
-    return TRDPkgHeader(*this);
+TrFileHeader TrPkg::header() {
+    return TrFileHeader(*this);
 }
 
 void Trd::TrPkg::closePkg() {

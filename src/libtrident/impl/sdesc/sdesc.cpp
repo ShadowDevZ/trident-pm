@@ -86,7 +86,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::IWriteSD(bool blankWrite) {
 //}
 std::expected<void, Err::TrdError> TRDSecDesc::IRwAccessible(Trd::Tstream::TStreamInfo& fstr) {
     //todo check
-    auto hdrStatus = TRDPkgHeader::IsHeaderPresent(fstr);
+    auto hdrStatus = TrFileHeader::IsHeaderPresent(fstr);
     if (!hdrStatus.has_value()) {
         return std::unexpected(hdrStatus.error());
     }

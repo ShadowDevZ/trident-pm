@@ -15,7 +15,7 @@ using eCode = Err::Code;
 
 
 
-const TRD_HEADER& TRDPkgHeader::getHeader() const {
+const TRD_HEADER& TrFileHeader::getHeader() const {
     return trpkg.trdHdr;
 }
 
@@ -26,8 +26,8 @@ const TRD_HEADER& TRDPkgHeader::getHeader() const {
 
 //in future this might get overloaded with something like int version
 
-std::expected<void, Err::TrdError> TRDPkgHeader::read() {
-    auto optHdr = TRDPkgHeader::readBack(trpkg.fstrInfo);
+std::expected<void, Err::TrdError> TrFileHeader::read() {
+    auto optHdr = TrFileHeader::readBack(trpkg.fstrInfo);
     if (!optHdr.has_value() || !IValidateHeader(optHdr.value())) {
         return std::unexpected(Err::TrdError(eCode::FileReadFailure));
     }
@@ -38,7 +38,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::read() {
 
 
 //reads back header, performs all field and validity checks, no need to call IValidateHeader
-std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::readBack(Impl::TStreamInfo& tStream) {
+std::expected<TRD_HEADER, Err::TrdError>TrFileHeader::readBack(Impl::TStreamInfo& tStream) {
     TRD_HEADER hdr {};
   
     if (!tStream.checkFileStreamInfo().has_value()) {
@@ -66,7 +66,7 @@ std::expected<TRD_HEADER, Err::TrdError>TRDPkgHeader::readBack(Impl::TStreamInfo
     
     return hdr;
 }
-bool TRDPkgHeader::isValid() {
+bool TrFileHeader::isValid() {
     if (!trpkg.fstrInfo.isOpen()) {
         return false;
     }
@@ -74,13 +74,13 @@ bool TRDPkgHeader::isValid() {
 }
 
 
-std::expected<void, Err::TrdError> TRDPkgHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
+std::expected<void, Err::TrdError> TrFileHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
    
     if (!streamInfo.checkFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
     }
    
-    auto optHdr = TRDPkgHeader::readBack(streamInfo);
+    auto optHdr = TrFileHeader::readBack(streamInfo);
     if (!optHdr.has_value()) {
         return std::unexpected(Err::TrdError(Err::Code::FileReadFailure));
     }
@@ -90,7 +90,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::isHeaderPresent(Trd::Impl::TStr
 
 
 
-std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADER& hdrIn){
+std::expected<void, Err::TrdError> TrFileHeader::IValidateHeader(const TRD_HEADER& hdrIn){
 
    
 
@@ -118,7 +118,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::IValidateHeader(const TRD_HEADE
     return {};
 }
 
-std::expected<void, Err::TrdError> TRDPkgHeader::write() {
+std::expected<void, Err::TrdError> TrFileHeader::write() {
     if (!isValid()) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
@@ -140,14 +140,14 @@ std::expected<void, Err::TrdError> TRDPkgHeader::write() {
 }
 
 
-bool TRDPkgHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
+bool TrFileHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
     if (hdr.size() != LT_HDR_SZB_01A) {
         return false;
     }
     return true;
 }
 
-std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(const TRD_HEADER& hdr) {
+std::expected<void, Err::TrdError> TrFileHeader::ICheckCRC(const TRD_HEADER& hdr) {
     u32 genCrc = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM);
     if ((genCrc != hdr.dynHdrChksum)) {
         dbgprintf("[CRC] gen %u : exp: %u\n", genCrc, hdr.dynHdrChksum);
@@ -157,7 +157,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::ICheckCRC(const TRD_HEADER& hdr
 }
 
 
-std::expected<void, Err::TrdError> TRDPkgHeader::create(BuildFlags::Flags buildFlgs, 
+std::expected<void, Err::TrdError> TrFileHeader::create(BuildFlags::Flags buildFlgs, 
                                                 ArchType::Type archType,
                                                 GlobalCompression::Algorithm comprType) {
     TRD_HDRFIELD_UPDATE update;
@@ -171,7 +171,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::create(BuildFlags::Flags buildF
     update.fmtVersion = fmtHdr.value();
     return create(update);
 }
-std::expected<void, Err::TrdError> TRDPkgHeader::create(const TRD_HDRFIELD_UPDATE& field) {
+std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDATE& field) {
     
     if (field.fmtVersion == 0) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
@@ -203,7 +203,7 @@ std::expected<void, Err::TrdError> TRDPkgHeader::create(const TRD_HDRFIELD_UPDAT
     return {};
 }
 
-std::expected<u16, Err::TrdError> TRDPkgHeader::formatHeaderVersion(u8 major, u8 minor, u8 revision) {
+std::expected<u16, Err::TrdError> TrFileHeader::formatHeaderVersion(u8 major, u8 minor, u8 revision) {
     if (major > 99 || minor > 99 || revision > 9
         || major == 0) {
         return std::unexpected(Err::TrdError(Err::Code::InvalidFuncArg));
@@ -219,7 +219,7 @@ std::expected<u16, Err::TrdError> TRDPkgHeader::formatHeaderVersion(u8 major, u8
     
 
 }
-std::expected<std::string, Err::TrdError> TRDPkgHeader::headerVersionFormatToString(u16 fmt, bool abRevision) {
+std::expected<std::string, Err::TrdError> TrFileHeader::headerVersionFormatToString(u16 fmt, bool abRevision) {
     std::string base;
     if (fmt < LT_HDR_VERSION_MIN) {
         return std::unexpected(Err::TrdError(Err::Code::InvalidFuncArg));
@@ -252,7 +252,7 @@ std::expected<std::string, Err::TrdError> TRDPkgHeader::headerVersionFormatToStr
     return strVersion;
 
 }
-std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD_UPDATE& update) {
+std::expected<void, Err::TrdError> TrFileHeader::updateHeader(const TRD_HDRFIELD_UPDATE& update) {
     TRD_HEADER hdr = trpkg.trdHdr;
     if (update.architecture.has_value())
         hdr.architecture = update.architecture.value();
@@ -272,19 +272,19 @@ std::expected<void, Err::TrdError> TRDPkgHeader::updateHeader(const TRD_HDRFIELD
     } 
     trpkg.trdHdr = hdr;
     
-    return TRDPkgHeader::write();
+    return TrFileHeader::write();
  }
 //CHECKSUM IS NOT UPDATED BECAUSE THESE ARE CONSIDERED DYNAMIC HEADER PROPS WHICH ARE NOT USED IN CRC FORMULA 
 //todo write directly
-std::expected<void, Err::TrdError> TRDPkgHeader::updateIoctrlProp(PackageIOCtrl::Flag ioctrl) {
+std::expected<void, Err::TrdError> TrFileHeader::updateIoctrlProp(PackageIOCtrl::Flag ioctrl) {
     //todo check if valid
     trpkg.trdHdr.dynIoCtrl = ioctrl;
-    return TRDPkgHeader::write();
+    return TrFileHeader::write();
 }
 
-std::expected<void, Err::TrdError> TRDPkgHeader::updateFileLenProp(u64 len) {
+std::expected<void, Err::TrdError> TrFileHeader::updateFileLenProp(u64 len) {
     //todo check if valid
     trpkg.trdHdr.dynFileLen = len;
-    return TRDPkgHeader::write();
+    return TrFileHeader::write();
 
  }

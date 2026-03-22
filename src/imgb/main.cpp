@@ -32,7 +32,7 @@ void print_header(const Trd::TRD_HEADER& hdr) {
     }
     dbgprintf("\n");
     dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
-    auto hdrFmtVal = TRDPkgHeader::headerVersionFormatToString(hdr.fmtVersion);
+    auto hdrFmtVal = TrFileHeader::headerVersionFormatToString(hdr.fmtVersion);
     if (!hdrFmtVal.has_value()) {
         abort();
     }
@@ -46,6 +46,7 @@ void print_header(const Trd::TRD_HEADER& hdr) {
     dbgprintf("\tIoControl 0x%X\n", hdr.dynIoCtrl);
     dbgprintf("[HEADER_END]\n");
 }
+/*
 void print_sd(const Trd::Impl::TRD_SD& sd) {
     dbgprintf("\n[SD_START]\n");
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
@@ -55,7 +56,7 @@ void print_sd(const Trd::Impl::TRD_SD& sd) {
     dbgprintf("\tReserved: %lu\n", sd._reserved0);
     dbgprintf("[SD_END]\n\n");
 }
-
+*/
 void print_stat(const Impl::PortableStat& ps) {
     u32 perms = static_cast<u32>(ps.permissions) & 0777;
     auto aux = ps.auxiliary.value();
@@ -184,7 +185,7 @@ int main(void) {
     updateField.architecture = ArchType::Aarch64;
     updateField.buildFlags = BuildFlags::PlatformNT;
     updateField.compression = GlobalCompression::GZip;
-    updateField.fmtVersion = TRDPkgHeader::formatHeaderVersion(3,1,2).value();
+    updateField.fmtVersion = TrFileHeader::formatHeaderVersion(3,1,2).value();
     
     tassert("UpdateHeader()", trPkgHdr.updateHeader(updateField));
  

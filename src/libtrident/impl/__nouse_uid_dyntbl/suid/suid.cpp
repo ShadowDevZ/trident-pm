@@ -64,7 +64,7 @@ std::expected<void, Err::TrdError> SUID::WriteSUIDAt(std::shared_ptr<Tstream::TS
     if (!strInfo.has_value()) {
         return std::unexpected(strInfo.error());
     }
-    auto hdrPresent = TRDPkgHeader::IsHeaderPresent(streamInfo);
+    auto hdrPresent = TrFileHeader::IsHeaderPresent(streamInfo);
     if (!hdrPresent.has_value()) {
         return std::unexpected(hdrPresent.error());
     }

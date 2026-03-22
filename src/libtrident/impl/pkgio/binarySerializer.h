@@ -20,7 +20,7 @@
 //todo add most basic IO function here
 //internal functions used by TStream
 namespace Trd::Impl {
-   
+   /* no use for now
     class Descriptor {
         public:
             virtual ~Descriptor() = default;
@@ -30,6 +30,7 @@ namespace Trd::Impl {
             virtual bool  isValidSUID() = 0;
            
     };
+    */
     template <typename T>
     concept ConTriviablyCopyable = std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>;
 

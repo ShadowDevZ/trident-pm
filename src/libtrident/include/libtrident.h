@@ -20,7 +20,7 @@
 namespace Trd {
      
 
-class TRDPkgHeader;
+class TrFileHeader;
 
 class TrPkg  {
 public:
@@ -32,7 +32,7 @@ public:
       closePkg();
    }
    /// @brief provides API to manipulate the file header
-   TRDPkgHeader header();
+   TrFileHeader header();
    const Trd::Impl::TStreamInfo& getTstream() const {
         return fstrInfo;
    }
@@ -67,8 +67,8 @@ private:
   Trd::Impl::TStreamInfo fstrInfo {};
   Trd::TRD_HEADER trdHdr {};
 
-  //TRDPkgHeader headerSection;
-  friend class TRDPkgHeader;
+  //TrFileHeader headerSection;
+  friend class TrFileHeader;
   // std::shared_ptr<TRDFstreamObject> fInfo;
 
 };
