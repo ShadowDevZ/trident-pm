@@ -68,7 +68,6 @@ public:
      * @return std::expected<void, Trd::Err::TrdError> 
      */
     std::expected<void, Trd::Err::TrdError> updateHeader(const TRD_HDRFIELD_UPDATE& update);
-    std::expected<void, Trd::Err::TrdError> updateIoctrlProp(PackageIOCtrl::Flag ioctrl);
     std::expected<void, Trd::Err::TrdError> updateFileLenProp(u64 len);
     
     /**

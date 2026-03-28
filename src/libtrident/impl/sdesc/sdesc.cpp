@@ -1,3 +1,18 @@
+#include "sdesc.h"
+#include "trheader.h"
+#include "trdconsts.h"
+#include "tstreaminfo.h"
+#include <expected>
+using namespace Trd;
+using eCode = Err::Code;
+
+// std::expected<void, Err::TrdError> Trd::TrSectionDescriptor::blankDescriptor() {};
+
+
+
+
+
+
 //temporarily disabled for testing
 /*
 #include "sdesc.h"

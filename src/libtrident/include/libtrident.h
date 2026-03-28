@@ -16,7 +16,7 @@
 #include "ioflags.h"
 #include "tstreaminfo.h"
 #include <filesystem>
-
+#include "sdescdefs.h"
 namespace Trd {
      
 
@@ -66,6 +66,7 @@ public:
 private:
   Trd::Impl::TStreamInfo fstrInfo {};
   Trd::TRD_HEADER trdHdr {};
+  Trd::Impl::TRD_SECTION_DESCRIPTOR trdSD {};
 
   //TrFileHeader headerSection;
   friend class TrFileHeader;

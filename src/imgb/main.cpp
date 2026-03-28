@@ -25,12 +25,12 @@ std::cout << "Target: Release\n";
 #if defined(_LIBTRIDENT_DEBUG)
 
 void print_header(const Trd::TRD_HEADER& hdr) {
-    dbgprintf("[HEADER_START]\n");
-    dbgprintf("\tMagic: ");
+    dbgprintf("[HEADER_START - SIZE(real:%luB, work:%luB)]\n", sizeof(hdr), hdr.size());
+    dbgprintf("\tMagic: [ ");
     for (auto const& it: hdr.magic) {
         dbgprintf("%X ", it);
     }
-    dbgprintf("\n");
+    dbgprintf("]\n");
     dbgprintf("\tExtened Signature: 0x%X\n",hdr.exSignature);
     auto hdrFmtVal = TrFileHeader::headerVersionFormatToString(hdr.fmtVersion);
     if (!hdrFmtVal.has_value()) {
@@ -43,7 +43,6 @@ void print_header(const Trd::TRD_HEADER& hdr) {
     dbgprintf("\tArchitecture %u\n", hdr.architecture);
     dbgprintf("\tChecksum 0x%X\n", hdr.dynHdrChksum);
     dbgprintf("\tFile length 0x%lXB\n", hdr.dynFileLen);
-    dbgprintf("\tIoControl 0x%X\n", hdr.dynIoCtrl);
     dbgprintf("[HEADER_END]\n");
 }
 /*
@@ -194,7 +193,6 @@ int main(void) {
     print_header(trPkgHdr.getHeader());   
 #endif
     tassert("ModifyLen()", trPkgHdr.updateFileLenProp(0xbeefccaa));
-    tassert("ModifyIOCTRL()", trPkgHdr.updateIoctrlProp(PackageIOCtrl::DynamicSectionWriteLock));
     tassert("ValidateHeader()", trPkgHdr.isValid());
 #if defined(_LIBTRIDENT_DEBUG)
     auto vxa = trPkgHdr.getHeader();

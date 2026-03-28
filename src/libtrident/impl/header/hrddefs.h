@@ -60,19 +60,7 @@ namespace ArchType {
  * is writing header as instance 2 tries to read it in this case this section is write protected.
  * 
  */
-namespace PackageIOCtrl {
-    enum Flag : u16 {
-        Clear = 0,
-        ReadHeaderLock = 1 << 1,
-        WriteHeaderLock = 1 << 2,
-        DynamicSectionReadLock = 1 << 3,
-        DynamicSectionWriteLock = 1 << 4,
-        TregReadLock = 1 << 5,
-        TregWriteLock = 1 << 6,
 
-        LockAll = 1 << 15
-};
-};
 struct TRD_HDRFIELD_UPDATE{
     std::optional<u16> fmtVersion;
     std::optional<GlobalCompression::Algorithm> compression;
@@ -93,20 +81,25 @@ struct TRD_HEADER : Impl::SerializableData {
     ArchType::Type architecture = ArchType::Any; 
     u32 dynHdrChksum = Consts::Header::TRD_HDR_INVALID_CHKSUM;
     u64 dynFileLen;
-    PackageIOCtrl::Flag dynIoCtrl = PackageIOCtrl::Clear;
+    u16 _reserved0;
+
+    //PackageIOCtrl::Flag dynIoCtrl = PackageIOCtrl::Clear; //moved to SD
 
     constexpr u64 size() const override {
         return Impl::BinarySerializer::elementSize(magic, exSignature,
-        fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, dynIoCtrl);
+        fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, _reserved0);
     }
 
     std::optional<std::vector<u8>> serialize() const override {
+        if (_reserved0 != 0) {
+            return std::nullopt;
+        }
         Trd::Impl::BinarySerializer bs;
-       
+        
     
         bs.addContainer(std::span<const u8>(magic));
         bs.addTrivial(exSignature,fmtVersion,compression, buildFlags,
-                        architecture, dynHdrChksum, dynFileLen, dynIoCtrl);
+                        architecture, dynHdrChksum, dynFileLen, _reserved0);
         
         return bs.getFormattedData();
 
@@ -115,26 +108,29 @@ struct TRD_HEADER : Impl::SerializableData {
     
     bool deserialize(const std::vector<u8>& dataIn) override {
         Impl::BinarySerializer bs(dataIn);
-
+        
         bs.readContainer(std::span<u8>(magic));
       
         bs.readTrivial(exSignature, fmtVersion,compression,
                                     buildFlags, architecture, dynHdrChksum,
-                                    dynFileLen, dynIoCtrl);
+                                    dynFileLen, _reserved0);
        
         dbgprintf("xsize:%ld:\n", bs.getReadOffset());
-        if (bs.getReadOffset() != this->size()){
+        if (bs.getReadOffset() != this->size() || _reserved0 != 0){
             return false;
         }
         return true;
     }
     std::optional<u32> checksumCRC32() const override {
+        if (_reserved0 != 0) {
+            return std::nullopt;
+        }
+        
         Impl::Crc32Gen crc;
         crc.addData(magic, exSignature,fmtVersion,
-                        compression,buildFlags,architecture);
+                        compression,buildFlags,architecture, _reserved0);
         return crc.getCrc32();
     }
-
 };
 
 

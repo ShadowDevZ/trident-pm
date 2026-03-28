@@ -197,7 +197,7 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
     hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM); //ignored for now
     
     hdr.dynFileLen = UINT64_MAX;
-    hdr.dynIoCtrl = PackageIOCtrl::Clear;
+    hdr._reserved0 = 0;
 
     trpkg.trdHdr = hdr;
     return {};
@@ -276,11 +276,6 @@ std::expected<void, Err::TrdError> TrFileHeader::updateHeader(const TRD_HDRFIELD
  }
 //CHECKSUM IS NOT UPDATED BECAUSE THESE ARE CONSIDERED DYNAMIC HEADER PROPS WHICH ARE NOT USED IN CRC FORMULA 
 //todo write directly
-std::expected<void, Err::TrdError> TrFileHeader::updateIoctrlProp(PackageIOCtrl::Flag ioctrl) {
-    //todo check if valid
-    trpkg.trdHdr.dynIoCtrl = ioctrl;
-    return TrFileHeader::write();
-}
 
 std::expected<void, Err::TrdError> TrFileHeader::updateFileLenProp(u64 len) {
     //todo check if valid

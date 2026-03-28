@@ -19,25 +19,25 @@ public:
 
     
     bool isValid();
-    std::expected<void, Err::TrdError> createBlank();
+    std::expected<void, Err::TrdError> blankDescriptor();
     std::expected<void, Err::TrdError> write();
-    std::expected<void, Trd::Err::TrdError> read();
+    std::expected<void, Err::TrdError> read();
     static std::expected<void, Err::TrdError> isSdPresent();
 
     static std::expected<u64, Err::TrdError> getStartOffset();
     static std::expected<u64, Err::TrdError> getEndOffset();
 
-    const Impl::SectionDesriptor& getSD() const;
+    const Impl::TRD_SECTION_DESCRIPTOR& getSD() const;
 
-    static std::expected<Impl::SectionDesriptor, Trd::Err::TrdError> readBack(Impl::TStreamInfo& tStream);
+    static std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> readBack(Impl::TStreamInfo& tStream);
 
     explicit TrSectionDescriptor(TrPkg& pkg) : trpkg(pkg) {};
 
 private:
     friend class TrPkg;
     TrPkg& trpkg;
-    static std::expected<void, Trd::Err::TrdError> ICheckCRC(const Trd::Impl::SectionDesriptor& sd);
-    static std::expected<void, Trd::Err::TrdError> IValidateHeader(const Trd::Impl::SectionDesriptor& sd);
+    static std::expected<void, Trd::Err::TrdError> ICheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+    static std::expected<void, Trd::Err::TrdError> IValidateHeader(const Impl::TRD_SECTION_DESCRIPTOR& sd);
 
 };
 
