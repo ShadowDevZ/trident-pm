@@ -44,44 +44,46 @@ struct TRD_SECTION_DESCRIPTOR : Impl::SerializableData {
     /*status code bitflags to determine what part of offsets contain valid offset
     for example if dynamic offset flag is cleared and some resizing of .dtbl occurs
     because we are adding a new table. */
-    u16 sectionStatusCode; 
-  
-
+    SectionStatusFlag::Flag sectionStatusCode {SectionStatusFlag::Clear}; 
+    u8 _reserved0 ;
+    u8_bool sdReady;
     u32 tblCount; 
     u64 tblDynamicOffset;
     u64 tblRegistryOffset;
-    u64 _reserved0;
+    u64 _reserved1;
 
     constexpr u64 size() const override {
-        return Impl::BinarySerializer::elementSize(crc, tblCount, tblDynamicOffset, 
-                                                  tblRegistryOffset, _reserved0);
+        return Impl::BinarySerializer::elementSize(crc, sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, 
+                                                  tblRegistryOffset, _reserved1);
     }
     std::optional<std::vector<u8>> serialize() const override {
-        if (_reserved0 != 0) {
+        if (_reserved0 != 0 ||_reserved1 != 0 || !u8b_check(sdReady)) {
             return std::nullopt;
         }
         Trd::Impl::BinarySerializer bs;
-        bs.addTrivial(crc, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved0);
+        bs.addTrivial(crc, sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, 
+                                                  tblRegistryOffset, _reserved1);
         return bs.getFormattedData();
     }
     bool deserialize(const std::vector<u8>& dataIn) override {
-        if (_reserved0 != 0) {
+        if (_reserved0 != 0 || !u8b_check(sdReady)) {
             return false;
         }
         Impl::BinarySerializer bs(dataIn);
-        bs.readTrivial(crc, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved0);
+        bs.readTrivial(crc, sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, 
+                                                  tblRegistryOffset, _reserved1);
         dbgprintf("xsize:%ld:\n", bs.getReadOffset());
-        if (bs.getReadOffset() != this->size() || _reserved0 != 0){
+        if (bs.getReadOffset() != this->size() || _reserved0 != 0 || _reserved1 != 0){
             return false;
         }
         return true;
     }   
     std::optional<u32> checksumCRC32() const override {
-        if (_reserved0 != 0) {
+        if (_reserved0 != 0 || _reserved1 != 0 || !u8b_check(sdReady)) {
             return std::nullopt;
         }
         Impl::Crc32Gen crc;
-        crc.addData(tblCount, tblDynamicOffset, tblRegistryOffset, _reserved0);
+        crc.addData(sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved1);
         return crc.getCrc32();
     }
 

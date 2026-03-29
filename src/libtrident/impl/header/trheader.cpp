@@ -1,8 +1,8 @@
-#include "trheader.h"
-#include "libtrident.h"
 #include <zlib.h>
 //#include "binarySerializer.h"
 
+#include "trheader.h"
+#include "libtrident.h"
 using namespace Trd;
 using namespace Trd::Consts::Header;
 using eCode = Err::Code;
@@ -44,15 +44,6 @@ std::expected<TRD_HEADER, Err::TrdError>TrFileHeader::readBack(Impl::TStreamInfo
     if (!tStream.checkFileStreamInfo().has_value()) {
         return std::unexpected(Err::TrdError(eCode::NullObject));
     }
-    
-    
-    //check size if someone accidentally decided to change some field
-    [[unlikely]]
-    if (!ICheckHeaderSize(hdr)) {
-        return std::unexpected(Err::TrdError(eCode::BadObject));
-    }
-    
-  
 
     auto readData =  Impl::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET, hdr.size());
     if (!hdr.deserialize(readData)) {
@@ -95,11 +86,10 @@ std::expected<void, Err::TrdError> TrFileHeader::IValidateHeader(const TRD_HEADE
    
 
     [[unlikely]]
-    if (!ICheckHeaderSize(hdrIn)) {
-        return std::unexpected(Err::TrdError(eCode::SectionMissing));
+    if (hdrIn.size() != Consts::Header::LT_HDR_SZB_01A) {
+        return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
-     //the data is already assigned in struct, just a check if someone tried messing with it
-    [[unlikely]]
+    
     if (hdrIn.magic != std::to_array(TRD_HDR_MAGIC) ||
         hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
 
@@ -140,17 +130,10 @@ std::expected<void, Err::TrdError> TrFileHeader::write() {
 }
 
 
-bool TrFileHeader::ICheckHeaderSize(const TRD_HEADER& hdr) {
-    if (hdr.size() != LT_HDR_SZB_01A) {
-        return false;
-    }
-    return true;
-}
-
 std::expected<void, Err::TrdError> TrFileHeader::ICheckCRC(const TRD_HEADER& hdr) {
-    u32 genCrc = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM);
+    u32 genCrc = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if ((genCrc != hdr.dynHdrChksum)) {
-        dbgprintf("[CRC] gen %u : exp: %u\n", genCrc, hdr.dynHdrChksum);
+        dbgprintf("[CRC_HDR] gen %u : exp: %u\n", genCrc, hdr.dynHdrChksum);
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     } 
     return {};
@@ -194,7 +177,7 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
     hdr.compression = field.compression.value();
     hdr.buildFlags = field.buildFlags.value();
     hdr.architecture = field.architecture.value();
-    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM); //ignored for now
+    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM); //ignored for now
     
     hdr.dynFileLen = UINT64_MAX;
     hdr._reserved0 = 0;
@@ -263,7 +246,7 @@ std::expected<void, Err::TrdError> TrFileHeader::updateHeader(const TRD_HDRFIELD
     if (update.buildFlags.has_value())
         hdr.buildFlags = update.buildFlags.value();
     
-    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::Header::TRD_HDR_INVALID_CHKSUM);
+    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     
 
     auto val = IValidateHeader(hdr);

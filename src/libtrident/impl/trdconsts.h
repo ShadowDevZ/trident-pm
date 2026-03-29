@@ -5,8 +5,14 @@
  * 
  * 
  */
+//THIS WHOLE FILE IS A MESS WITH NAMES PORTED FROM C MACROS FIX THIS
 #pragma once
 #include "datatypes.h"
+namespace Trd::Consts {
+
+    constexpr u32 TRD_INVALID_CHKSUM = 0;
+};
+
 namespace Trd::Consts::Header {
     //when printing dont forget to add NULL terminator
     /// TRPX magic number
@@ -20,7 +26,7 @@ namespace Trd::Consts::Header {
     /// bleeding edge header version for packages pulled directly from master branch
     constexpr u16 TRD_HDR_BLEEDING_EDGE = UINT16_MAX;
     //Package major, minor version and revision
-    constexpr u32 TRD_HDR_INVALID_CHKSUM = 0;
+    
     /// major header version
     constexpr u8 TRD_HDR_VMAJOR = 1;
     /// minor header version
@@ -36,7 +42,7 @@ namespace Trd::Consts::Header {
 
 namespace Trd::Consts::SD {
     /// size of SD section as defined by the documentation
-    constexpr u16 TRD_SECTIONSD_SIZE = 32;
+    constexpr u16 TRD_SECTIONSD_SIZE = 34;
 };
 namespace Trd::Consts::SUID {
     /// maximum length of the SUID string containing the predefined UUID of a specific section without NULL terminator

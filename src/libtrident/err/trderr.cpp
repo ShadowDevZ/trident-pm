@@ -42,7 +42,8 @@ constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
     {eCode::BadObject, "Object does not hold correct size/data"},
     {eCode::ReferenceExpired, "Reference object has expired"},
     {eCode::OSFunctionCallFailed, "Call to operating system function/syscall or routine failed"},
-    {eCode::SerializerFailure, "Failed to serialize/deserialize binary data object"}
+    {eCode::SerializerFailure, "Failed to serialize/deserialize binary data object"},
+    {eCode::SectionSizeViolated, "Size of the section does not match the specified size"}
 };
 
 std::string_view Err::TrdError::translateError(Trd::Err::Code primary) noexcept {

@@ -9,18 +9,22 @@
 #include <cstddef>
 #include <string>
 
-#include "hrddefs.h"
 
 #include "trderr.h"
 #include "binarySerializer.h"
 #include "ioflags.h"
 #include "tstreaminfo.h"
 #include <filesystem>
+
+
+#include "hrddefs.h"
 #include "sdescdefs.h"
+
 namespace Trd {
      
 
 class TrFileHeader;
+class TrSectionDescriptor;
 
 class TrPkg  {
 public:
@@ -31,8 +35,20 @@ public:
       dbgprintf("~Destructor called\n");
       closePkg();
    }
-   /// @brief provides API to manipulate the file header
+   /**
+    * @brief Method to manipulate the header class
+    * 
+    * @return TrFileHeader 
+    */
    TrFileHeader header();
+   /**
+    * @brief Method to manipulate the Section Descriptor (TOC)
+    * 
+    * @return TrSectionDescriptor 
+    */
+   TrSectionDescriptor sectionDescriptor();
+
+
    const Trd::Impl::TStreamInfo& getTstream() const {
         return fstrInfo;
    }
@@ -70,6 +86,7 @@ private:
 
   //TrFileHeader headerSection;
   friend class TrFileHeader;
+  friend class TrSectionDescriptor;
   // std::shared_ptr<TRDFstreamObject> fInfo;
 
 };

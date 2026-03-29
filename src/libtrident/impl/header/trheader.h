@@ -97,7 +97,6 @@ private:
     
    
     static std::expected<void, Trd::Err::TrdError> ICheckCRC(const TRD_HEADER& hdr);
-    static bool ICheckHeaderSize(const TRD_HEADER& hdr);
     static std::expected<void, Trd::Err::TrdError> IValidateHeader(const TRD_HEADER& hdrIn);
     //std::pair<bool,Tstream::TRDFstreamObject&> ICheckAndGetFstreamContent();
     

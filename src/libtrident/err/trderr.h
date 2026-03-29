@@ -45,6 +45,8 @@ namespace Trd::Err {
             StreamSeekFailure,
             /// Section is not present but it should have
             SectionMissing,
+            /// Size of the section does not match the specified size
+            SectionSizeViolated,
             /// Block of non optional data where file section was supposed to be is fully or partially corrupted 
             SectionCorrupted,
             /// Read operation failed

@@ -4,12 +4,18 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <stdexcept>
+
+
 #include "trheader.h"
+#include "sdesc.h"
 using namespace Trd;
 using namespace Trd::Impl;
 
 TrFileHeader TrPkg::header() {
     return TrFileHeader(*this);
+}
+TrSectionDescriptor TrPkg::sectionDescriptor() {
+    return TrSectionDescriptor(*this);
 }
 
 void Trd::TrPkg::closePkg() {

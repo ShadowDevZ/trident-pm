@@ -1,16 +1,74 @@
-#include "sdesc.h"
 #include "trheader.h"
 #include "trdconsts.h"
 #include "tstreaminfo.h"
 #include <expected>
+
+
+#include "sdesc.h"
+#include "libtrident.h"
 using namespace Trd;
 using eCode = Err::Code;
 
-// std::expected<void, Err::TrdError> Trd::TrSectionDescriptor::blankDescriptor() {};
+std::expected<void, Err::TrdError> Trd::TrSectionDescriptor::blankDescriptor() {
+    trpkg.trdSD = {};
 
+    //todo issue a write    
+    return {};
+};
+//Of course its another copy from the header class, in future there will be interface
+//for this (TM)
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::ICheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+    u32 genCrc = sd.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
+    if ((genCrc != sd.crc)) {
+        dbgprintf("[CRC_SD] gen %u : exp: %u\n", genCrc, sd.crc);
+        return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
+    } 
+    return {};
+}
 
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::IFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+    [[unlikely]]
+    if (sd.size() != Consts::SD::TRD_SECTIONSD_SIZE) {
+        return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
+    }
+    if (sd._reserved0 != 0 || sd._reserved1 != 0) {
+        return std::unexpected(Err::TrdError(eCode::ReservedFieldViolated));
+    }
+    if (!u8b_check(sd.sdReady)) {
+        return std::unexpected(Err::TrdError(eCode::BadObject));
+    }
+    return {};
+}
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::IValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+    auto x = IFieldCheckSD(sd);
+    if (!x.has_value())
+        return x;
 
+    if (sd.tblCount == 0 ||sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0 || sd.sdReady == 0) {
+        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
+    }
+    auto crc = ICheckCRC(sd);
+    if (!crc.has_value())
+        return crc;
 
+    
+    //todo once dyntbl and treg are imlpemented jump to each offsets and check section
+    return {};
+}
+
+const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
+    return trpkg.trdSD;
+}
+std::expected<u64, Err::TrdError> getStartOffset() {
+    return Consts::Header::LT_HDR_SZB_01A + 1;
+}
+std::expected<u64, Err::TrdError> getEndOffset() {
+    auto x = getStartOffset();
+    if (!x.has_value())
+        return std::unexpected(x.error());
+
+    return x.value() + Consts::SD::TRD_SECTIONSD_SIZE;
+}
 
 
 //temporarily disabled for testing

@@ -79,7 +79,7 @@ struct TRD_HEADER : Impl::SerializableData {
     GlobalCompression::Algorithm compression = GlobalCompression::None;
     BuildFlags::Flags buildFlags = BuildFlags::Clear;
     ArchType::Type architecture = ArchType::Any; 
-    u32 dynHdrChksum = Consts::Header::TRD_HDR_INVALID_CHKSUM;
+    u32 dynHdrChksum = Consts::TRD_INVALID_CHKSUM;
     u64 dynFileLen;
     u16 _reserved0;
 
