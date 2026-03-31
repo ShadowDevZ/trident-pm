@@ -45,48 +45,57 @@ struct TRD_SECTION_DESCRIPTOR : Impl::SerializableData {
     for example if dynamic offset flag is cleared and some resizing of .dtbl occurs
     because we are adding a new table. */
     SectionStatusFlag::Flag sectionStatusCode {SectionStatusFlag::Clear}; 
-    u8 _reserved0 ;
-    u8_bool sdReady;
     u32 tblCount; 
+    u32 _reserved1;
     u64 tblDynamicOffset;
     u64 tblRegistryOffset;
-    u64 _reserved1;
-
+    u64 _reserved2;
+    u8_bool sdReady;
+    //why simply not use const here ? using const prevents struct assigning as const
+    //cannot be assigned
+    u8 idByte {Consts::SD::TRD_SD_IDBYTE};
+    
+    
     constexpr u64 size() const override {
-        return Impl::BinarySerializer::elementSize(crc, sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, 
-                                                  tblRegistryOffset, _reserved1);
+        return Impl::BinarySerializer::elementSize(crc, sectionStatusCode, sdReady, tblCount, tblDynamicOffset, 
+                                                  tblRegistryOffset, _reserved1, _reserved2,idByte);
     }
+    //again in code we shouldnt even bother what is idByte outside of validating external SD struct
     std::optional<std::vector<u8>> serialize() const override {
-        if (_reserved0 != 0 ||_reserved1 != 0 || !u8b_check(sdReady)) {
-            return std::nullopt;
+        if (_reserved1 != 0 || _reserved2 != 0 ||
+            !u8b_valid(sdReady) || idByte != Consts::SD::TRD_SD_IDBYTE) {
+            
+                return std::nullopt;
         }
         Trd::Impl::BinarySerializer bs;
-        bs.addTrivial(crc, sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, 
-                                                  tblRegistryOffset, _reserved1);
+        bs.addTrivial(crc, sectionStatusCode, sdReady, tblCount, tblDynamicOffset, 
+                    tblRegistryOffset, _reserved1, _reserved2,idByte);
+
+        
         return bs.getFormattedData();
     }
     bool deserialize(const std::vector<u8>& dataIn) override {
-        if (_reserved0 != 0 || !u8b_check(sdReady)) {
-            return false;
-        }
         Impl::BinarySerializer bs(dataIn);
-        bs.readTrivial(crc, sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, 
-                                                  tblRegistryOffset, _reserved1);
+        
+        bs.readTrivial(crc, sectionStatusCode, sdReady, tblCount, tblDynamicOffset, 
+                    tblRegistryOffset, _reserved1, _reserved2,idByte);
         dbgprintf("xsize:%ld:\n", bs.getReadOffset());
-        if (bs.getReadOffset() != this->size() || _reserved0 != 0 || _reserved1 != 0){
+        
+        if (bs.getReadOffset() != this->size() || _reserved1 != 0 || _reserved2 != 0 ||
+            !u8b_valid(sdReady) || idByte != Consts::SD::TRD_SD_IDBYTE)
             return false;
-        }
+
+
         return true;
     }   
     std::optional<u32> checksumCRC32() const override {
-        if (_reserved0 != 0 || _reserved1 != 0 || !u8b_check(sdReady)) {
+        if (_reserved1 != 0 || _reserved2 != 0 ||
+            !u8b_valid(sdReady) || idByte != Consts::SD::TRD_SD_IDBYTE) {
             return std::nullopt;
         }
         Impl::Crc32Gen crc;
-        crc.addData(sectionStatusCode, _reserved0, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved1);
+        crc.addData(sectionStatusCode, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved1, _reserved1, _reserved2,idByte);
         return crc.getCrc32();
     }
-
-
 };
 };

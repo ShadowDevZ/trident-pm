@@ -72,6 +72,8 @@ struct TRD_HEADER : Impl::SerializableData {
     //we are not using byte or unsigned char as ive read that its somehow not well standardized
     //and on different compilers we could get different results
    
+     //why simply not use const here ? using const prevents struct assigning as const
+    //cannot be assigned
     std::array<u8,8> magic = std::to_array(Consts::Header::TRD_HDR_MAGIC);
     u16 exSignature = Consts::Header::TRD_HDR_EXTENDED_SIGNATURE;
     u16 fmtVersion = Consts::Header::TRD_HDR_INVALID_VERSION;
@@ -91,7 +93,9 @@ struct TRD_HEADER : Impl::SerializableData {
     }
 
     std::optional<std::vector<u8>> serialize() const override {
-        if (_reserved0 != 0) {
+        if (_reserved0 != 0) { 
+            //todo check here the fields that should be const like header so we dont have to check manually
+            //in code always, as the header field only matters when doing CRC, serialization and deserialization
             return std::nullopt;
         }
         Trd::Impl::BinarySerializer bs;
@@ -100,6 +104,7 @@ struct TRD_HEADER : Impl::SerializableData {
         bs.addContainer(std::span<const u8>(magic));
         bs.addTrivial(exSignature,fmtVersion,compression, buildFlags,
                         architecture, dynHdrChksum, dynFileLen, _reserved0);
+        
         
         return bs.getFormattedData();
 
@@ -131,6 +136,7 @@ struct TRD_HEADER : Impl::SerializableData {
                         compression,buildFlags,architecture, _reserved0);
         return crc.getCrc32();
     }
+    //todo implement recalcCRC()
 };
 
 

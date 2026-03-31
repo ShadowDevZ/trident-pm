@@ -42,7 +42,8 @@ namespace Trd::Consts::Header {
 
 namespace Trd::Consts::SD {
     /// size of SD section as defined by the documentation
-    constexpr u16 TRD_SECTIONSD_SIZE = 34;
+    constexpr u16 TRD_SECTIONSD_SIZE = 40;
+    constexpr u8 TRD_SD_IDBYTE = 0x5D;
 };
 namespace Trd::Consts::SUID {
     /// maximum length of the SUID string containing the predefined UUID of a specific section without NULL terminator

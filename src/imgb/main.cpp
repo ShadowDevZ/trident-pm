@@ -198,6 +198,8 @@ int main(void) {
     auto vxa = trPkgHdr.getHeader();
     print_header(vxa);
 #endif
+    auto trpkgSD = ltTrPkg.sectionDescriptor();
+    tassert("CreateSD()", trpkgSD.createWriteBlank());
 
 /*
     TRDSecDesc sectionDesc(ltTrPkg.fstrInfo);

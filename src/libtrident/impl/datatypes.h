@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "ccattribs.h"
 #include <concepts>
+#include <stdexcept>
 namespace Trd {
 
 //basic datatypes
@@ -29,8 +30,16 @@ using foffset_t = uint64_t;
 //the size could be anywhere from 1 byte, to make things platform independent we have to improvise
 template <typename T>
 requires std::same_as<T, u8_bool>
-constexpr bool u8b_check(T b) {
+constexpr bool u8b_valid(T b) {
     return (b == 1 || b == 0);
+} 
+
+template <typename T>
+requires std::same_as<T, u8_bool>
+constexpr bool u8b_isTrue(T b) {
+    if (!u8b_valid(b)) 
+        throw std::invalid_argument("u8b was assigned non boolean value");
+    return (b == 1 ? true : false);
 } 
 
 

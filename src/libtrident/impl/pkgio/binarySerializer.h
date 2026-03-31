@@ -119,7 +119,7 @@ public:
         }
      }
      
-     
+    
    
     //make the datatype 8 byte aligned        
     static u64 getByteAlignment(u64 varSize);
@@ -163,6 +163,12 @@ public:
     std::vector<uint8_t>& getData() {
         return bufferData;
     }
+    u64 getDataSize() const {
+        return (getData().size() * sizeof(u8));
+    }
+#ifdef _LIBTRIDENT_DEBUG
+    TRD_DBG_BUILD_ONLY void dbgDumpData() const;
+#endif
     /// clears the stored data
     inline void emptyData() {
         bufferData.clear();
@@ -176,7 +182,7 @@ public:
      * @param data non null and valid pointer to the block of data to add
      * @param size size of the data
      */
-    LT_UNSAFE_API void addRaw(const void*  data, u64 size);
+    TRD_UNSAFE_API void addRaw(const void*  data, u64 size);
     
    
     
@@ -201,7 +207,7 @@ public:
     u64 readTrivialEx(u64 offset, Ts&... args) {
         u64 zOffset = offset;
         ((zOffset += iReadTrivialEx(zOffset, args)), ...);
-        //we have to substract from the original offset otherwise we may misleading results
+        //we have to substract from the original offset otherwise we may get misleading results
         //when offset is nonzero
         return zOffset - offset;
     }
@@ -264,7 +270,7 @@ public:
      * This function doesn't do any endianness checking nor handling. Do not pass data with improper
      * endianness otherwise the written data will get corrupted 
      */
-    LT_UNSAFE_API u64 readRaw(void*  dataOut, u64 size, u64 offset=0);
+    TRD_UNSAFE_API u64 readRaw(void*  dataOut, u64 size, u64 offset=0);
 
 
 
@@ -331,6 +337,8 @@ public:
      */
     static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
                 u64 size, bool checkAlignment=true);
+
+    
 };
 /**
  * @brief Generates CRC32 and handles endianness for multiple types and containers

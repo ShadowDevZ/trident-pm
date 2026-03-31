@@ -96,8 +96,8 @@ private:
     TrPkg& trpkg;
     
    
-    static std::expected<void, Trd::Err::TrdError> ICheckCRC(const TRD_HEADER& hdr);
-    static std::expected<void, Trd::Err::TrdError> IValidateHeader(const TRD_HEADER& hdrIn);
+    static std::expected<void, Trd::Err::TrdError> iCheckCRC(const TRD_HEADER& hdr);
+    static std::expected<void, Trd::Err::TrdError> iValidateHeader(const TRD_HEADER& hdrIn);
     //std::pair<bool,Tstream::TRDFstreamObject&> ICheckAndGetFstreamContent();
     
     

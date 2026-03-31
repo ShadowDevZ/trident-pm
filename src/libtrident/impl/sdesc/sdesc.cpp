@@ -9,15 +9,64 @@
 using namespace Trd;
 using eCode = Err::Code;
 
-std::expected<void, Err::TrdError> Trd::TrSectionDescriptor::blankDescriptor() {
+std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
+    if (u8b_isTrue(trpkg.trdSD.sdReady))
+        throw std::runtime_error("Cannot make SD blank as SD was marked with status READY");
+
     trpkg.trdSD = {};
 
     //todo issue a write    
-    return {};
+    
+    return IwriteSDNoValidate(trpkg.trdSD);
 };
+std::expected<void, Err::TrdError> TrSectionDescriptor::write(bool markReady) {
+    auto valid = iValidateSD(trpkg.trdSD, false);
+    if (!valid.has_value())
+        return std::unexpected(valid.error());
+    
+    auto sdVal = IwriteSDNoValidate(trpkg.trdSD);
+    if (!sdVal.has_value()) 
+        return std::unexpected(sdVal.error());
+    
+    changeReadyStatus(markReady);
+    return {};
+}
+void TrSectionDescriptor::changeReadyStatus(bool ready) {
+    trpkg.trdSD.sdReady = ready;
+}
+bool TrSectionDescriptor::isReady() const {
+    return trpkg.trdSD.sdReady;
+}
+
+std::expected<void, Err::TrdError> TrSectionDescriptor::IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+    auto fieldCheck = iFieldCheckSD(sd);
+    if(!fieldCheck.has_value()) {
+        return std::unexpected(fieldCheck.error());
+    }
+
+    auto& sdStream = trpkg.fstrInfo;
+    if (!sdStream.checkFileStreamInfo()) {
+        return std::unexpected(Err::TrdError(eCode::NullObject));
+       
+    }
+    
+    
+    auto serializer = sd.serialize();
+    if (!serializer.has_value()) {
+        return std::unexpected(Err::TrdError(eCode::SerializerFailure));
+    }
+    auto startOffset = getStartOffset();
+    if (!startOffset.has_value())
+        return std::unexpected(Err::TrdError(eCode::BadObject));
+
+    Impl::BinarySerializer::writeDataToTStream(sdStream, serializer.value(), startOffset.value());
+   
+    return {};
+}
+
 //Of course its another copy from the header class, in future there will be interface
 //for this (TM)
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::ICheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
     u32 genCrc = sd.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if ((genCrc != sd.crc)) {
         dbgprintf("[CRC_SD] gen %u : exp: %u\n", genCrc, sd.crc);
@@ -26,43 +75,44 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::ICheckCRC(const Imp
     return {};
 }
 
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::IFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
     [[unlikely]]
     if (sd.size() != Consts::SD::TRD_SECTIONSD_SIZE) {
+        dbgprintf("sd size violation: exp: %u got: %lu\n",Consts::SD::TRD_SECTIONSD_SIZE,sd.size());
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
-    if (sd._reserved0 != 0 || sd._reserved1 != 0) {
+    if (sd._reserved1 != 0) {
         return std::unexpected(Err::TrdError(eCode::ReservedFieldViolated));
     }
-    if (!u8b_check(sd.sdReady)) {
+    if (!u8b_valid(sd.sdReady)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     return {};
 }
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::IValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
-    auto x = IFieldCheckSD(sd);
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool checkReady) {
+    auto x = iFieldCheckSD(sd);
     if (!x.has_value())
         return x;
 
-    if (sd.tblCount == 0 ||sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0 || sd.sdReady == 0) {
+    if (sd.tblCount == 0 ||sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0) {
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
-    auto crc = ICheckCRC(sd);
+    auto crc = iCheckCRC(sd);
     if (!crc.has_value())
         return crc;
 
-    
+    if (checkReady && !sd.sdReady) {
+        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
+    }
     //todo once dyntbl and treg are imlpemented jump to each offsets and check section
     return {};
 }
 
-const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
-    return trpkg.trdSD;
-}
-std::expected<u64, Err::TrdError> getStartOffset() {
+
+std::expected<u64, Err::TrdError> TrSectionDescriptor::getStartOffset() {
     return Consts::Header::LT_HDR_SZB_01A + 1;
 }
-std::expected<u64, Err::TrdError> getEndOffset() {
+std::expected<u64, Err::TrdError> TrSectionDescriptor::getEndOffset() {
     auto x = getStartOffset();
     if (!x.has_value())
         return std::unexpected(x.error());
@@ -70,7 +120,9 @@ std::expected<u64, Err::TrdError> getEndOffset() {
     return x.value() + Consts::SD::TRD_SECTIONSD_SIZE;
 }
 
-
+const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
+    return trpkg.trdSD;
+}
 //temporarily disabled for testing
 /*
 #include "sdesc.h"
@@ -126,7 +178,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::WriteBlankSD() {
 
 std::expected<void, Err::TrdError> TRDSecDesc::IWriteSD(bool blankWrite) {
     //we do not validate empty TRD_SD
-    if (!blankWrite && !IValidateSDContent(secDescInternal)) {
+    if (!blankWrite && !iValidateSDContent(secDescInternal)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     auto haveCtx = Tstream::TStreamInfo::GetFstreamContent(wFstr);
@@ -174,7 +226,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD
     updateSd.tblDynamicOffset = sd.tblDynamicOffset;
     updateSd.tblRegistryOffset = sd.tblRegistryOffset;
     updateSd.crc = IGenerateChecksum(updateSd);
-    auto sdValid = IValidateSDContent(updateSd);
+    auto sdValid = iValidateSDContent(updateSd);
     if (!sdValid.has_value()) {
         return std::unexpected(sdValid.error());
     }
@@ -197,7 +249,7 @@ utilize header only cross platform library like https://github.com/vimpunk/mio
 
 
 /*
-std::expected<void, Err::TrdError> TRDSecDesc::IValidateSDContent(const TRD_SD& sd) {
+std::expected<void, Err::TrdError> TRDSecDesc::iValidateSDContent(const TRD_SD& sd) {
     
     if (!IChecksumValid(sd.crc, sd)) {
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
@@ -282,7 +334,7 @@ std::expected<TRD_SD, Err::TrdError>TRDSecDesc::ReadBack() {
   
 
     sdStream->SetSeekPosR(originalPosition);
-    auto valContent = IValidateSDContent(sdDesc);
+    auto valContent = iValidateSDContent(sdDesc);
     if (!valContent.has_value()) {
         return std::unexpected(valContent.error());
     }
@@ -293,7 +345,7 @@ std::expected<TRD_SD, Err::TrdError>TRDSecDesc::ReadBack() {
  std::expected<void, Err::TrdError> TRDSecDesc::Read() {
     auto optHdr = TRDSecDesc::ReadBack();
     //todo call when implemented IValidateTblAddr
-    if (!optHdr.has_value() || !IValidateSDContent(optHdr.value())) {
+    if (!optHdr.has_value() || !iValidateSDContent(optHdr.value())) {
         secDescInternal = optHdr.value();
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
@@ -314,7 +366,7 @@ bool TRDSecDesc::IsValid() {
     }
     */
 /*
-    return IValidateSDContent(secDescInternal).has_value();
+    return iValidateSDContent(secDescInternal).has_value();
 }
 
 

@@ -23,8 +23,10 @@ public:
     bool isValid();
     //because right after writing header we dont have access to other sections assuming
     //we are writing sections sequentionally
-    std::expected<void, Err::TrdError> blankDescriptor();
-    std::expected<void, Err::TrdError> write();
+    std::expected<void, Err::TrdError> createWriteBlank();
+    std::expected<void, Err::TrdError> write(bool markReady=false);
+    void changeReadyStatus(bool ready);
+    bool isReady() const;
     std::expected<void, Err::TrdError> read();
     static std::expected<void, Err::TrdError> isSdPresent();
 
@@ -41,9 +43,11 @@ public:
 private:
     friend class TrPkg;
     TrPkg& trpkg;
-    static std::expected<void, Trd::Err::TrdError> ICheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd);
-    static std::expected<void, Trd::Err::TrdError> IValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd);
-    static std::expected<void, Trd::Err::TrdError> IFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+    std::expected<void, Trd::Err::TrdError> IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+    static std::expected<void, Trd::Err::TrdError> iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+    static std::expected<void, Trd::Err::TrdError> iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd,
+                                                              bool checkReady=true);
+    static std::expected<void, Trd::Err::TrdError> iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd);
 
 
 };

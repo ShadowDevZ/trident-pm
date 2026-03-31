@@ -104,6 +104,9 @@ std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign
     }
 
     bufferData.insert(bufferData.end(), alignSize, 0);
+    #ifdef _LIBTRIDENT_DEBUG_VERBOSE
+        dbgDumpData();
+    #endif
     if (!expectAlignedDataOrDie(bufferData.size())) {
             return std::nullopt;
     }
@@ -148,9 +151,22 @@ bool BinarySerializer::expectAlignedDataOrDie(u64 size) {
     //normal assert used because this condition simply cant happen
     bool aligned = isDataSizeAligned(size);
     if (!aligned) {
-        throw std::runtime_error("Passed data was not properly aligned");
+        
+        throw std::runtime_error("Passed data was not properly aligned got: " + std::to_string(size));
     }
     //just in case the assertion fails
     return aligned;
 }
+#ifdef _LIBTRIDENT_DEBUG
+TRD_DBG_BUILD_ONLY void BinarySerializer::dbgDumpData() const {
+    const auto& data = getData();
+   
+    dbgprintf("=====BS_DATA_DUMP(%lu,%s)======\n{", (data.size() * sizeof(u8)), 
+    isDataSizeAligned(data.size()) ? "aligned" : "!aligned");
+    for (const auto& x : data) {
+        dbgprintf(" 0x0%x ", x);
+    } 
+    dbgprintf("}\n===========\n");
+}
+#endif
 //todo use ReadLeStream()

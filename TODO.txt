@@ -20,6 +20,9 @@ mark every constructor as explicit
 
 /current goal
 
+- make tassert template with check for std optional/expected to properly print error()
+- recalcCRC()
+
 TEST ENDIANNESS ON PPC EMULATOR
 properly separate implementation details from the exposed API and include dirs
 
@@ -27,3 +30,4 @@ updateHeader fields should be optional there should also be readDynamicXXXX
 
 DO NOT STORE THE FILE SIZE BY INCREMENTING. INSTEAD AT THE VERY END OF WRITING TO THE PACKAGE
 SUBSTRACT SIZE OF WHOLE FILE AND HEADER
+

@@ -28,7 +28,7 @@ const TRD_HEADER& TrFileHeader::getHeader() const {
 
 std::expected<void, Err::TrdError> TrFileHeader::read() {
     auto optHdr = TrFileHeader::readBack(trpkg.fstrInfo);
-    if (!optHdr.has_value() || !IValidateHeader(optHdr.value())) {
+    if (!optHdr.has_value() || !iValidateHeader(optHdr.value())) {
         return std::unexpected(Err::TrdError(eCode::FileReadFailure));
     }
     
@@ -37,7 +37,7 @@ std::expected<void, Err::TrdError> TrFileHeader::read() {
 }
 
 
-//reads back header, performs all field and validity checks, no need to call IValidateHeader
+//reads back header, performs all field and validity checks, no need to call iValidateHeader
 std::expected<TRD_HEADER, Err::TrdError>TrFileHeader::readBack(Impl::TStreamInfo& tStream) {
     TRD_HEADER hdr {};
   
@@ -51,7 +51,7 @@ std::expected<TRD_HEADER, Err::TrdError>TrFileHeader::readBack(Impl::TStreamInfo
     }
    
        
-    if (!IValidateHeader(hdr)) {
+    if (!iValidateHeader(hdr)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     
@@ -61,7 +61,7 @@ bool TrFileHeader::isValid() {
     if (!trpkg.fstrInfo.isOpen()) {
         return false;
     }
-    return IValidateHeader(trpkg.trdHdr).has_value();
+    return iValidateHeader(trpkg.trdHdr).has_value();
 }
 
 
@@ -81,7 +81,7 @@ std::expected<void, Err::TrdError> TrFileHeader::isHeaderPresent(Trd::Impl::TStr
 
 
 
-std::expected<void, Err::TrdError> TrFileHeader::IValidateHeader(const TRD_HEADER& hdrIn){
+std::expected<void, Err::TrdError> TrFileHeader::iValidateHeader(const TRD_HEADER& hdrIn){
 
    
 
@@ -98,7 +98,7 @@ std::expected<void, Err::TrdError> TrFileHeader::IValidateHeader(const TRD_HEADE
     if (hdrIn.fmtVersion == Consts::Header::TRD_HDR_INVALID_VERSION) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
-    if (!ICheckCRC(hdrIn).has_value()) {
+    if (!iCheckCRC(hdrIn).has_value()) {
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     }
     if (hdrIn.dynFileLen == 0) {
@@ -130,7 +130,7 @@ std::expected<void, Err::TrdError> TrFileHeader::write() {
 }
 
 
-std::expected<void, Err::TrdError> TrFileHeader::ICheckCRC(const TRD_HEADER& hdr) {
+std::expected<void, Err::TrdError> TrFileHeader::iCheckCRC(const TRD_HEADER& hdr) {
     u32 genCrc = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if ((genCrc != hdr.dynHdrChksum)) {
         dbgprintf("[CRC_HDR] gen %u : exp: %u\n", genCrc, hdr.dynHdrChksum);
@@ -160,7 +160,7 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
     TRD_HEADER hdr {};
-    //todo probably instead call IValidateHeader()
+    //todo probably instead call iValidateHeader()
     //the data is already assigned in struct, just a check if someone tried messing with it
     [[unlikely]]
     if (hdr.magic != std::to_array(TRD_HDR_MAGIC) ||
@@ -249,7 +249,7 @@ std::expected<void, Err::TrdError> TrFileHeader::updateHeader(const TRD_HDRFIELD
     hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     
 
-    auto val = IValidateHeader(hdr);
+    auto val = iValidateHeader(hdr);
     if (!val.has_value()) {
         return std::unexpected(val.error());
     } 
