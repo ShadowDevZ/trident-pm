@@ -19,7 +19,7 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
     
     return IwriteSDNoValidate(trpkg.trdSD);
 };
-std::expected<void, Err::TrdError> TrSectionDescriptor::write(bool markReady) {
+std::expected<void, Err::TrdError> TrSectionDescriptor::write() {
     auto valid = iValidateSD(trpkg.trdSD, false);
     if (!valid.has_value())
         return std::unexpected(valid.error());
@@ -28,7 +28,6 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::write(bool markReady) {
     if (!sdVal.has_value()) 
         return std::unexpected(sdVal.error());
     
-    changeReadyStatus(markReady);
     return {};
 }
 void TrSectionDescriptor::changeReadyStatus(bool ready) {
@@ -81,11 +80,14 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iFieldCheckSD(const
         dbgprintf("sd size violation: exp: %u got: %lu\n",Consts::SD::TRD_SECTIONSD_SIZE,sd.size());
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
-    if (sd._reserved1 != 0) {
+    if (sd._reserved1 != 0 || sd._reserved2 != 0) {
         return std::unexpected(Err::TrdError(eCode::ReservedFieldViolated));
     }
     if (!u8b_valid(sd.sdReady)) {
         return std::unexpected(Err::TrdError(eCode::BadObject));
+    }
+    if (sd.idByte != Consts::SD::TRD_SD_IDBYTE) {
+        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
     return {};
 }
@@ -93,17 +95,18 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iValidateSD(const I
     auto x = iFieldCheckSD(sd);
     if (!x.has_value())
         return x;
-
-    if (sd.tblCount == 0 ||sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0) {
+    if (checkReady && !sd.sdReady) {
+        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
+    }
+    //if the SD is marked as ready then we are expecting all of these fields to be filled with existing
+    //information, todo there should be a call to function which checks if the offsets are actually correct
+    if (sd.sdReady && (sd.tblCount == 0 ||sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0) ) {
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
     auto crc = iCheckCRC(sd);
     if (!crc.has_value())
-        return crc;
+        return std::unexpected(crc.error());
 
-    if (checkReady && !sd.sdReady) {
-        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
-    }
     //todo once dyntbl and treg are imlpemented jump to each offsets and check section
     return {};
 }
@@ -124,8 +127,32 @@ const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
     return trpkg.trdSD;
 }
 
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update) {
-    return {};
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update, 
+                                                                      std::optional<bool> setReadyStatus,
+                                                                      bool checkReady) {
+    Impl::TRD_SECTION_DESCRIPTOR sdTemp = trpkg.trdSD;
+    if (update.sectionStatusCode)
+        sdTemp.sectionStatusCode = *update.sectionStatusCode;
+    if (update.tblCount)
+        sdTemp.tblCount = *update.tblCount;
+    if (update.tblDynamicOffset)
+        sdTemp.tblDynamicOffset = *update.tblDynamicOffset;
+    if (update.tblRegistryOffset)
+        sdTemp.tblRegistryOffset = *update.tblRegistryOffset;
+
+    sdTemp.crc = sdTemp.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
+    if (setReadyStatus)
+        //because we are assigning u8b not bool
+        sdTemp.sdReady = *setReadyStatus ? 1 : 0;
+    
+    auto optValid = iValidateSD(sdTemp, checkReady);
+    if (!optValid) {
+        return std::unexpected(optValid.error());
+    }
+    trpkg.trdSD = sdTemp;
+    return TrSectionDescriptor::write();
+
+    
 }
 
 //temporarily disabled for testing

@@ -6,3 +6,4 @@
 #include "trdconsts.h"
 #include "tstreaminfo.h"
 #include "ccattribs.h"
+#include "trderr.h"

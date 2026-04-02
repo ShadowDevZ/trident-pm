@@ -45,17 +45,21 @@ void print_header(const Trd::TRD_HEADER& hdr) {
     dbgprintf("\tFile length 0x%lXB\n", hdr.dynFileLen);
     dbgprintf("[HEADER_END]\n");
 }
-/*
-void print_sd(const Trd::Impl::TRD_SD& sd) {
+
+void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
     dbgprintf("\n[SD_START]\n");
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
+    dbgprintf("\tSection status %u\n", static_cast<u16>(sd.sectionStatusCode));
     dbgprintf("\tTblcount: %u\n", sd.tblCount);
+    dbgprintf("\tReserved1: %u\n", sd._reserved1);
     dbgprintf("\tDtbl offset: 0x%lX\n", sd.tblDynamicOffset);
     dbgprintf("\tTreg offset: 0x%lX\n", sd.tblRegistryOffset);
-    dbgprintf("\tReserved: %lu\n", sd._reserved0);
+    dbgprintf("\tReserved2: %lu\n", sd._reserved2);
+    dbgprintf("\tReady status: %s\n", u8b_isTrue(sd.sdReady) ? "true" : "false");
+    dbgprintf("\tID byte: 0x%X\n", sd.idByte);
     dbgprintf("[SD_END]\n\n");
 }
-*/
+
 void print_stat(const Impl::PortableStat& ps) {
     u32 perms = static_cast<u32>(ps.permissions) & 0777;
     auto aux = ps.auxiliary.value();
@@ -200,6 +204,15 @@ int main(void) {
 #endif
     auto trpkgSD = ltTrPkg.sectionDescriptor();
     tassert("CreateSD()", trpkgSD.createWriteBlank());
+    print_sd(trpkgSD.getSD());
+    Impl::TRD_SD_UPDATEFIELD sdUpd = {
+        .sectionStatusCode {Impl::SectionStatusFlag::ReadLockTreg},
+        .tblCount = 0xEEEEEEEEEEEEEEE,
+        .tblDynamicOffset = UINT64_MAX,
+        .tblRegistryOffset = UINT32_MAX + UINT16_MAX
+    };
+    tassert("UpdateSD()", trpkgSD.updateSD(sdUpd, true));
+    print_sd(trpkgSD.getSD());
 
 /*
     TRDSecDesc sectionDesc(ltTrPkg.fstrInfo);

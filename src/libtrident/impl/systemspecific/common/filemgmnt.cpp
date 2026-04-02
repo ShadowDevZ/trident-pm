@@ -42,8 +42,8 @@ std::expected<Trd::Impl::PortableStat, Trd::Err::TrdError> Trd::Impl::statObject
     //std::filesystem only provides mtime, so get everything using stat()
     //the additional info is purely optional
     auto aux = Impl::getAuxiliaryStat(file);
-    if (aux.has_value()) {
-        pStat.auxiliary = aux.value();
+    if (aux) {
+        pStat.auxiliary = *aux;
     }
    
     return pStat;

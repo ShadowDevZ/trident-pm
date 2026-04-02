@@ -24,7 +24,8 @@ public:
     //because right after writing header we dont have access to other sections assuming
     //we are writing sections sequentionally
     std::expected<void, Err::TrdError> createWriteBlank();
-    std::expected<void, Err::TrdError> write(bool markReady=false);
+    
+    std::expected<void, Err::TrdError> write();
     void changeReadyStatus(bool ready);
     bool isReady() const;
     std::expected<void, Err::TrdError> read();
@@ -34,7 +35,9 @@ public:
     static std::expected<u64, Err::TrdError> getEndOffset();
 
     const Impl::TRD_SECTION_DESCRIPTOR& getSD() const;
-    std::expected<void, Trd::Err::TrdError> updateSD(const Impl::TRD_SD_UPDATEFIELD& update);
+    std::expected<void, Trd::Err::TrdError> updateSD(const Impl::TRD_SD_UPDATEFIELD& update, 
+                                                    std::optional<bool> setReadyStatus = std::nullopt,
+                                                    bool checkReady = true);
 
     static std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> readBack(Impl::TStreamInfo& tStream);
 

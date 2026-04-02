@@ -173,10 +173,10 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
             field.buildFlags.has_value() || field.architecture.has_value())) {
                 return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
-    hdr.fmtVersion = field.fmtVersion.value();
-    hdr.compression = field.compression.value();
-    hdr.buildFlags = field.buildFlags.value();
-    hdr.architecture = field.architecture.value();
+    hdr.fmtVersion = *field.fmtVersion;
+    hdr.compression = *field.compression;
+    hdr.buildFlags = *field.buildFlags;
+    hdr.architecture = *field.architecture;
     hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM); //ignored for now
     
     hdr.dynFileLen = UINT64_MAX;
@@ -237,14 +237,14 @@ std::expected<std::string, Err::TrdError> TrFileHeader::headerVersionFormatToStr
 }
 std::expected<void, Err::TrdError> TrFileHeader::updateHeader(const TRD_HDRFIELD_UPDATE& update) {
     TRD_HEADER hdr = trpkg.trdHdr;
-    if (update.architecture.has_value())
-        hdr.architecture = update.architecture.value();
-    if (update.fmtVersion.has_value())
-        hdr.fmtVersion = update.fmtVersion.value();
-    if (update.compression.has_value())
-        hdr.compression = update.compression.value();
-    if (update.buildFlags.has_value())
-        hdr.buildFlags = update.buildFlags.value();
+    if (update.architecture)
+        hdr.architecture = *update.architecture;
+    if (update.fmtVersion)
+        hdr.fmtVersion = *update.fmtVersion;
+    if (update.compression)
+        hdr.compression = *update.compression;
+    if (update.buildFlags)
+        hdr.buildFlags = *update.buildFlags;
     
     hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     
