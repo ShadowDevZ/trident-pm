@@ -34,9 +34,10 @@ namespace SectionStatusFlag {
 
 
 typedef struct {
-    u32 tblCount;
-    u64 tblDynamicOffset;
-    u64 tblRegistryOffset;
+    std::optional<SectionStatusFlag::Flag> sectionStatusCode {SectionStatusFlag::Clear}; 
+    std::optional<u32> tblCount;
+    std::optional<u64> tblDynamicOffset;
+    std::optional<u64> tblRegistryOffset;
 }TRD_SD_UPDATEFIELD;
 
 struct TRD_SECTION_DESCRIPTOR : Impl::SerializableData {
@@ -44,6 +45,8 @@ struct TRD_SECTION_DESCRIPTOR : Impl::SerializableData {
     /*status code bitflags to determine what part of offsets contain valid offset
     for example if dynamic offset flag is cleared and some resizing of .dtbl occurs
     because we are adding a new table. */
+    
+    //u16
     SectionStatusFlag::Flag sectionStatusCode {SectionStatusFlag::Clear}; 
     u32 tblCount; 
     u32 _reserved1;

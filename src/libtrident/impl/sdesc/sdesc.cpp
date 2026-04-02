@@ -123,6 +123,11 @@ std::expected<u64, Err::TrdError> TrSectionDescriptor::getEndOffset() {
 const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
     return trpkg.trdSD;
 }
+
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update) {
+    return {};
+}
+
 //temporarily disabled for testing
 /*
 #include "sdesc.h"

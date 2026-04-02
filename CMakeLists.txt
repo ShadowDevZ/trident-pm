@@ -55,6 +55,9 @@ target_include_directories(${TRDLIB} PUBLIC
 )
 ###target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 ###target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
+
+target_precompile_headers(${TRDLIB} PRIVATE src/libtrident/pch.h)
+
 target_link_libraries(${TRDLIB} PRIVATE ZLIB::ZLIB)
 # --- Executable targets (only if not building library-only) ---
 option(TRD_BUILD_LIBONLY "Do not build the trpm standalone app" OFF)

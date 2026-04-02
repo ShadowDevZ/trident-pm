@@ -34,7 +34,7 @@ public:
     static std::expected<u64, Err::TrdError> getEndOffset();
 
     const Impl::TRD_SECTION_DESCRIPTOR& getSD() const;
-    
+    std::expected<void, Trd::Err::TrdError> updateSD(const Impl::TRD_SD_UPDATEFIELD& update);
 
     static std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> readBack(Impl::TStreamInfo& tStream);
 

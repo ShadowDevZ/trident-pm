@@ -41,7 +41,7 @@
     /**
      * @brief Allows more verbose debug output and prints
      */
-    #define _LIBTRIDENT_DEBUG_VERBOSE
+    //#define _LIBTRIDENT_DEBUG_VERBOSE
 #endif
 
 
