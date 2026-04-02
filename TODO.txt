@@ -20,8 +20,15 @@ mark every constructor as explicit
 
 /current goal
 
-- make tassert template with check for std optional/expected to properly print error()
 - recalcCRC()
+- trderror callback for user to check for errors
+the callback is also triggered in the constructor of the TrdErr class object so when we
+return std;:unexpected(Err::TrdErr(eCode::....)) this should call the callback handler.
+Also each set error operation should call the handler. The handler should have boolean return value
+if false is returned the whole program is terminated with error
+
+- SD.idByte is not enough even when header is written this information could be corrupted
+use at least u16! or u32 reserved field
 
 TEST ENDIANNESS ON PPC EMULATOR
 properly separate implementation details from the exposed API and include dirs

@@ -143,6 +143,7 @@ std::expected<void, Err::TrdError> TrFileHeader::iCheckCRC(const TRD_HEADER& hdr
 std::expected<void, Err::TrdError> TrFileHeader::create(BuildFlags::Flags buildFlgs, 
                                                 ArchType::Type archType,
                                                 GlobalCompression::Algorithm comprType) {
+    //return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     TRD_HDRFIELD_UPDATE update;
     auto fmtHdr = formatHeaderVersion(TRD_HDR_VMAJOR, TRD_HDR_VMINOR, TRD_HDR_VREVISION);
     if (!fmtHdr.has_value()) {

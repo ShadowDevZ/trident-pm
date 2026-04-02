@@ -16,7 +16,7 @@ namespace Trd::Err {
      * @brief Errorcodes when additional information is needed
      * 
      */
-    enum class Code {
+    enum class Code : u16 {
             /// This error should not be returned, appropriate error type should be used
             UndefinedError = 0,
             /// Operation was completed successfully
@@ -170,7 +170,14 @@ public:
         return translateError(trdErr.primaryError);
     } 
     friend std::ostream& operator<<(std::ostream& os, const TrdError& m)  {
-        os << m.translateError(m.primaryError);
+        os << "[e" << static_cast<std::underlying_type_t<Err::Code>>(m.getError()) 
+           << "]("<< m.translateError(m.primaryError) << ")";
+
+        
+        if (m.secondaryError) {
+            os << "\nSecondary." << m.secondaryError.value().secondaryError
+               << "(" << m.secondaryError.value().friendlyErrorMessage << ")";
+        }
         return os;
     }
     operator bool() const {
