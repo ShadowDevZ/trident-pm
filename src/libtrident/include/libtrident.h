@@ -83,7 +83,6 @@ private:
   Trd::Impl::TStreamInfo fstrInfo {};
   Trd::TRD_HEADER trdHdr {};
   Trd::Impl::TRD_SECTION_DESCRIPTOR trdSD {};
-
   //TrFileHeader headerSection;
   friend class TrFileHeader;
   friend class TrSectionDescriptor;

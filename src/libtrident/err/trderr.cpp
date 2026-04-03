@@ -57,3 +57,21 @@ std::string_view Err::TrdError::translateError(Trd::Err::Code primary) noexcept 
    
    return gErrorMessages[0].second;
 }
+void TrdError::setError(Err::Code primary) {
+    primaryError = primary;
+    if (callHandler)
+        Err::TrdErrorCallback::instance().callHandlers(*this);
+            //cb.callHandlers();
+}
+void TrdError::setError(Err::Code primary, u32 extErr, std::string extErrMsg) {
+    if (extErrMsg.size() > Trd::Consts::Err::SECONDARY_ERROR_MAXSIZE) {
+        throw std::length_error("Error message exceeded max allowed size");
+    }
+    setError(primary);
+    secondaryError = SecondaryErrorInfo{
+        .secondaryError = extErr,
+        //moving because we might or might not modify the message in some way in the future
+        .friendlyErrorMessage = std::move(extErrMsg)
+    };
+        
+}

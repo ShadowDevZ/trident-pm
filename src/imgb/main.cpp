@@ -14,7 +14,7 @@
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
 
-
+#include "err/callback.h"
 
 
 
@@ -25,11 +25,17 @@ using namespace Trd;
 //HEAVILY WIP, DO NOT USE THIS BRANCH TESTING ONLY, multiple things are disabled
 #warning "Testing branch only, everything is broken here, dont use"
 
-
+void cb_data(const Trd::Err::TrdError& e) {
+    std::cout << "callback reg called!\n";
+    std::cout << "got error " << e << "\n";
+}
 
 int main(void) {
    // std::cout << SystemSpecific::createTemporaryFile().value() << std::endl;
-    PrintBuildTarget();
+    
+   PrintBuildTarget();
+   
+   
    
     Trd::TrPkg ltTrPkg("./test.tpx", {TrdOpenIO::CreateNew,
                                         TrdAccessIO::AllAccess,
@@ -38,8 +44,8 @@ int main(void) {
   //  Trd::TrPkg ltTrPkg("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
     //ltTrPkg.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
-
-
+u32 reg = Err::TrdErrorCallback::instance().registerCallback(cb_data);
+    dbgprintf("cb.id:%d\n", reg);
     auto trPkgHdr = ltTrPkg.header();
     
 #if defined(_LIBTRIDENT_DEBUG)

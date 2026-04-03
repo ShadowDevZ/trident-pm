@@ -27,8 +27,6 @@ return std;:unexpected(Err::TrdErr(eCode::....)) this should call the callback h
 Also each set error operation should call the handler. The handler should have boolean return value
 if false is returned the whole program is terminated with error
 
-- SD.idByte is not enough even when header is written this information could be corrupted
-use at least u16! or u32 reserved field
 
 TEST ENDIANNESS ON PPC EMULATOR
 properly separate implementation details from the exposed API and include dirs
@@ -38,3 +36,8 @@ updateHeader fields should be optional there should also be readDynamicXXXX
 DO NOT STORE THE FILE SIZE BY INCREMENTING. INSTEAD AT THE VERY END OF WRITING TO THE PACKAGE
 SUBSTRACT SIZE OF WHOLE FILE AND HEADER
 
+- long term goal implement optional sandboxed environment for launched apps (not part of the libtrident library)
+but the actual trpm launcher, most likely bubblewrap or libsandbox2 with custom fs isolation as reinventing wheel
+for this would be too much hustle and open billion vulnerabilities as I have 0 to none experience with BPF and seccomp 
+for this toy project this would however break the system compatibility on non linux systems
+optional feature ?

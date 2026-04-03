@@ -11,7 +11,10 @@
 #include "trdconsts.h"
 #include <memory>
 #include <optional>
+#include "callback.h"
+
 namespace Trd::Err {
+    
     /**
      * @brief Errorcodes when additional information is needed
      * 
@@ -114,13 +117,16 @@ namespace Trd::Err {
 class TrdError {
 protected:
     Trd::Err::Code primaryError {Trd::Err::Code::Success};
-    std::optional<SecondaryErrorInfo> secondaryError;
+    std::optional<SecondaryErrorInfo> secondaryError {};
+    bool callHandler = true;
 
 public:
     TrdError() {};
-    explicit TrdError(Err::Code primary) : primaryError(primary) {};
+    explicit TrdError(Err::Code primary, bool callHandler=true) : callHandler(callHandler) {
+        setError(primary);
+    };
 
-    explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg)  {
+    explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg, bool callHandler=true) : callHandler(callHandler) {
         setError(primary, extErr, extErrMsg);
     };
     Trd::Err::Code getError() const noexcept {
@@ -132,28 +138,15 @@ public:
         return secondaryError;
     }
     
-    void setError(Err::Code primary) {
-        primaryError = primary;
-    }
-    void setError(Err::Code primary, u32 extErr=0, std::string extErrMsg="") {
-        if (extErrMsg.size() > Trd::Consts::Err::SECONDARY_ERROR_MAXSIZE) {
-            throw std::length_error("Error message exceeded max allowed size");
-        }
-        primaryError = primary;
-        secondaryError = SecondaryErrorInfo{
-            .secondaryError = extErr,
-            //moving because we might or might not modify the message in some way in the future
-            .friendlyErrorMessage = std::move(extErrMsg)
-        };
-        
-    }
+    void setError(Err::Code primary);
+    void setError(Err::Code primary, u32 extErr, std::string extErrMsg="");
     ///  checks whether the stored error code is Code::Success
     bool isOK() const noexcept {
         return (primaryError == Err::Code::Success);
     }
     /// sets stored error to Code::Success and clears secondaryError
     void setSuccess() {
-        primaryError = Err::Code::Success;
+        setError(Err::Code::Success);
         //unset any other flags as secondaryError is not available for all errors
         secondaryError.reset();
     }
