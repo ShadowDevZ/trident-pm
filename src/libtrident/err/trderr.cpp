@@ -15,63 +15,58 @@ are embedding struct or using std::pair, also we cannot do this because it makes
 //constexpr std::array gErrorMessages {_errmsgTbl};
 */
 using eCode = Err::Code;
-constexpr std::pair<Err::Code,std::string_view> gErrorMessages [] = {
-    {eCode::UndefinedError, "Undefined error"},
-    {eCode::Success, "Operation was successful"},
-    {eCode::CustomError, "(Custom error)"},
-    {eCode::InvalidFuncArg, "Unknown or incorrect argument has been passed to the function"},
-    {eCode::FileAccessFailure, "Insufficient privileges to the specified resource, access denied"},
-    {eCode::NullObject, "The object was NULL"},
-    {eCode::FileOpenFailure, "Error opening access handle"},
-    {eCode::ObjectNotDir, "Filesystem object is not a directory"},
-    {eCode::ObjectNotFile, "Filesystem object does not exist"},
-    {eCode::FileAttrModFailure, "Failed to change permissions"},
-    {eCode::ObjectCopyFailure, "Failed to copy object"},
-    {eCode::StreamSeekFailure, "Failed to set seek pointer"},
-    {eCode::SectionMissing, "File section is missing"},
-    {eCode::SectionCorrupted, "Section contains invalid data"},
-    {eCode::FileReadFailure, "Failed to read file"},
-    {eCode::FileWriteFailure, "Failed to write file"},
-    {eCode::ChecksumFailure, "CRC32 checksum has failed"},
-    {eCode::SUIDMissing, "SUID token not found"},
-    {eCode::SUIDInvalid, "Invalid SUID token"},
-    {eCode::ReservedFieldViolated, "Reserved field not set to 0"},
-    {eCode::FileAlrOpen, "Object was already opened"},
-    {eCode::FunctionNotImplemented, "Function not implemented. Do not use"},
-    {eCode::UnalignedData, "Data was not properly aligned before written. Alignment violated"},
-    {eCode::BadObject, "Object does not hold correct size/data"},
-    {eCode::ReferenceExpired, "Reference object has expired"},
-    {eCode::OSFunctionCallFailed, "Call to operating system function/syscall or routine failed"},
-    {eCode::SerializerFailure, "Failed to serialize/deserialize binary data object"},
-    {eCode::SectionSizeViolated, "Size of the section does not match the specified size"}
-};
+constexpr std::pair<Err::Code, std::string_view> gErrorMessages[] = {{eCode::UndefinedError, "Undefined error"},
+                                                                     {eCode::Success, "Operation was successful"},
+                                                                     {eCode::CustomError, "(Custom error)"},
+                                                                     {eCode::InvalidFuncArg, "Unknown or incorrect argument has been passed to the function"},
+                                                                     {eCode::FileAccessFailure, "Insufficient privileges to the specified resource, access denied"},
+                                                                     {eCode::NullObject, "The object was NULL"},
+                                                                     {eCode::FileOpenFailure, "Error opening access handle"},
+                                                                     {eCode::ObjectNotDir, "Filesystem object is not a directory"},
+                                                                     {eCode::ObjectNotFile, "Filesystem object does not exist"},
+                                                                     {eCode::FileAttrModFailure, "Failed to change permissions"},
+                                                                     {eCode::ObjectCopyFailure, "Failed to copy object"},
+                                                                     {eCode::StreamSeekFailure, "Failed to set seek pointer"},
+                                                                     {eCode::SectionMissing, "File section is missing"},
+                                                                     {eCode::SectionCorrupted, "Section contains invalid data"},
+                                                                     {eCode::FileReadFailure, "Failed to read file"},
+                                                                     {eCode::FileWriteFailure, "Failed to write file"},
+                                                                     {eCode::ChecksumFailure, "CRC32 checksum has failed"},
+                                                                     {eCode::SUIDMissing, "SUID token not found"},
+                                                                     {eCode::SUIDInvalid, "Invalid SUID token"},
+                                                                     {eCode::ReservedFieldViolated, "Reserved field not set to 0"},
+                                                                     {eCode::FileAlrOpen, "Object was already opened"},
+                                                                     {eCode::FunctionNotImplemented, "Function not implemented. Do not use"},
+                                                                     {eCode::UnalignedData, "Data was not properly aligned before written. Alignment violated"},
+                                                                     {eCode::BadObject, "Object does not hold correct size/data"},
+                                                                     {eCode::ReferenceExpired, "Reference object has expired"},
+                                                                     {eCode::OSFunctionCallFailed, "Call to operating system function/syscall or routine failed"},
+                                                                     {eCode::SerializerFailure, "Failed to serialize/deserialize binary data object"},
+                                                                     {eCode::SectionSizeViolated, "Size of the section does not match the specified size"}};
 
 std::string_view Err::TrdError::translateError(Trd::Err::Code primary) noexcept {
-   
-   for (const auto&  x: gErrorMessages)  {
+
+    for (const auto& x : gErrorMessages) {
         if (x.first == primary) {
-            
+
             return x.second;
         }
-   }
-   
-   return gErrorMessages[0].second;
+    }
+
+    return gErrorMessages[0].second;
 }
 void TrdError::setError(Err::Code primary) {
     primaryError = primary;
     if (callHandler)
         Err::TrdErrorCallback::instance().callHandlers(*this);
-            //cb.callHandlers();
+    //cb.callHandlers();
 }
 void TrdError::setError(Err::Code primary, u32 extErr, std::string extErrMsg) {
     if (extErrMsg.size() > Trd::Consts::Err::SECONDARY_ERROR_MAXSIZE) {
         throw std::length_error("Error message exceeded max allowed size");
     }
     setError(primary);
-    secondaryError = SecondaryErrorInfo{
-        .secondaryError = extErr,
-        //moving because we might or might not modify the message in some way in the future
-        .friendlyErrorMessage = std::move(extErrMsg)
-    };
-        
+    secondaryError = SecondaryErrorInfo{.secondaryError = extErr,
+                                        //moving because we might or might not modify the message in some way in the future
+                                        .friendlyErrorMessage = std::move(extErrMsg)};
 }

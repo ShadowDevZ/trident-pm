@@ -3,8 +3,7 @@
 #include <filesystem>
 namespace Trd::Impl {
 
-    struct AccessTimes
-    {
+    struct AccessTimes {
         std::chrono::system_clock::time_point lastAccess;
         std::chrono::system_clock::time_point lastModify;
         std::chrono::system_clock::time_point lastMetadataChange;
@@ -24,7 +23,5 @@ namespace Trd::Impl {
         std::filesystem::perms permissions;
         //extended non portable information
         std::optional<AuxiliaryStat> auxiliary;
-
-
     };
 }

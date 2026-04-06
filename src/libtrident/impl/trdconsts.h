@@ -16,9 +16,7 @@ namespace Trd::Consts {
 namespace Trd::Consts::Header {
     //when printing dont forget to add NULL terminator
     /// TRPX magic number
-    constexpr u8 TRD_HDR_MAGIC[] = {
-        0x93, 0x54, 0x52, 0x44, 0x21, 0x12, 0x2E, 0x53
-    };//\223TRD!\x12.S
+    constexpr u8 TRD_HDR_MAGIC[] = {0x93, 0x54, 0x52, 0x44, 0x21, 0x12, 0x2E, 0x53}; //\223TRD!\x12.S
     /// extended signature for additional checking
     constexpr u16 TRD_HDR_EXTENDED_SIGNATURE = 0xbf97;
 
@@ -26,7 +24,7 @@ namespace Trd::Consts::Header {
     /// bleeding edge header version for packages pulled directly from master branch
     constexpr u16 TRD_HDR_BLEEDING_EDGE = UINT16_MAX;
     //Package major, minor version and revision
-    
+
     /// major header version
     constexpr u8 TRD_HDR_VMAJOR = 1;
     /// minor header version

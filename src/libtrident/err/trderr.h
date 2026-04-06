@@ -14,73 +14,72 @@
 #include "callback.h"
 
 namespace Trd::Err {
-    
+
     /**
      * @brief Errorcodes when additional information is needed
      * 
      */
     enum class Code : u16 {
-            /// This error should not be returned, appropriate error type should be used
-            UndefinedError = 0,
-            /// Operation was completed successfully
-            Success = 1,
-            /// Indicates a non standard error code which holds information in SecondaryErrorInfo class
-            CustomError,
-            /// Improper argument types or values were passed to the called function
-            InvalidFuncArg,
-            /// Tried opening file with insufficient privileges
-            FileAccessFailure,
-            /// Internal object which was supposed to be initialized doesn't point to any valid data
-            NullObject,
-            /// Indicates error where file handle could not be properly opened
-            FileOpenFailure,
-            /// The passed file system object is not a directory
-            ObjectNotDir,
-            /// The passed file system object is not a file
-            ObjectNotFile,
-            /// Provided file was not found
-            FileMissing,
-            /// Failed to change or update file attributes
-            FileAttrModFailure,
-            /// Could not copy filesystem object to specified destination
-            ObjectCopyFailure,
-            /// Seek file operation failed
-            StreamSeekFailure,
-            /// Section is not present but it should have
-            SectionMissing,
-            /// Size of the section does not match the specified size
-            SectionSizeViolated,
-            /// Block of non optional data where file section was supposed to be is fully or partially corrupted 
-            SectionCorrupted,
-            /// Read operation failed
-            FileReadFailure,
-            /// Write operation failed
-            FileWriteFailure,
-            /// CRC32 checksum validation of buffer does not match with the expected value
-            ChecksumFailure,
-            /// UUID for section is not equal to the expexted value
-            SUIDInvalid,
-            /// UUID for section is not present at all
-            SUIDMissing,
-            /// Tried opening already opened and locked file
-            FileAlrOpen,
-            /// Internal reserved struct field contained non zero value
-            ReservedFieldViolated,
-            /// The function is not implemented. This error should be used only for testing builds
-            FunctionNotImplemented,
-            /// Data type is not properly aligned according to BSERIALIZE_DATA_ALIGN constant
-            UnalignedData,
-            /// Code execution failed as the host operating system is not supported or does not support certain system function
-            UnsupportedPlatform,
-            /// The object which was passed/returned to/from function does not hold correct data value
-            BadObject,
-            /// scheduled for removal
-            ReferenceExpired,
-            /// Call to operating system specific function or syscall failed with an error
-            OSFunctionCallFailed,
-            /// Provided data could not be properly serialized/deserialized
-            SerializerFailure
-            
+        /// This error should not be returned, appropriate error type should be used
+        UndefinedError = 0,
+        /// Operation was completed successfully
+        Success = 1,
+        /// Indicates a non standard error code which holds information in SecondaryErrorInfo class
+        CustomError,
+        /// Improper argument types or values were passed to the called function
+        InvalidFuncArg,
+        /// Tried opening file with insufficient privileges
+        FileAccessFailure,
+        /// Internal object which was supposed to be initialized doesn't point to any valid data
+        NullObject,
+        /// Indicates error where file handle could not be properly opened
+        FileOpenFailure,
+        /// The passed file system object is not a directory
+        ObjectNotDir,
+        /// The passed file system object is not a file
+        ObjectNotFile,
+        /// Provided file was not found
+        FileMissing,
+        /// Failed to change or update file attributes
+        FileAttrModFailure,
+        /// Could not copy filesystem object to specified destination
+        ObjectCopyFailure,
+        /// Seek file operation failed
+        StreamSeekFailure,
+        /// Section is not present but it should have
+        SectionMissing,
+        /// Size of the section does not match the specified size
+        SectionSizeViolated,
+        /// Block of non optional data where file section was supposed to be is fully or partially corrupted
+        SectionCorrupted,
+        /// Read operation failed
+        FileReadFailure,
+        /// Write operation failed
+        FileWriteFailure,
+        /// CRC32 checksum validation of buffer does not match with the expected value
+        ChecksumFailure,
+        /// UUID for section is not equal to the expexted value
+        SUIDInvalid,
+        /// UUID for section is not present at all
+        SUIDMissing,
+        /// Tried opening already opened and locked file
+        FileAlrOpen,
+        /// Internal reserved struct field contained non zero value
+        ReservedFieldViolated,
+        /// The function is not implemented. This error should be used only for testing builds
+        FunctionNotImplemented,
+        /// Data type is not properly aligned according to BSERIALIZE_DATA_ALIGN constant
+        UnalignedData,
+        /// Code execution failed as the host operating system is not supported or does not support certain system function
+        UnsupportedPlatform,
+        /// The object which was passed/returned to/from function does not hold correct data value
+        BadObject,
+        /// scheduled for removal
+        ReferenceExpired,
+        /// Call to operating system specific function or syscall failed with an error
+        OSFunctionCallFailed,
+        /// Provided data could not be properly serialized/deserialized
+        SerializerFailure
     };
     /*
     Extended error info, used when for example we have SectionMissingError
@@ -91,7 +90,6 @@ namespace Trd::Err {
     SECONDARY_ERROR_MAXSIZE constant defined in <trconsts.h>. This is only there to prevent
     whole stack traces being stored there and to prevent making unnecessarily large objects
     */
-    
 
     /**
      * @brief Stores extended error information
@@ -111,72 +109,67 @@ namespace Trd::Err {
          */
         u32 secondaryError{0};
         /// user friendly error message with maximum size of SECONDARY_ERROR_MAXSIZE
-        std::string friendlyErrorMessage {""}; 
-    };
-    
-class TrdError {
-protected:
-    Trd::Err::Code primaryError {Trd::Err::Code::Success};
-    std::optional<SecondaryErrorInfo> secondaryError {};
-    bool callHandler = true;
-
-public:
-    TrdError() {};
-    explicit TrdError(Err::Code primary, bool callHandler=true) : callHandler(callHandler) {
-        setError(primary);
+        std::string friendlyErrorMessage{""};
     };
 
-    explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg, bool callHandler=true) : callHandler(callHandler) {
-        setError(primary, extErr, extErrMsg);
-    };
-    Trd::Err::Code getError() const noexcept {
-        return primaryError;
-    }
-    /// @brief returns stored secondary error info
-    /// @return secondary info if present
-    std::optional<SecondaryErrorInfo> getSecondaryError() const noexcept {
-        return secondaryError;
-    }
-    
-    void setError(Err::Code primary);
-    void setError(Err::Code primary, u32 extErr, std::string extErrMsg="");
-    ///  checks whether the stored error code is Code::Success
-    bool isOK() const noexcept {
-        return (primaryError == Err::Code::Success);
-    }
-    /// sets stored error to Code::Success and clears secondaryError
-    void setSuccess() {
-        setError(Err::Code::Success);
-        //unset any other flags as secondaryError is not available for all errors
-        secondaryError.reset();
-    }
-    /// returns user friendly primary error as string
-    std::string_view getErrorAsString() const noexcept {
-        return TrdError::translateError(primaryError);
-    }
-    /// @brief translates primary error code to string
-    /// @param primary primary error code
-    /// @return translated string
-    static std::string_view translateError(Trd::Err::Code primary) noexcept;
+    class TrdError {
+      protected:
+        Trd::Err::Code primaryError{Trd::Err::Code::Success};
+        std::optional<SecondaryErrorInfo> secondaryError{};
+        bool callHandler = true;
 
-    static std::string_view translateError(const TrdError& trdErr) noexcept {
-        return translateError(trdErr.primaryError);
-    } 
-    friend std::ostream& operator<<(std::ostream& os, const TrdError& m)  {
-        os << "[e" << static_cast<std::underlying_type_t<Err::Code>>(m.getError()) 
-           << "]("<< m.translateError(m.primaryError) << ")";
+      public:
+        explicit TrdError(Err::Code primary, bool callHandler = true) : callHandler(callHandler) {
+            setError(primary);
+        };
 
-        
-        if (m.secondaryError) {
-            os << "\nSecondary." << m.secondaryError.value().secondaryError
-               << "(" << m.secondaryError.value().friendlyErrorMessage << ")";
+        explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg, bool callHandler = true) : callHandler(callHandler) {
+            setError(primary, extErr, extErrMsg);
+        };
+        Trd::Err::Code getError() const noexcept {
+            return primaryError;
         }
-        return os;
-    }
-    operator bool() const {
-        return isOK();
-    }
+        /// @brief returns stored secondary error info
+        /// @return secondary info if present
+        std::optional<SecondaryErrorInfo> getSecondaryError() const noexcept {
+            return secondaryError;
+        }
 
-};
+        void setError(Err::Code primary);
+        void setError(Err::Code primary, u32 extErr, std::string extErrMsg = "");
+        ///  checks whether the stored error code is Code::Success
+        bool isOK() const noexcept {
+            return (primaryError == Err::Code::Success);
+        }
+        /// sets stored error to Code::Success and clears secondaryError
+        void setSuccess() {
+            setError(Err::Code::Success);
+            //unset any other flags as secondaryError is not available for all errors
+            secondaryError.reset();
+        }
+        /// returns user friendly primary error as string
+        std::string_view getErrorAsString() const noexcept {
+            return TrdError::translateError(primaryError);
+        }
+        /// @brief translates primary error code to string
+        /// @param primary primary error code
+        /// @return translated string
+        static std::string_view translateError(Trd::Err::Code primary) noexcept;
+
+        static std::string_view translateError(const TrdError& trdErr) noexcept {
+            return translateError(trdErr.primaryError);
+        }
+        friend std::ostream& operator<<(std::ostream& os, const TrdError& m) {
+            os << "[e" << static_cast<std::underlying_type_t<Err::Code>>(m.getError()) << "](" << m.translateError(m.primaryError) << ")";
+
+            if (m.secondaryError) {
+                os << "\nSecondary." << m.secondaryError.value().secondaryError << "(" << m.secondaryError.value().friendlyErrorMessage << ")";
+            }
+            return os;
+        }
+        operator bool() const {
+            return isOK();
+        }
+    };
 
 };

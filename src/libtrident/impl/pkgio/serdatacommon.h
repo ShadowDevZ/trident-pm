@@ -11,13 +11,13 @@
 #include <vector>
 #include "datatypes.h"
 namespace Trd::Impl {
-    
+
     /**
      * @brief struct data to be serialized using BinarySerializer class
      * @details BinarySerializer as well as Impl::Crc32Gen handle endianness correctly 
      * no need to bitswap or do any data manipulations
      */
-    struct SerializableData{
+    struct SerializableData {
         /// size of all elements ideally returned by elementSize()
         virtual constexpr u64 size() const = 0;
 
@@ -44,6 +44,5 @@ namespace Trd::Impl {
         virtual std::optional<u32> checksumCRC32() const {
             return std::nullopt;
         }
-
     };
 }

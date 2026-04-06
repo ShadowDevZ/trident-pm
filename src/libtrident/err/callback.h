@@ -9,46 +9,46 @@
 namespace Trd::Err {
     class TrdError;
 
-    
-//Singleton class for adding callbacks to TrdErrors
-class TrdErrorCallback {
-public:
-    using ErrCb = std::function<void(const Trd::Err::TrdError&)>;
+    //Singleton class for adding callbacks to TrdErrors
+    class TrdErrorCallback {
+      public:
+        using ErrCb = std::function<void(const Trd::Err::TrdError&)>;
 
-    static TrdErrorCallback& instance() {
-        static TrdErrorCallback inst;
-        return inst;
-    }
-
-    template<std::invocable<const Trd::Err::TrdError&> F>
-    u32 registerCallback(F&& cb) {
-        u32 id = ++nextId;
-        callbacks.push_back({id, std::function<void(const Trd::Err::TrdError&)>(std::forward<F>(cb))});
-        return id;
-    }
-
-    void callHandlers(const Trd::Err::TrdError& err) {
-        for (auto& entry : callbacks) {
-            entry.cb(err);
+        static TrdErrorCallback& instance() {
+            static TrdErrorCallback inst;
+            return inst;
         }
-    }
 
-    void unregisterCallback(u32 id) {
-        std::erase_if(callbacks, [id](const auto& entry) { return entry.cbId == id; });
-    }
+        template <std::invocable<const Trd::Err::TrdError&> F>
+        u32 registerCallback(F&& cb) {
+            const u32 id = ++nextId;
+            callbacks.push_back({id, std::function<void(const Trd::Err::TrdError&)>(std::forward<F>(cb))});
+            return id;
+        }
 
-private:
-    TrdErrorCallback() = default;
-    ~TrdErrorCallback() = default;
-    TrdErrorCallback(const TrdErrorCallback&) = delete;
-    TrdErrorCallback& operator=(const TrdErrorCallback&) = delete;
+        void callHandlers(const Trd::Err::TrdError& err) {
+            for (auto& entry : callbacks) {
+                entry.cb(err);
+            }
+        }
 
-    struct CbEntry {
-        u32 cbId = 0;
-        ErrCb cb {};
+        void unregisterCallback(u32 id) {
+            std::erase_if(callbacks, [id](const auto& entry) { return entry.cbId == id; });
+        }
+
+        TrdErrorCallback(const TrdErrorCallback&) = delete;
+        TrdErrorCallback& operator=(const TrdErrorCallback&) = delete;
+
+      private:
+        TrdErrorCallback() = default;
+        ~TrdErrorCallback() = default;
+
+        struct CbEntry {
+            u32 cbId = 0;
+            ErrCb cb{};
+        };
+
+        u32 nextId = 0;
+        std::vector<CbEntry> callbacks;
     };
-
-    u32 nextId = 0;
-    std::vector<CbEntry> callbacks;
-};
 };

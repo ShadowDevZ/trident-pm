@@ -1,37 +1,35 @@
 #include "tstreaminfo.h"
-//#include "fileOperations.h"
+// #include "fileOperations.h"
 #include "ioflags.h"
 #include "binarySerializer.h"
 #include <cstring>
+#include <ranges>
 using namespace Trd;
 using namespace Trd::Impl;
 
 std::expected<void, Err::TrdError> TStreamInfo::checkFileStreamInfo() const {
-    //check if pointer was allocated usiong OpenPkg()
-    
+    // check if pointer was allocated usiong OpenPkg()
+
     if (!TStreamInfo::isOpen() || !xfInfo.hFile || !xfInfo.hFile->is_open()) {
         return std::unexpected(Err::TrdError{Err::Code::FileOpenFailure});
     }
     return {};
 }
-
 Err::Code streamRemoteIsOpen(const TRDFstreamObject& info) {
     if (info.acccessModel._internal == _TrdInternalIO::IoClosed) {
         return Err::Code::FileOpenFailure;
     }
-   
-    if (!info.hFile || ! info.hFile->is_open() || (!info.fileOpened)) {
-    
+
+    if (!info.hFile || !info.hFile->is_open() || (!info.fileOpened)) {
+
         return Err::Code::FileOpenFailure;
     }
 
     return Err::Code::Success;
 }
 
-
-
 std::expected<void, Err::TrdError> TStreamInfo::isOpen() const {
-    Err::Code status = streamRemoteIsOpen(xfInfo);
+    const Err::Code status = streamRemoteIsOpen(xfInfo);
     if (status != Err::Code::Success) {
         return std::unexpected(Err::TrdError{status});
     }
@@ -43,31 +41,27 @@ std::expected<void, Err::TrdError> TStreamInfo::closeStream() {
     return {};
 }
 
-
 void TStreamInfo::setFileStreamInfo(const TRDFstreamObject& info) {
     if (streamRemoteIsOpen(info) != Err::Code::Success) {
         throw std::runtime_error("Stream remote is closed");
     }
-  
+
     xfInfo = info;
 }
 
-
-
-
-//does not check for endianness, the data should already be passed in as LE object
+// does not check for endianness, the data should already be passed in as LE object
 void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
-    if (!checkFileStreamInfo() || !data || size < 1)  {
+    if (!checkFileStreamInfo() || !data || size < 1) {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
-    //for compatibility across different CPUS and to improve performance on x86/64
+    // for compatibility across different CPUS and to improve performance on x86/64
     if (!BinarySerializer::expectAlignedDataOrDie(size)) {
         return;
     }
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
-    
+
     xfInfo.hFile->write(data, size);
     if (!xfInfo.hFile) {
         throw std::ios_base::failure("WriteLeData() Failed");
@@ -77,12 +71,12 @@ void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
         xfInfo.checksumSize += size;
     }
 }
-//does not check for endianness, the data is retrieved as native endianness
+// does not check for endianness, the data is retrieved as native endianness
 void TStreamInfo::readTStream(char* s, u64 size) const {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
-    if (!checkFileStreamInfo() || !s || size < 1)  {
+    if (!checkFileStreamInfo() || !s || size < 1) {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
     if (!BinarySerializer::expectAlignedDataOrDie(size)) {
@@ -95,32 +89,30 @@ void TStreamInfo::readTStream(char* s, u64 size) const {
     }
 }
 
-
 void TStreamInfo::setSeekPos(u64 pos, std::ios_base::seekdir seekd) {
     xfInfo.hFile->seekg(pos, seekd);
     xfInfo.hFile->seekp(pos, seekd);
     if (!xfInfo.hFile) {
-        
-        //i was actually thinking if exceptions are necessary here but given that the user could set invalid offset
-        //and this could invalidate the whole program means we would have to check seekpos in every function 
+
+        // i was actually thinking if exceptions are necessary here but given that the user could set invalid offset
+        // and this could invalidate the whole program means we would have to check seekpos in every function
         throw std::ios_base::failure("seekg() failure");
     }
 }
 i64 TStreamInfo::getSeekPos() const {
-    i64 pos = xfInfo.hFile->tellg();
-  
+    const i64 pos = xfInfo.hFile->tellg();
+
     if (pos == -1 || !xfInfo.hFile) {
-        
+
         throw std::ios_base::failure("tellg() failed");
     }
     return pos;
 }
 
 void TStreamInfo::writePadding(u16 size, int value, bool increment) {
-    //char padding[size];
+    // char padding[size];
     std::vector<char> padding(size);
-    std::fill(padding.begin(), padding.end(), value);
-   // std::memset(padding, value, sizeof(padding));
+    std::ranges::fill(padding, value);
+    // std::memset(padding, value, sizeof(padding));
     writeTStream(reinterpret_cast<const char*>(padding.data()), padding.size(), increment);
 }
-

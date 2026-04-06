@@ -26,31 +26,25 @@
  */
 #define TRD_DBG_BUILD_ONLY
 
-
 #define LT_INITFL_DEFAULT 1 << 1
 
-#if defined(__DEBUG_PROJ_TARGET)
-    /**
+#ifdef __DEBUG_PROJ_TARGET
+/**
      * @brief Macro to check if the current built is set to Debug mode
      * May output unnecessary debug information
      * do not edit this field manually use './build.sh regen debug' or release
      * Never publish your 
      */
-    #define _LIBTRIDENT_DEBUG 1
-    /**
+#define _LIBTRIDENT_DEBUG 1
+/**
      * @brief Allows more verbose debug output and prints
      */
-    //#define _LIBTRIDENT_DEBUG_VERBOSE
+//#define _LIBTRIDENT_DEBUG_VERBOSE
 #endif
 
-
-
-
-
-
-#if defined(_LIBTRIDENT_DEBUG)
-    #define dbgprintf(...) fprintf( stderr, __VA_ARGS__ )
-        /*
+#ifdef _LIBTRIDENT_DEBUG
+#define dbgprintf(...) fprintf(stderr, __VA_ARGS__)
+/*
     Allows to manually overridce endianness for debugging purposes.
     Do not use unless you know what you are doing
 
@@ -59,10 +53,11 @@
     2: Force big endian
 
     */
-    #define LT_DEBUG_ENDIAN_FORCE 0
-    
-#else
-    #define dbgprintf(...) do{ } while ( 0 );
+#define LT_DEBUG_ENDIAN_FORCE 0
 
+#else
+#define dbgprintf(...)                                                                                                                                                             \
+    do {                                                                                                                                                                           \
+    } while (0);
 
 #endif

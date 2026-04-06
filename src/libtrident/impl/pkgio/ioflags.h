@@ -10,7 +10,7 @@
 #include <memory>
 namespace Trd {
 
-   /*
+    /*
     enum FileFlags : IO_OpenFlag {
         OCREATE_NEW       = 1 << 1,
         OPEN_EXISTING    = 1 << 2,
@@ -32,7 +32,7 @@ namespace Trd {
         
     };
     */
-    
+
     /**
      * @brief Package open type
      * 
@@ -48,7 +48,6 @@ namespace Trd {
         OpenExisting,
         /// creates package from array of bytes or partial memory block
         CreateFromMemBuff
-
     };
 
     /**
@@ -80,8 +79,7 @@ namespace Trd {
         /// locks the file and prevents other programs from reading and writing the data whilst open
         LockFile = 1 << 1,
         /// Do not change the modification time
-        NoTimeStamp = 1 << 2, 
-        
+        NoTimeStamp = 1 << 2,
     };
     /**
      * @brief Internal flags for library use
@@ -92,24 +90,23 @@ namespace Trd {
         None = 0,
         IoOpen = None,
         IoClosed = ((1 << 8) - 1)
-
     };
-    struct TRDAccessModel{
-        TrdOpenIO open {TrdOpenIO::None};
-        TrdAccessIO access {TrdAccessIO::None};
-        TrdXattrIO xattr {TrdXattrIO::None};
-        _TrdInternalIO _internal {_TrdInternalIO::None};
+    struct TRDAccessModel {
+        TrdOpenIO open{TrdOpenIO::None};
+        TrdAccessIO access{TrdAccessIO::None};
+        TrdXattrIO xattr{TrdXattrIO::None};
+        _TrdInternalIO _internal{_TrdInternalIO::None};
     };
 
     namespace Impl {
-    /*Translates AccessModel into std::ios:openmode. If mode cannot be translated like for example
+        /*Translates AccessModel into std::ios:openmode. If mode cannot be translated like for example
     TrdAccessIO::CreateFromMembuff returns nullopt. For attributes like TrdXattrIO or _TrdReserved nothing happens
     TrdOpenIO and TRDAccessIO are mandatory.
     */
-    std::optional<std::ios::openmode> translateAccessModel(const TRDAccessModel& accessModel); 
-     //all attributes without X prefix can be translated
-     //if an attribute with X prefix is passed, returns 0;
-   // std::ios::openmode IOFlags2FsBase(IO_OpenFlag flags);
-   // IO_OpenFlag FsToIOFlags(std::ios::openmode mode);
+        std::optional<std::ios::openmode> translateAccessModel(const TRDAccessModel& accessModel);
+        //all attributes without X prefix can be translated
+        //if an attribute with X prefix is passed, returns 0;
+        // std::ios::openmode IOFlags2FsBase(IO_OpenFlag flags);
+        // IO_OpenFlag FsToIOFlags(std::ios::openmode mode);
     };
 }

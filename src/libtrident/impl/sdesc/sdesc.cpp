@@ -3,14 +3,13 @@
 #include "tstreaminfo.h"
 #include <expected>
 
-
 #include "sdesc.h"
 #include "libtrident.h"
 using namespace Trd;
 using eCode = Err::Code;
 
 std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
-    //header needs to exist before any sd data is written
+    // header needs to exist before any sd data is written
     auto present = TrFileHeader::isHeaderPresent(trpkg.fstrInfo);
     if (!present) {
         return std::unexpected(present.error());
@@ -20,19 +19,19 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
 
     trpkg.trdSD = {};
 
-    //todo issue a write    
-    
+    // todo issue a write
+
     return IwriteSDNoValidate(trpkg.trdSD);
 };
 std::expected<void, Err::TrdError> TrSectionDescriptor::write() {
     auto valid = iValidateSD(trpkg.trdSD, false);
     if (!valid.has_value())
         return std::unexpected(valid.error());
-    
+
     auto sdVal = IwriteSDNoValidate(trpkg.trdSD);
-    if (!sdVal.has_value()) 
+    if (!sdVal.has_value())
         return std::unexpected(sdVal.error());
-    
+
     return {};
 }
 void TrSectionDescriptor::changeReadyStatus(bool ready) {
@@ -47,8 +46,7 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::IwriteSDNoValidate(const
 
     auto& sdStream = trpkg.fstrInfo;
     EXP_TRY(sdStream.checkFileStreamInfo());
-    
-    
+
     auto serializer = sd.serialize();
     if (!serializer.has_value()) {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
@@ -58,25 +56,25 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::IwriteSDNoValidate(const
         return std::unexpected(Err::TrdError(eCode::BadObject));
 
     Impl::BinarySerializer::writeDataToTStream(sdStream, serializer.value(), startOffset.value());
-   
+
     return {};
 }
 
-//Of course its another copy from the header class, in future there will be interface
-//for this (TM)
+// Of course its another copy from the header class, in future there will be interface
+// for this (TM)
 std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
-    u32 genCrc = sd.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
+    const u32 genCrc = sd.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if ((genCrc != sd.crc)) {
         dbgprintf("[CRC_SD] gen %u : exp: %u\n", genCrc, sd.crc);
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
-    } 
+    }
     return {};
 }
 
 std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
     [[unlikely]]
     if (sd.size() != Consts::SD::TRD_SECTIONSD_SIZE) {
-        dbgprintf("sd size violation: exp: %u got: %lu\n",Consts::SD::TRD_SECTIONSD_SIZE,sd.size());
+        dbgprintf("sd size violation: exp: %u got: %lu\n", Consts::SD::TRD_SECTIONSD_SIZE, sd.size());
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
     if (sd._reserved1 != 0 || sd._reserved2 != 0) {
@@ -97,19 +95,18 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iValidateSD(const I
     if (checkReady && !sd.sdReady) {
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
-    //if the SD is marked as ready then we are expecting all of these fields to be filled with existing
-    //information, todo there should be a call to function which checks if the offsets are actually correct
-    if (sd.sdReady && (sd.tblCount == 0 ||sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0) ) {
+    // if the SD is marked as ready then we are expecting all of these fields to be filled with existing
+    // information, todo there should be a call to function which checks if the offsets are actually correct
+    if (sd.sdReady && (sd.tblCount == 0 || sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0)) {
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
     auto crc = iCheckCRC(sd);
     if (!crc.has_value())
         return std::unexpected(crc.error());
 
-    //todo once dyntbl and treg are imlpemented jump to each offsets and check section
+    // todo once dyntbl and treg are imlpemented jump to each offsets and check section
     return {};
 }
-
 
 std::expected<u64, Err::TrdError> TrSectionDescriptor::getStartOffset() {
     return Consts::Header::LT_HDR_SZB_01A + 1;
@@ -126,9 +123,7 @@ const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
     return trpkg.trdSD;
 }
 
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update, 
-                                                                      std::optional<bool> setReadyStatus,
-                                                                      bool checkReady) {
+std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update, std::optional<bool> setReadyStatus, bool checkReady) {
     Impl::TRD_SECTION_DESCRIPTOR sdTemp = trpkg.trdSD;
     if (update.sectionStatusCode)
         sdTemp.sectionStatusCode = *update.sectionStatusCode;
@@ -141,17 +136,15 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl
 
     sdTemp.crc = sdTemp.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if (setReadyStatus)
-        //because we are assigning u8b not bool
+        // because we are assigning u8b not bool
         sdTemp.sdReady = *setReadyStatus ? 1 : 0;
-    
+
     auto optValid = iValidateSD(sdTemp, checkReady);
     if (!optValid) {
         return std::unexpected(optValid.error());
     }
     trpkg.trdSD = sdTemp;
     return TrSectionDescriptor::write();
-
-    
 }
 bool TrSectionDescriptor::isValid() {
     if (!trpkg.fstrInfo.checkFileStreamInfo())
@@ -159,42 +152,26 @@ bool TrSectionDescriptor::isValid() {
     return iValidateSD(trpkg.trdSD).has_value();
 }
 
+std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
 
-
-std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> 
-            TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
-    
     EXP_TRY(tStream.checkFileStreamInfo());
-    Impl::TRD_SECTION_DESCRIPTOR sd {};
+    Impl::TRD_SECTION_DESCRIPTOR sd{};
     auto startOffset = getStartOffset();
     auto endOffset = getEndOffset();
 
-    u64 size = endOffset.value() - startOffset.value();
+    const u64 size = endOffset.value() - startOffset.value();
     if (!startOffset || !endOffset || size != Consts::SD::TRD_SECTIONSD_SIZE)
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
 
-
-    auto readData =  Impl::BinarySerializer::readDataFromTStream(tStream, startOffset.value(),
-                                                                size);
+    auto readData = Impl::BinarySerializer::readDataFromTStream(tStream, startOffset.value(), size);
     if (!sd.deserialize(readData)) {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
     }
     EXP_TRY(iValidateSD(sd));
     return sd;
-
 }
 
-
-
-
-
-
-
-
-
-
-
-//temporarily disabled for testing
+// temporarily disabled for testing
 /*
 #include "sdesc.h"
 #include "sdescid.h"
@@ -219,7 +196,7 @@ u32 IGenerateChecksum(const TRD_SD& sd);
 //difference between these and raw functions is that Raw function point to the start of GUID whilst these point to actual data
 //less error checking
 //todo fix repetetiveness
-constexpr foffset_t TRDSecDesc::GetSDAddress() noexcept { 
+constexpr foffset_t TRDSecDesc::GetSDAddress() noexcept {
     //todo actually find the TUID inside the stream and get its position to check presence start
    return TRDSdToken::GetOptRawSDStart() + Trd::Consts::SUID::SUID_MAX_LENGTH;
 }
@@ -242,7 +219,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::WriteBlankSD() {
     if(!writeSDd.has_value()) {
         return std::unexpected(writeSDd.error());
     }
-    
+
     return IWriteSD(true);
 }
 
@@ -264,15 +241,15 @@ std::expected<void, Err::TrdError> TRDSecDesc::IWriteSD(bool blankWrite) {
     if (!rwAccess.has_value()) {
         return std::unexpected(rwAccess.error());
     }
-    
+
    // auto& fstrInfo = sdStream->GetFstreamObject();
    // auto& fstrStream = sdStream->GetFstreamObject().hFile;
-    
+
     sdStream->SetSeekPosW(GetSDAddress());
-    
+
     //const char* hdrContent = reinterpret_cast<const char*>(&secDescInternal);
     sdStream->WriteTStream<TRD_SD>(secDescInternal);
-    
+
     return {};
 }
 //checks if we have header first
@@ -302,7 +279,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD
         return std::unexpected(sdValid.error());
     }
     secDescInternal = updateSd;
-    
+
     if (autoWrite) {
         return IWriteSD();
     }
@@ -310,7 +287,7 @@ std::expected<void, Err::TrdError> TRDSecDesc::UpdateSD(const TRD_SD_UPDATEFIELD
 }
 
 /*
-if we are going to have to perform random access we probably should use mmap() syscall, in that 
+if we are going to have to perform random access we probably should use mmap() syscall, in that
 case we probably should also in Impl create custom std::ostream clonse for memory mapped file, mimicking the
 seek/tell functions, this will however make it more os dependent and we are going to need multiple os specific function
 prototypes. There is also problem that when we write to the file and size changes we have to again call mmap() because
@@ -318,10 +295,9 @@ the kernel won't update the size automatically resulting in SIGBUS, this becomes
 utilize header only cross platform library like https://github.com/vimpunk/mio
 */
 
-
 /*
 std::expected<void, Err::TrdError> TRDSecDesc::iValidateSDContent(const TRD_SD& sd) {
-    
+
     if (!IChecksumValid(sd.crc, sd)) {
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     }
@@ -351,7 +327,7 @@ bool TRDSecDesc::IChecksumValid(u32 crc, const TRD_SD& sd) {
     u32 genCrc = IGenerateChecksum(sd);
     if ((genCrc != sd.crc) || (crc == 0)) {
         return false;
-    } 
+    }
     return true;
 }
 //These functions have to calculate CRC32 unlike the Header UpdateX
@@ -373,19 +349,19 @@ std::expected<void, Err::TrdError> TRDSecDesc::UpdateSDRegOffset(u64 tregOffset)
 
 std::expected<TRD_SD, Err::TrdError>TRDSecDesc::ReadBack() {
     TRD_SD sdDesc { };
-    
+
     auto haveCtx= Tstream::TStreamInfo::GetFstreamContent(wFstr);
     if (!haveCtx.has_value()) {
         return std::unexpected(Err::TrdError(eCode::ReferenceExpired));
     }
     auto sdStream = haveCtx.value();
     auto expStream = sdStream->CheckFileStreamInfo();
-        
+
     if (!expStream.has_value()) {
         return std::unexpected(expStream.error());
     }
-    
-    
+
+
     i64 originalPosition = sdStream->GetSeekPosR();
 
     if (originalPosition == -1) {
@@ -397,19 +373,19 @@ std::expected<TRD_SD, Err::TrdError>TRDSecDesc::ReadBack() {
     }
 
     sdStream->SetSeekPosR(GetSDAddress());
-   
-    
+
+
    // ReadHeaderStream.ReadHeader(reinterpret_cast<char*>(&hdr), GetHeaderByteSize());
 
     sdStream->ReadTStream<TRD_SD>(sdDesc);
-  
+
 
     sdStream->SetSeekPosR(originalPosition);
     auto valContent = iValidateSDContent(sdDesc);
     if (!valContent.has_value()) {
         return std::unexpected(valContent.error());
     }
-    
+
     return sdDesc;
  }
 
@@ -420,7 +396,7 @@ std::expected<TRD_SD, Err::TrdError>TRDSecDesc::ReadBack() {
         secDescInternal = optHdr.value();
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
-    return {};    
+    return {};
 }
 
 bool TRDSecDesc::IsValid() {
