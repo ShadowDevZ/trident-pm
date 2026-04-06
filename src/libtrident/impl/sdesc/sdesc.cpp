@@ -10,6 +10,11 @@ using namespace Trd;
 using eCode = Err::Code;
 
 std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
+    //header needs to exist before any sd data is written
+    auto present = TrFileHeader::isHeaderPresent(trpkg.fstrInfo);
+    if (!present) {
+        return std::unexpected(present.error());
+    }
     if (u8b_isTrue(trpkg.trdSD.sdReady))
         throw std::runtime_error("Cannot make SD blank as SD was marked with status READY");
 

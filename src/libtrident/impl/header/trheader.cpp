@@ -52,7 +52,7 @@ std::expected<TRD_HEADER, Err::TrdError>TrFileHeader::readBack(Impl::TStreamInfo
    
        
     if (!iValidateHeader(hdr)) {
-        return std::unexpected(Err::TrdError(eCode::BadObject));
+        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
     
     return hdr;
@@ -73,8 +73,11 @@ std::expected<void, Err::TrdError> TrFileHeader::isHeaderPresent(Trd::Impl::TStr
    
     auto optHdr = TrFileHeader::readBack(streamInfo);
     if (!optHdr.has_value()) {
-        return std::unexpected(Err::TrdError(Err::Code::FileReadFailure));
+        return std::unexpected(optHdr.error());
     }
+    auto valHdr = iValidateHeader(optHdr.value());
+    if (!valHdr)
+        return std::unexpected(valHdr.error());
     
     return {};
 }

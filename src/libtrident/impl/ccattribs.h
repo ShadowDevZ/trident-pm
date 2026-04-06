@@ -1,5 +1,4 @@
 #pragma once
-#include <assert.h>
 #include <stdlib.h>
 
 #define __UNMANGLE extern "C"
@@ -51,8 +50,6 @@
 
 #if defined(_LIBTRIDENT_DEBUG)
     #define dbgprintf(...) fprintf( stderr, __VA_ARGS__ )
-    #define ASSERTION_FAIL_EXIT_CODE 500
-
         /*
     Allows to manually overridce endianness for debugging purposes.
     Do not use unless you know what you are doing
@@ -66,6 +63,6 @@
     
 #else
     #define dbgprintf(...) do{ } while ( 0 );
-  //  #define tassert(x, msg) do{ } while (0);
+
 
 #endif

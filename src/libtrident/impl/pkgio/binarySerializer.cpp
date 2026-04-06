@@ -110,7 +110,9 @@ std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign
     if (!expectAlignedDataOrDie(bufferData.size())) {
             return std::nullopt;
     }
+#if defined(_LIBTRIDENT_DEBUG_VERBOSE)
     dbgprintf("--Serializing data size %luB\n\n", bufferData.size());
+#endif
    // bool st = tStream->writeTStream(reinterpret_cast<const char*>(bufferData.data()), bufferData.size(),  true);
     
     return bufferData;

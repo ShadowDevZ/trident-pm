@@ -20,13 +20,6 @@ mark every constructor as explicit
 
 /current goal
 
-- recalcCRC()
-- trderror callback for user to check for errors
-the callback is also triggered in the constructor of the TrdErr class object so when we
-return std;:unexpected(Err::TrdErr(eCode::....)) this should call the callback handler.
-Also each set error operation should call the handler. The handler should have boolean return value
-if false is returned the whole program is terminated with error
-
 
 TEST ENDIANNESS ON PPC EMULATOR
 properly separate implementation details from the exposed API and include dirs

@@ -97,7 +97,7 @@ void print_header(const Trd::TRD_HEADER& hdr) {
 }
 
 void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
-    dbgprintf("\n[SD_START]\n");
+    dbgprintf("[SD_START - SIZE(real:%luB, work:%luB)]\n", sizeof(sd), sd.size());
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
     dbgprintf("\tSection status %u\n", static_cast<Trd::u16>(sd.sectionStatusCode));
     dbgprintf("\tTblcount: %u\n", sd.tblCount);
