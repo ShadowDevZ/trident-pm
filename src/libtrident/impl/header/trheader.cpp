@@ -28,9 +28,10 @@ const TRD_HEADER& TrFileHeader::getHeader() const {
 
 std::expected<void, Err::TrdError> TrFileHeader::read() {
     auto optHdr = TrFileHeader::readBack(trpkg.fstrInfo);
-    if (!optHdr.has_value() || !iValidateHeader(optHdr.value())) {
-        return std::unexpected(Err::TrdError(eCode::FileReadFailure));
+    if (!optHdr.has_value()) {
+        return std::unexpected(optHdr.error());
     }
+    EXP_TRY(iValidateHeader(optHdr.value()));
     
     trpkg.trdHdr = optHdr.value();
     return {};
@@ -41,43 +42,35 @@ std::expected<void, Err::TrdError> TrFileHeader::read() {
 std::expected<TRD_HEADER, Err::TrdError>TrFileHeader::readBack(Impl::TStreamInfo& tStream) {
     TRD_HEADER hdr {};
   
-    if (!tStream.checkFileStreamInfo().has_value()) {
-        return std::unexpected(Err::TrdError(eCode::NullObject));
-    }
+    EXP_TRY(tStream.checkFileStreamInfo());
 
     auto readData =  Impl::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET, hdr.size());
     if (!hdr.deserialize(readData)) {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
     }
    
-       
-    if (!iValidateHeader(hdr)) {
-        return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
-    }
+    
+    EXP_TRY(iValidateHeader(hdr));
     
     return hdr;
 }
 bool TrFileHeader::isValid() {
-    if (!trpkg.fstrInfo.isOpen()) {
+    if (!trpkg.fstrInfo.checkFileStreamInfo())
         return false;
-    }
     return iValidateHeader(trpkg.trdHdr).has_value();
 }
 
 
 std::expected<void, Err::TrdError> TrFileHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
    
-    if (!streamInfo.checkFileStreamInfo().has_value()) {
-        return std::unexpected(Err::TrdError(eCode::NullObject));
-    }
+    EXP_TRY(streamInfo.checkFileStreamInfo());
    
     auto optHdr = TrFileHeader::readBack(streamInfo);
     if (!optHdr.has_value()) {
         return std::unexpected(optHdr.error());
     }
-    auto valHdr = iValidateHeader(optHdr.value());
-    if (!valHdr)
-        return std::unexpected(valHdr.error());
+    EXP_TRY(iValidateHeader(optHdr.value()));
+    
     
     return {};
 }
@@ -101,9 +94,7 @@ std::expected<void, Err::TrdError> TrFileHeader::iValidateHeader(const TRD_HEADE
     if (hdrIn.fmtVersion == Consts::Header::TRD_HDR_INVALID_VERSION) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
-    if (!iCheckCRC(hdrIn).has_value()) {
-        return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
-    }
+    EXP_TRY(iCheckCRC(hdrIn));
     if (hdrIn.dynFileLen == 0) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
@@ -116,10 +107,7 @@ std::expected<void, Err::TrdError> TrFileHeader::write() {
         return std::unexpected(Err::TrdError(eCode::BadObject));
     }
     auto& hdrStream = trpkg.fstrInfo;
-    if (!hdrStream.checkFileStreamInfo()) {
-        return std::unexpected(Err::TrdError(eCode::NullObject));
-       
-    }
+    EXP_TRY(hdrStream.checkFileStreamInfo());
     
     //hdrStream.setSeekPos(TRD_HDR_START_OFFSET);
     auto serializer = trpkg.trdHdr.serialize();

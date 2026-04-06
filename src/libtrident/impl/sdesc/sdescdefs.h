@@ -64,41 +64,17 @@ struct TRD_SECTION_DESCRIPTOR : Impl::SerializableData {
                                                   tblRegistryOffset, _reserved1, _reserved2,idByte);
     }
     //again in code we shouldnt even bother what is idByte outside of validating external SD struct
-    std::optional<std::vector<u8>> serialize() const override {
-        if (_reserved1 != 0 || _reserved2 != 0 ||
-            !u8b_valid(sdReady) || idByte != Consts::SD::TRD_SD_IDBYTE) {
-            
-                return std::nullopt;
-        }
-        Trd::Impl::BinarySerializer bs;
-        bs.addTrivial(crc, sectionStatusCode, sdReady, tblCount, tblDynamicOffset, 
-                    tblRegistryOffset, _reserved1, _reserved2,idByte);
+    std::optional<std::vector<u8>> serialize() const override;
 
-        
-        return bs.getFormattedData();
-    }
-    bool deserialize(const std::vector<u8>& dataIn) override {
-        Impl::BinarySerializer bs(dataIn);
-        
-        bs.readTrivial(crc, sectionStatusCode, sdReady, tblCount, tblDynamicOffset, 
-                    tblRegistryOffset, _reserved1, _reserved2,idByte);
-        dbgprintf("xsize:%ld:\n", bs.getReadOffset());
-        
-        if (bs.getReadOffset() != this->size() || _reserved1 != 0 || _reserved2 != 0 ||
-            !u8b_valid(sdReady) || idByte != Consts::SD::TRD_SD_IDBYTE)
-            return false;
+    bool deserialize(const std::vector<u8>& dataIn) override;
+    
+    std::optional<u32> checksumCRC32() const;
 
-
-        return true;
-    }   
-    std::optional<u32> checksumCRC32() const override {
-        if (_reserved1 != 0 || _reserved2 != 0 ||
-            !u8b_valid(sdReady) || idByte != Consts::SD::TRD_SD_IDBYTE) {
-            return std::nullopt;
-        }
-        Impl::Crc32Gen crc;
-        crc.addData(sectionStatusCode, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved1, _reserved1, _reserved2,idByte);
-        return crc.getCrc32();
+    bool operator==(const TRD_SECTION_DESCRIPTOR& other) const {
+        return crc == other.crc && sectionStatusCode == other.sectionStatusCode
+        && tblCount == other.tblCount && _reserved1 == other._reserved1 &&
+        tblDynamicOffset == other.tblDynamicOffset && tblRegistryOffset == other.tblRegistryOffset
+        && _reserved2 == other._reserved2 && sdReady == other.sdReady;
     }
 };
 };

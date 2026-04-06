@@ -103,8 +103,19 @@ int main(void) {
     TASSERT("UpdateSD()", trpkgSD.updateSD(sdUpd));
 
 
+    auto tsd = trpkgSD.getSD();
+
+    auto rbSd = trpkgSD.readBack(ltTrPkg.getTstream());
+    TASSERT("ReadbackSD()", rbSd);
+    if (rbSd.value() != tsd) {
+        dbgprintf("eread!fail\n");
+        return 1;
+    }
+    
+
 #if defined(_LIBTRIDENT_DEBUG)
     print_sd(trpkgSD.getSD());
+    print_sd(rbSd.value());
 #endif
 
     

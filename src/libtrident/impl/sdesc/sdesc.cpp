@@ -43,16 +43,10 @@ bool TrSectionDescriptor::isReady() const {
 }
 
 std::expected<void, Err::TrdError> TrSectionDescriptor::IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
-    auto fieldCheck = iFieldCheckSD(sd);
-    if(!fieldCheck.has_value()) {
-        return std::unexpected(fieldCheck.error());
-    }
+    EXP_TRY(iFieldCheckSD(sd));
 
     auto& sdStream = trpkg.fstrInfo;
-    if (!sdStream.checkFileStreamInfo()) {
-        return std::unexpected(Err::TrdError(eCode::NullObject));
-       
-    }
+    EXP_TRY(sdStream.checkFileStreamInfo());
     
     
     auto serializer = sd.serialize();
@@ -159,6 +153,46 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl
 
     
 }
+bool TrSectionDescriptor::isValid() {
+    if (!trpkg.fstrInfo.checkFileStreamInfo())
+        return false;
+    return iValidateSD(trpkg.trdSD).has_value();
+}
+
+
+
+std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> 
+            TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
+    
+    EXP_TRY(tStream.checkFileStreamInfo());
+    Impl::TRD_SECTION_DESCRIPTOR sd {};
+    auto startOffset = getStartOffset();
+    auto endOffset = getEndOffset();
+
+    u64 size = endOffset.value() - startOffset.value();
+    if (!startOffset || !endOffset || size != Consts::SD::TRD_SECTIONSD_SIZE)
+        return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
+
+
+    auto readData =  Impl::BinarySerializer::readDataFromTStream(tStream, startOffset.value(),
+                                                                size);
+    if (!sd.deserialize(readData)) {
+        return std::unexpected(Err::TrdError(eCode::SerializerFailure));
+    }
+    EXP_TRY(iValidateSD(sd));
+    return sd;
+
+}
+
+
+
+
+
+
+
+
+
+
 
 //temporarily disabled for testing
 /*

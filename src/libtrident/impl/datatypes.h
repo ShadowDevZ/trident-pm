@@ -43,4 +43,12 @@ constexpr bool u8b_isTrue(T b) {
 } 
 
 
+#if (defined(EXP_TRY))
+#error "TRY macro already defined"
+#else
+//convenient macro that lets us test std::expected if we only care to check if function failed and get error
+#define EXP_TRY(expr)                      \
+    if (auto _r = (expr); !_r)             \
+        return std::unexpected(_r.error())
+#endif
 };
