@@ -72,7 +72,7 @@ int main(void) {
     auto vxa = trPkgHdr.getHeader();
     print_header(vxa);
 #endif
-    auto trpkgSD = ltTrPkg.sectionDescriptor();
+    auto trpkgSD = ltTrPkg.sd();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
     Impl::TRD_SD_UPDATEFIELD sdUpd = {.sectionStatusCode{Impl::SectionStatusFlag::ReadLockTreg},
@@ -82,18 +82,15 @@ int main(void) {
     trpkgSD.changeReadyStatus(true);
     TASSERT("UpdateSD()", trpkgSD.updateSD(sdUpd));
 
-    auto tsd = trpkgSD.getSD();
-
-    auto rbSd = trpkgSD.readBack(ltTrPkg.getTstream());
-    TASSERT("ReadbackSD()", rbSd);
-    if (rbSd.value() != tsd) {
+    auto rbSd = trpkgSD.getSD();
+    TASSERT("ReadbackSD()", trpkgSD.read());
+    if (rbSd != ltTrPkg.sd().getSD()) {
         dbgprintf("eread!fail\n");
         return 1;
     }
 
 #ifdef _LIBTRIDENT_DEBUG
-    print_sd(trpkgSD.getSD());
-    print_sd(rbSd.value());
+    print_sd(rbSd);
 #endif
 
     std::cout << "Exit(0)\n";

@@ -72,7 +72,7 @@ namespace Trd {
          *
          * @return std::expected<void, Err::TrdError>
          */
-        static std::expected<void, Err::TrdError> isSdPresent();
+        static std::expected<void, Err::TrdError> isSdPresent(Trd::Impl::TStreamInfo& streamInfo);
         /**
          * @brief Returns the starting stream offset where SD is located
          *
@@ -107,6 +107,7 @@ namespace Trd {
                  std::optional<bool> setReadyStatus = std::nullopt, bool checkReady = true);
         /**
          * @brief Reads the SD from the Tstream and returns the SD object
+         * @attention The function already validates the read section no need to double check
          *
          * @param tStream reference to the TStream where SD is supposed to be read from
          * @return std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> full SD struct if present
@@ -119,12 +120,16 @@ namespace Trd {
       private:
         friend class TrPkg;
         TrPkg& trpkg;
+
         std::expected<void, Trd::Err::TrdError>
         IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+
         static std::expected<void, Trd::Err::TrdError>
         iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+
         static std::expected<void, Trd::Err::TrdError>
         iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool checkReady = true);
+
         static std::expected<void, Trd::Err::TrdError>
         iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd);
     };

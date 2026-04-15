@@ -13,7 +13,7 @@ using namespace Trd::Impl;
 TrFileHeader TrPkg::header() {
     return TrFileHeader(*this);
 }
-TrSectionDescriptor TrPkg::sectionDescriptor() {
+TrSectionDescriptor TrPkg::sd() {
     return TrSectionDescriptor(*this);
 }
 

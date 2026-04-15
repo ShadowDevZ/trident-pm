@@ -35,7 +35,7 @@ namespace Trd {
         std::expected<void, Trd::Err::TrdError> read() /*override*/;
         /**
      * @brief Reads the header from the file and returns the copy without altering the internal header
-     * 
+     * @attention This function already checks and validates the header no need to double check
      * @param tStream reference to the valid TStream
      * @return std::expected<TRD_HEADER, Trd::Err::TrdError> if header is present returns
      * the valid and deserialized Header otherwise provides additional error info.

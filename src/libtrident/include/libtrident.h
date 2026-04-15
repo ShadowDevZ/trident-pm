@@ -42,7 +42,7 @@ namespace Trd {
            *
            * @return TrSectionDescriptor
            */
-        TrSectionDescriptor sectionDescriptor();
+        TrSectionDescriptor sd();
 
         const Trd::Impl::TStreamInfo& getTstream() const {
             return fstrInfo;

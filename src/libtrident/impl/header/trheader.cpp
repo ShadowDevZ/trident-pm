@@ -54,14 +54,11 @@ bool TrFileHeader::isValid() {
 
 std::expected<void, Err::TrdError>
 TrFileHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
-
-    EXP_TRY(streamInfo.checkFileStreamInfo());
-
+    //returned header is already validated
     auto optHdr = TrFileHeader::readBack(streamInfo);
     if (!optHdr.has_value()) {
         return std::unexpected(optHdr.error());
     }
-    EXP_TRY(iValidateHeader(optHdr.value()));
 
     return {};
 }
