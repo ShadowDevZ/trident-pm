@@ -36,7 +36,8 @@ std::expected<TRD_HEADER, Err::TrdError> TrFileHeader::readBack(Impl::TStreamInf
 
     EXP_TRY(tStream.checkFileStreamInfo());
 
-    auto readData = Impl::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET, hdr.size());
+    auto readData =
+        Impl::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET, hdr.size());
     if (!hdr.deserialize(readData)) {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
     }
@@ -51,7 +52,8 @@ bool TrFileHeader::isValid() {
     return iValidateHeader(trpkg.trdHdr).has_value();
 }
 
-std::expected<void, Err::TrdError> TrFileHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
+std::expected<void, Err::TrdError>
+TrFileHeader::isHeaderPresent(Trd::Impl::TStreamInfo& streamInfo) {
 
     EXP_TRY(streamInfo.checkFileStreamInfo());
 
@@ -71,7 +73,8 @@ std::expected<void, Err::TrdError> TrFileHeader::iValidateHeader(const TRD_HEADE
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
 
-    if (hdrIn.magic != std::to_array(TRD_HDR_MAGIC) || hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
+    if (hdrIn.magic != std::to_array(TRD_HDR_MAGIC) ||
+        hdrIn.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
 
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
@@ -113,7 +116,9 @@ std::expected<void, Err::TrdError> TrFileHeader::iCheckCRC(const TRD_HEADER& hdr
     return {};
 }
 
-std::expected<void, Err::TrdError> TrFileHeader::create(BuildFlags::Flags buildFlgs, ArchType::Type archType, GlobalCompression::Algorithm comprType) {
+std::expected<void, Err::TrdError> TrFileHeader::create(BuildFlags::Flags buildFlgs,
+                                                        ArchType::Type archType,
+                                                        GlobalCompression::Algorithm comprType) {
     //return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     TRD_HDRFIELD_UPDATE update;
     auto fmtHdr = formatHeaderVersion(TRD_HDR_VMAJOR, TRD_HDR_VMINOR, TRD_HDR_VREVISION);
@@ -135,12 +140,14 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
     //todo probably instead call iValidateHeader()
     //the data is already assigned in struct, just a check if someone tried messing with it
     [[unlikely]]
-    if (hdr.magic != std::to_array(TRD_HDR_MAGIC) || hdr.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
+    if (hdr.magic != std::to_array(TRD_HDR_MAGIC) ||
+        hdr.exSignature != TRD_HDR_EXTENDED_SIGNATURE) {
 
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
 
-    if (!(field.fmtVersion.has_value() || field.compression.has_value() || field.buildFlags.has_value() || field.architecture.has_value())) {
+    if (!(field.fmtVersion.has_value() || field.compression.has_value() ||
+          field.buildFlags.has_value() || field.architecture.has_value())) {
         return std::unexpected(Err::TrdError(eCode::InvalidFuncArg));
     }
     // NOLINTBEGIN(bugprone-unchecked-optional-access)
@@ -158,7 +165,8 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
     return {};
 }
 
-std::expected<u16, Err::TrdError> TrFileHeader::formatHeaderVersion(u8 major, u8 minor, u8 revision) {
+std::expected<u16, Err::TrdError> TrFileHeader::formatHeaderVersion(u8 major, u8 minor,
+                                                                    u8 revision) {
     if (major > 99 || minor > 99 || revision > 9 || major == 0) {
         return std::unexpected(Err::TrdError(Err::Code::InvalidFuncArg));
     }
@@ -171,7 +179,8 @@ std::expected<u16, Err::TrdError> TrFileHeader::formatHeaderVersion(u8 major, u8
     }
     return r;
 }
-std::expected<std::string, Err::TrdError> TrFileHeader::headerVersionFormatToString(u16 fmt, bool abRevision) {
+std::expected<std::string, Err::TrdError>
+TrFileHeader::headerVersionFormatToString(u16 fmt, bool abRevision) {
     std::string base;
     if (fmt < LT_HDR_VERSION_MIN) {
         return std::unexpected(Err::TrdError(Err::Code::InvalidFuncArg));

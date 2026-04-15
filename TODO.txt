@@ -1,22 +1,4 @@
 Ltrident/
-main.cpp static assertions
-trheader.cpp check eacch field individually
-             serialize the fields, template the CRC32
-             ?direct write??
-             validate fields in update
-
-sdesc.cpp
-            implement functions
-            check sd tags and returns
-            call IValidateTblAddr
-
-sdescid.cpp
-            read SUID inside stream
-
-
-
-mark every constructor as explicit
-
 
 /current goal
 
@@ -24,7 +6,6 @@ mark every constructor as explicit
 TEST ENDIANNESS ON PPC EMULATOR
 properly separate implementation details from the exposed API and include dirs
 
-updateHeader fields should be optional there should also be readDynamicXXXX
 
 DO NOT STORE THE FILE SIZE BY INCREMENTING. INSTEAD AT THE VERY END OF WRITING TO THE PACKAGE
 SUBSTRACT SIZE OF WHOLE FILE AND HEADER

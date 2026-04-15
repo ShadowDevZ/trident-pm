@@ -54,7 +54,8 @@ namespace Trd {
         explicit TrPkg(const std::filesystem::path& path, const TRDAccessModel& access) {
             openPackage(path, access);
         }
-        explicit TrPkg(const std::filesystem::path& path, TrdOpenIO open, TrdAccessIO access, TrdXattrIO xattr = TrdXattrIO::None) {
+        explicit TrPkg(const std::filesystem::path& path, TrdOpenIO open, TrdAccessIO access,
+                       TrdXattrIO xattr = TrdXattrIO::None) {
 
             openPackage(path, {open, access, xattr, _TrdInternalIO::None});
         }

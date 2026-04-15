@@ -123,7 +123,8 @@ namespace Trd::Err {
             setError(primary);
         };
 
-        explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg, bool callHandler = true) : callHandler(callHandler) {
+        explicit TrdError(Err::Code primary, u32 extErr, std::string extErrMsg,
+                          bool callHandler = true) : callHandler(callHandler) {
             setError(primary, extErr, extErrMsg);
         };
         Trd::Err::Code getError() const noexcept {
@@ -160,10 +161,12 @@ namespace Trd::Err {
             return translateError(trdErr.primaryError);
         }
         friend std::ostream& operator<<(std::ostream& os, const TrdError& m) {
-            os << "[e" << static_cast<std::underlying_type_t<Err::Code>>(m.getError()) << "](" << m.translateError(m.primaryError) << ")";
+            os << "[e" << static_cast<std::underlying_type_t<Err::Code>>(m.getError()) << "]("
+               << m.translateError(m.primaryError) << ")";
 
             if (m.secondaryError) {
-                os << "\nSecondary." << m.secondaryError.value().secondaryError << "(" << m.secondaryError.value().friendlyErrorMessage << ")";
+                os << "\nSecondary." << m.secondaryError.value().secondaryError << "("
+                   << m.secondaryError.value().friendlyErrorMessage << ")";
             }
             return os;
         }

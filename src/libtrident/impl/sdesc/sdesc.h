@@ -102,24 +102,31 @@ namespace Trd {
          * this would render the SD invalid unless this option is set to false
          * @return std::expected<void, Trd::Err::TrdError>
          */
-        std::expected<void, Trd::Err::TrdError> updateSD(const Impl::TRD_SD_UPDATEFIELD& update, std::optional<bool> setReadyStatus = std::nullopt, bool checkReady = true);
+        std::expected<void, Trd::Err::TrdError>
+        updateSD(const Impl::TRD_SD_UPDATEFIELD& update,
+                 std::optional<bool> setReadyStatus = std::nullopt, bool checkReady = true);
         /**
          * @brief Reads the SD from the Tstream and returns the SD object
          *
          * @param tStream reference to the TStream where SD is supposed to be read from
          * @return std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> full SD struct if present
          */
-        static std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> readBack(Impl::TStreamInfo& tStream);
+        static std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError>
+        readBack(Impl::TStreamInfo& tStream);
 
         explicit TrSectionDescriptor(TrPkg& pkg) : trpkg(pkg) {};
 
       private:
         friend class TrPkg;
         TrPkg& trpkg;
-        std::expected<void, Trd::Err::TrdError> IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd);
-        static std::expected<void, Trd::Err::TrdError> iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd);
-        static std::expected<void, Trd::Err::TrdError> iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool checkReady = true);
-        static std::expected<void, Trd::Err::TrdError> iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+        std::expected<void, Trd::Err::TrdError>
+        IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+        static std::expected<void, Trd::Err::TrdError>
+        iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd);
+        static std::expected<void, Trd::Err::TrdError>
+        iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool checkReady = true);
+        static std::expected<void, Trd::Err::TrdError>
+        iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd);
     };
 
 };

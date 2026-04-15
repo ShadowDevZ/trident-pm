@@ -9,6 +9,7 @@
 namespace LinuxSpecific {
 
     std::expected<std::filesystem::path, Trd::Err::TrdError> createTemporaryFile();
-    std::expected<Trd::Impl::AuxiliaryStat, Trd::Err::TrdError> getAuxiliaryStat(const std::filesystem::path& path);
+    std::expected<Trd::Impl::AuxiliaryStat, Trd::Err::TrdError>
+    getAuxiliaryStat(const std::filesystem::path& path);
 }
 #endif

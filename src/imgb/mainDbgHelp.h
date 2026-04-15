@@ -54,7 +54,8 @@ void tassert(NAME fnName, FUNC function) {
 
         std::exit(1);
     } else {
-        std::cout << "\x1B[32m" << fnName << std::setw(22 - sv.size()) << "[ok]" << "\x1B[0m\n";
+        std::cout << "\x1B[32m" << fnName << std::setw(22 - sv.size()) << "[ok]"
+                  << "\x1B[0m\n";
     }
 #else
     (void)fnName;
@@ -116,15 +117,21 @@ inline void print_stat(const Trd::Impl::PortableStat& ps) {
     }
     auto aux = ps.auxiliary.value();
 
-    auto to_time_t = [](auto tp) -> std::time_t { return std::chrono::system_clock::to_time_t(tp); };
+    auto to_time_t = [](auto tp) -> std::time_t {
+        return std::chrono::system_clock::to_time_t(tp);
+    };
     //ugly debug print, i still dont know how to use std::print, i always get
     //kilometres of unreadable template errors
     //size is expected to be 0 here as we are creating fresh file and data is not written becasue of RAII
     std::cerr << "stat() info\n"
-              << "Type: " << static_cast<signed char>(ps.fileType) << "\n  Size: " << ps.fileSize.value_or(0) << "\n  Perms: " << std::oct << perms << std::dec
-              << "\n  UID: " << aux.optOwnerUID.value_or(0) << "\n  GID: " << aux.optOwnerGID.value_or(0) << "\n  BTIME: " << to_time_t(aux.times.fileCreated.value())
-              << "\n  ATIME: " << to_time_t(aux.times.lastAccess) << "\n  CTIME: " << to_time_t(aux.times.lastMetadataChange) << "\n  MTIME: " << to_time_t(aux.times.lastModify)
-              << '\n';
+              << "Type: " << static_cast<signed char>(ps.fileType)
+              << "\n  Size: " << ps.fileSize.value_or(0) << "\n  Perms: " << std::oct << perms
+              << std::dec << "\n  UID: " << aux.optOwnerUID.value_or(0)
+              << "\n  GID: " << aux.optOwnerGID.value_or(0)
+              << "\n  BTIME: " << to_time_t(aux.times.fileCreated.value())
+              << "\n  ATIME: " << to_time_t(aux.times.lastAccess)
+              << "\n  CTIME: " << to_time_t(aux.times.lastMetadataChange)
+              << "\n  MTIME: " << to_time_t(aux.times.lastModify) << '\n';
 }
 
 #endif

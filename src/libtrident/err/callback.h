@@ -22,7 +22,8 @@ namespace Trd::Err {
         template <std::invocable<const Trd::Err::TrdError&> F>
         u32 registerCallback(F&& cb) {
             const u32 id = ++nextId;
-            callbacks.push_back({id, std::function<void(const Trd::Err::TrdError&)>(std::forward<F>(cb))});
+            callbacks.push_back(
+                {id, std::function<void(const Trd::Err::TrdError&)>(std::forward<F>(cb))});
             return id;
         }
 

@@ -11,7 +11,8 @@ using namespace Trd;
 using namespace Trd::Impl;
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#error "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
+#error                                                                                             \
+    "The implementation on Big Endian is currently completely broken. DO NOT USE THIS PROGRAM ON BIG ENDIAN SYSTEM"
 #endif
 
 void BinarySerializer::addRaw(const void* data, u64 size) {
@@ -27,7 +28,8 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, u64 offset) {
         throw std::invalid_argument("nullptr was passed");
     }
     if (offset + size > bufferData.size()) {
-        const std::string pi = std::format("buffsz: {}, exp_atl: {}", bufferData.size(), offset + size);
+        const std::string pi =
+            std::format("buffsz: {}, exp_atl: {}", bufferData.size(), offset + size);
         throw std::out_of_range("Buffer was not big enough " + pi);
     }
 
@@ -40,7 +42,8 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, u64 offset) {
     return size;
 }
 //todo use std expected instead of exceptions
-std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos, u64 size, bool checkAlignment) {
+std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
+                                                      u64 size, bool checkAlignment) {
 
     if (!checkAlignment || !isDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
@@ -57,7 +60,9 @@ std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tS
     tStream.setSeekPos(ogSeek);
     return data;
 }
-void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, const std::vector<u8>& data, i64 seekPos, std::ios_base::seekdir seekDir) {
+void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
+                                          const std::vector<u8>& data, i64 seekPos,
+                                          std::ios_base::seekdir seekDir) {
     //todo make this boilerplate in all classes a function
     if (data.empty()) {
         throw std::invalid_argument("Empty buffer was passed");
@@ -138,7 +143,8 @@ bool BinarySerializer::expectAlignedDataOrDie(u64 size) {
     const bool aligned = isDataSizeAligned(size);
     if (!aligned) {
 
-        throw std::runtime_error("Passed data was not properly aligned got: " + std::to_string(size));
+        throw std::runtime_error("Passed data was not properly aligned got: " +
+                                 std::to_string(size));
     }
     //just in case the assertion fails
     return aligned;
@@ -147,7 +153,8 @@ bool BinarySerializer::expectAlignedDataOrDie(u64 size) {
 TRD_DBG_BUILD_ONLY void BinarySerializer::dbgDumpData() const {
     const auto& data = getData();
 
-    dbgprintf("=====BS_DATA_DUMP(%lu,%s)======\n{", (data.size() * sizeof(u8)), isDataSizeAligned(data.size()) ? "aligned" : "!aligned");
+    dbgprintf("=====BS_DATA_DUMP(%lu,%s)======\n{", (data.size() * sizeof(u8)),
+              isDataSizeAligned(data.size()) ? "aligned" : "!aligned");
     for (const auto& x : data) {
         dbgprintf(" 0x0%x ", x);
     }

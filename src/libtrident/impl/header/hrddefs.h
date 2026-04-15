@@ -88,7 +88,9 @@ namespace Trd {
         //PackageIOCtrl::Flag dynIoCtrl = PackageIOCtrl::Clear; //moved to SD
 
         constexpr u64 size() const override {
-            return Impl::BinarySerializer::elementSize(magic, exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, _reserved0);
+            return Impl::BinarySerializer::elementSize(magic, exSignature, fmtVersion, compression,
+                                                       buildFlags, architecture, dynHdrChksum,
+                                                       dynFileLen, _reserved0);
         }
 
         std::optional<std::vector<u8>> serialize() const override;

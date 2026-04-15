@@ -11,7 +11,8 @@ std::optional<std::vector<u8>> TRD_HEADER::serialize() const {
     Trd::Impl::BinarySerializer bs;
 
     bs.addContainer(std::span<const u8>(magic));
-    bs.addTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, _reserved0);
+    bs.addTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum,
+                  dynFileLen, _reserved0);
 
     return bs.getFormattedData();
 }
@@ -21,7 +22,8 @@ bool TRD_HEADER::deserialize(const std::vector<u8>& dataIn) {
 
     bs.readContainer(std::span<u8>(magic));
 
-    bs.readTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum, dynFileLen, _reserved0);
+    bs.readTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum,
+                   dynFileLen, _reserved0);
 
     dbgprintf("xsize:%ld:\n", bs.getReadOffset());
     if (bs.getReadOffset() != this->size() || _reserved0 != 0) {

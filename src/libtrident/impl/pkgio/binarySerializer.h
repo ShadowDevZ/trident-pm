@@ -86,7 +86,8 @@ namespace Trd::Impl {
 
         BinarySerializer(std::endian emulated = std::endian::native) : emulEndianness(emulated) {}
         // second constructor for deserialize()
-        BinarySerializer(const std::vector<uint8_t>& data, std::endian emulated = std::endian::native, u64 xOffset = 0) :
+        BinarySerializer(const std::vector<uint8_t>& data,
+                         std::endian emulated = std::endian::native, u64 xOffset = 0) :
             bufferData(data), emulEndianness(emulated), readOffset(xOffset) {}
 
         template <ConTriviablyCopyable T>
@@ -298,7 +299,9 @@ namespace Trd::Impl {
          * @param seekPos fseek position where to sttart writing
          * @param seekDir seek direction
          */
-        static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, const std::vector<u8>& data, i64 seekPos = 0, std::ios_base::seekdir seekDir = std::ios::beg);
+        static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, const std::vector<u8>& data,
+                                       i64 seekPos = 0,
+                                       std::ios_base::seekdir seekDir = std::ios::beg);
 
         /**
          * @brief Reads data from TStream as vector with unserialized data.
@@ -308,7 +311,8 @@ namespace Trd::Impl {
          * @param checkAlignment throws std::invalid_argument if data is misaligned
          * @return std::vector<u8> unserialized raw data from file
          */
-        static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos, u64 size, bool checkAlignment = true);
+        static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
+                                                   u64 size, bool checkAlignment = true);
     };
     /**
      * @brief Generates CRC32 and handles endianness for multiple types and containers
@@ -371,9 +375,11 @@ namespace Trd::Impl {
                 for (auto& x : data) {
                     BinarySerializer::reverseByteOrderInPlace(x);
                 }
-                crc = ::crc32(crc, reinterpret_cast<const Bytef*>(data.data()), static_cast<u32>(data.size() * sizeof(T)));
+                crc = ::crc32(crc, reinterpret_cast<const Bytef*>(data.data()),
+                              static_cast<u32>(data.size() * sizeof(T)));
             } else {
-                crc = ::crc32(crc, reinterpret_cast<const Bytef*>(bytes.data()), static_cast<u32>(bytes.size_bytes()));
+                crc = ::crc32(crc, reinterpret_cast<const Bytef*>(bytes.data()),
+                              static_cast<u32>(bytes.size_bytes()));
             }
         }
     };

@@ -41,7 +41,8 @@ bool TrSectionDescriptor::isReady() const {
     return trpkg.trdSD.sdReady;
 }
 
-std::expected<void, Err::TrdError> TrSectionDescriptor::IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+std::expected<void, Err::TrdError>
+TrSectionDescriptor::IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
     EXP_TRY(iFieldCheckSD(sd));
 
     auto& sdStream = trpkg.fstrInfo;
@@ -62,7 +63,8 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::IwriteSDNoValidate(const
 
 // Of course its another copy from the header class, in future there will be interface
 // for this (TM)
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+std::expected<void, Trd::Err::TrdError>
+TrSectionDescriptor::iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
     const u32 genCrc = sd.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if ((genCrc != sd.crc)) {
         dbgprintf("[CRC_SD] gen %u : exp: %u\n", genCrc, sd.crc);
@@ -71,10 +73,12 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iCheckCRC(const Imp
     return {};
 }
 
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
+std::expected<void, Trd::Err::TrdError>
+TrSectionDescriptor::iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
     [[unlikely]]
     if (sd.size() != Consts::SD::TRD_SECTIONSD_SIZE) {
-        dbgprintf("sd size violation: exp: %u got: %lu\n", Consts::SD::TRD_SECTIONSD_SIZE, sd.size());
+        dbgprintf("sd size violation: exp: %u got: %lu\n", Consts::SD::TRD_SECTIONSD_SIZE,
+                  sd.size());
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
     if (sd._reserved1 != 0 || sd._reserved2 != 0) {
@@ -88,7 +92,8 @@ std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iFieldCheckSD(const
     }
     return {};
 }
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool checkReady) {
+std::expected<void, Trd::Err::TrdError>
+TrSectionDescriptor::iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool checkReady) {
     auto x = iFieldCheckSD(sd);
     if (!x.has_value())
         return x;
@@ -123,7 +128,9 @@ const Impl::TRD_SECTION_DESCRIPTOR& TrSectionDescriptor::getSD() const {
     return trpkg.trdSD;
 }
 
-std::expected<void, Trd::Err::TrdError> TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update, std::optional<bool> setReadyStatus, bool checkReady) {
+std::expected<void, Trd::Err::TrdError>
+TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update,
+                              std::optional<bool> setReadyStatus, bool checkReady) {
     Impl::TRD_SECTION_DESCRIPTOR sdTemp = trpkg.trdSD;
     if (update.sectionStatusCode)
         sdTemp.sectionStatusCode = *update.sectionStatusCode;
@@ -152,7 +159,8 @@ bool TrSectionDescriptor::isValid() {
     return iValidateSD(trpkg.trdSD).has_value();
 }
 
-std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
+std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError>
+TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
 
     EXP_TRY(tStream.checkFileStreamInfo());
     Impl::TRD_SECTION_DESCRIPTOR sd{};
@@ -169,6 +177,16 @@ std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError> TrSectionDescriptor::
     }
     EXP_TRY(iValidateSD(sd));
     return sd;
+}
+
+std::expected<void, Err::TrdError> TrSectionDescriptor::read() {
+    auto optSD = readBack(trpkg.fstrInfo);
+    if (!optSD) {
+        return std::unexpected(optSD.error());
+    }
+    EXP_TRY(iValidateSD(optSD.value()));
+    trpkg.trdSD = optSD.value();
+    return {};
 }
 
 // temporarily disabled for testing

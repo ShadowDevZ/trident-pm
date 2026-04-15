@@ -5,7 +5,7 @@
 #include "ccattribs.h"
 #include "serdatacommon.h"
 #include "binarySerializer.h"
- 
+
 namespace Trd::Impl {
     /*allows smooth control of multiple different processes accessing the same file resource
     and the same part of library checking. Note if status flag is not clear then the
@@ -56,7 +56,9 @@ namespace Trd::Impl {
         u8 idByte{Consts::SD::TRD_SD_IDBYTE};
 
         constexpr u64 size() const override {
-            return Impl::BinarySerializer::elementSize(crc, sectionStatusCode, sdReady, tblCount, tblDynamicOffset, tblRegistryOffset, _reserved1, _reserved2, idByte);
+            return Impl::BinarySerializer::elementSize(crc, sectionStatusCode, sdReady, tblCount,
+                                                       tblDynamicOffset, tblRegistryOffset,
+                                                       _reserved1, _reserved2, idByte);
         }
         // again in code we shouldnt even bother what is idByte outside of validating external SD struct
         std::optional<std::vector<u8>> serialize() const override;
@@ -66,8 +68,11 @@ namespace Trd::Impl {
         std::optional<u32> checksumCRC32() const;
 
         bool operator==(const TRD_SECTION_DESCRIPTOR& other) const {
-            return crc == other.crc && sectionStatusCode == other.sectionStatusCode && tblCount == other.tblCount && _reserved1 == other._reserved1 &&
-                tblDynamicOffset == other.tblDynamicOffset && tblRegistryOffset == other.tblRegistryOffset && _reserved2 == other._reserved2 && sdReady == other.sdReady;
+            return crc == other.crc && sectionStatusCode == other.sectionStatusCode &&
+                tblCount == other.tblCount && _reserved1 == other._reserved1 &&
+                tblDynamicOffset == other.tblDynamicOffset &&
+                tblRegistryOffset == other.tblRegistryOffset && _reserved2 == other._reserved2 &&
+                sdReady == other.sdReady;
         }
     };
 };

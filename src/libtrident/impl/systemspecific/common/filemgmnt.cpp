@@ -13,7 +13,8 @@ std::expected<std::filesystem::path, Trd::Err::TrdError> Impl::createTemporaryFi
 #error "Function not implemented"
 #endif
 }
-std::expected<Trd::Impl::AuxiliaryStat, Trd::Err::TrdError> Trd::Impl::getAuxiliaryStat(const std::filesystem::path& path) {
+std::expected<Trd::Impl::AuxiliaryStat, Trd::Err::TrdError>
+Trd::Impl::getAuxiliaryStat(const std::filesystem::path& path) {
 #if defined(__linux__) || defined(__unix__)
     return LinuxSpecific::getAuxiliaryStat(path);
 #elif defined(_WIN32_)
@@ -23,7 +24,8 @@ std::expected<Trd::Impl::AuxiliaryStat, Trd::Err::TrdError> Trd::Impl::getAuxili
 #endif
 }
 
-std::expected<Trd::Impl::PortableStat, Trd::Err::TrdError> Trd::Impl::statObject(const std::filesystem::path& file) {
+std::expected<Trd::Impl::PortableStat, Trd::Err::TrdError>
+Trd::Impl::statObject(const std::filesystem::path& file) {
     if (!fs::exists(file)) {
         return std::unexpected(Err::TrdError{Err::Code::FileMissing});
     }

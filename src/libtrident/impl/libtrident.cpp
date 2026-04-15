@@ -48,7 +48,8 @@ void Trd::TrPkg::openPackage(const std::filesystem::path& path, const TRDAccessM
     const std::filesystem::path& parentDir = absolutePath.parent_path();
 
     if (!std::filesystem::exists(parentDir)) {
-        throw std::filesystem::filesystem_error("Parent directory does not exist", std::error_code());
+        throw std::filesystem::filesystem_error("Parent directory does not exist",
+                                                std::error_code());
     }
 
     // the user doesnt need to specify

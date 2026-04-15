@@ -27,7 +27,9 @@ int main(void) {
 
     PrintBuildTarget();
 
-    Trd::TrPkg ltTrPkg("./test.tpx", {TrdOpenIO::CreateNew, TrdAccessIO::AllAccess, TrdXattrIO::None, _TrdInternalIO::None});
+    Trd::TrPkg ltTrPkg(
+        "./test.tpx",
+        {TrdOpenIO::CreateNew, TrdAccessIO::AllAccess, TrdXattrIO::None, _TrdInternalIO::None});
     //  Trd::TrPkg ltTrPkg("./test.tpx", IOFLAGS::TrdOpenIO::CreateNew, IOFLAGS::TrdAccessIO::ReadAll);
     //ltTrPkg.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
@@ -39,7 +41,8 @@ int main(void) {
 
 #endif
 
-    TASSERT("CreateHeader()", trPkgHdr.create(BuildFlags::PlatformLinux, ArchType::Amd64, GlobalCompression::None));
+    TASSERT("CreateHeader()",
+            trPkgHdr.create(BuildFlags::PlatformLinux, ArchType::Amd64, GlobalCompression::None));
 #ifdef _LIBTRIDENT_DEBUG
     print_header(trPkgHdr.getHeader());
 #endif
@@ -72,8 +75,10 @@ int main(void) {
     auto trpkgSD = ltTrPkg.sectionDescriptor();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
-    Impl::TRD_SD_UPDATEFIELD sdUpd = {
-        .sectionStatusCode{Impl::SectionStatusFlag::ReadLockTreg}, .tblCount = UINT32_MAX, .tblDynamicOffset = 0x1337CAFFEEDDDDDD, .tblRegistryOffset = 0xEEEEEEEEEEEEEEEE};
+    Impl::TRD_SD_UPDATEFIELD sdUpd = {.sectionStatusCode{Impl::SectionStatusFlag::ReadLockTreg},
+                                      .tblCount = UINT32_MAX,
+                                      .tblDynamicOffset = 0x1337CAFFEEDDDDDD,
+                                      .tblRegistryOffset = 0xEEEEEEEEEEEEEEEE};
     trpkgSD.changeReadyStatus(true);
     TASSERT("UpdateSD()", trpkgSD.updateSD(sdUpd));
 

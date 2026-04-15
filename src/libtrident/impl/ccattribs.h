@@ -56,8 +56,8 @@
 #define LT_DEBUG_ENDIAN_FORCE 0
 
 #else
-#define dbgprintf(...)                                                                                                                                                             \
-    do {                                                                                                                                                                           \
+#define dbgprintf(...)                                                                             \
+    do {                                                                                           \
     } while (0);
 
 #endif

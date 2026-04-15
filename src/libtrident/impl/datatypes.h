@@ -45,8 +45,8 @@ namespace Trd {
 #error "TRY macro already defined"
 #else
 //convenient macro that lets us test std::expected if we only care to check if function failed and get error
-#define EXP_TRY(expr)                                                                                                                                                              \
-    if (auto _r = (expr); !_r)                                                                                                                                                     \
+#define EXP_TRY(expr)                                                                              \
+    if (auto _r = (expr); !_r)                                                                     \
     return std::unexpected(_r.error())
 #endif
 };

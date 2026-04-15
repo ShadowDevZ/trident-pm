@@ -17,7 +17,8 @@ namespace Trd {
 
     class TrPkg;
     //todo each SECTION should inherit from something like SectionCommon, standardize the functions
-    class TrFileHeader /*final : public Trd::Sections::SectionCommon<TRD_HEADER> */ {
+    class TrFileHeader /*final : public Trd::Sections::SectionCommon<TRD_HEADER> */
+    {
       public:
         /**
      * @brief Write the internal header to the file
@@ -39,7 +40,9 @@ namespace Trd {
      * @return std::expected<TRD_HEADER, Trd::Err::TrdError> if header is present returns
      * the valid and deserialized Header otherwise provides additional error info.
      */
-        static std::expected<TRD_HEADER, Trd::Err::TrdError> readBack(Impl::TStreamInfo& tStream) /*override*/;
+        static std::expected<TRD_HEADER, Trd::Err::TrdError>
+        readBack(Impl::TStreamInfo& tStream) /*override*/;
+
         bool isValid() /*override*/;
         /**
      * @brief Retrieves the references to the internal header
@@ -55,7 +58,9 @@ namespace Trd {
      * @param comprType compression algorithm hint
      * @return std::expected<void, Trd::Err::TrdError> 
      */
-        std::expected<void, Trd::Err::TrdError> create(BuildFlags::Flags buildFlgs, ArchType::Type archType, GlobalCompression::Algorithm comprType = GlobalCompression::None);
+        std::expected<void, Trd::Err::TrdError>
+        create(BuildFlags::Flags buildFlgs, ArchType::Type archType,
+               GlobalCompression::Algorithm comprType = GlobalCompression::None);
         std::expected<void, Trd::Err::TrdError> create(const TRD_HDRFIELD_UPDATE& field);
         /**
      * @brief Updates the available header fields
@@ -74,15 +79,18 @@ namespace Trd {
      * @param revision header revisioon
      * @return std::expected<u16, Trd::Err::TrdError> formatted version
      */
-        static std::expected<u16, Trd::Err::TrdError> formatHeaderVersion(u8 major, u8 minor, u8 revision);
-        static std::expected<std::string, Trd::Err::TrdError> headerVersionFormatToString(u16 fmt, bool abRevision = true);
+        static std::expected<u16, Trd::Err::TrdError> formatHeaderVersion(u8 major, u8 minor,
+                                                                          u8 revision);
+        static std::expected<std::string, Trd::Err::TrdError>
+        headerVersionFormatToString(u16 fmt, bool abRevision = true);
         /**
      * @brief Checks whether file has already written header
      * 
      * @param fStreamInfo reference to TStream
      * @return std::expected<void, Trd::Err::TrdError> 
      */
-        static std::expected<void, Trd::Err::TrdError> isHeaderPresent(Trd::Impl::TStreamInfo& fStreamInfo);
+        static std::expected<void, Trd::Err::TrdError>
+        isHeaderPresent(Trd::Impl::TStreamInfo& fStreamInfo);
 
         explicit TrFileHeader(TrPkg& pkg) : trpkg(pkg) {};
 
