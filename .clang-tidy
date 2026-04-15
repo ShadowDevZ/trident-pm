@@ -39,6 +39,7 @@ Checks: >
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-pro-type-reinterpret-cast,
   misc-*,
+  -misc-const-correctness,
   -misc-use-internal-linkage,
   -misc-unused-parameters,
   -misc-no-recursion,

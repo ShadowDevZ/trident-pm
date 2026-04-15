@@ -5,7 +5,7 @@
 #include "ccattribs.h"
 #include "serdatacommon.h"
 #include "binarySerializer.h"
-
+ 
 namespace Trd::Impl {
     /*allows smooth control of multiple different processes accessing the same file resource
     and the same part of library checking. Note if status flag is not clear then the
