@@ -7,13 +7,15 @@
 #include "binarySerializer.h"
 
 namespace Trd::Impl {
+
+    //removed feature for now, will be moved into separate tmp file.
     /*allows smooth control of multiple different processes accessing the same file resource
     and the same part of library checking. Note if status flag is not clear then the
     other process MUST NOT perform any IO operation which could
     alter the file manipulation by the host program under any circumstances, this check should be done
     using some OS specific function by other process accessing this resource not as stored field in case
     of crash the package would be bricked
-    permamently*/
+    permamently
     namespace SectionStatusFlag {
         enum Flag : u16 {
             Clear = 0,
@@ -29,9 +31,9 @@ namespace Trd::Impl {
             LockAll = 1 << 15
         };
     };
-
+*/
     typedef struct {
-        std::optional<SectionStatusFlag::Flag> sectionStatusCode{SectionStatusFlag::Clear};
+        //std::optional<SectionStatusFlag::Flag> sectionStatusCode{SectionStatusFlag::Clear};
         std::optional<u32> tblCount;
         std::optional<u64> tblDynamicOffset;
         std::optional<u64> tblRegistryOffset;
@@ -44,7 +46,8 @@ namespace Trd::Impl {
         because we are adding a new table. */
 
         // u16
-        SectionStatusFlag::Flag sectionStatusCode{SectionStatusFlag::Clear};
+        //SectionStatusFlag::Flag sectionStatusCode{SectionStatusFlag::Clear};
+        u16 _reserved0;
         u32 tblCount;
         u32 _reserved1;
         u64 tblDynamicOffset;
@@ -56,7 +59,7 @@ namespace Trd::Impl {
         u8 idByte{Consts::SD::TRD_SD_IDBYTE};
 
         constexpr u64 size() const override {
-            return Impl::BinarySerializer::elementSize(crc, sectionStatusCode, sdReady, tblCount,
+            return Impl::BinarySerializer::elementSize(crc, _reserved0, sdReady, tblCount,
                                                        tblDynamicOffset, tblRegistryOffset,
                                                        _reserved1, _reserved2, idByte);
         }
@@ -68,7 +71,7 @@ namespace Trd::Impl {
         std::optional<u32> checksumCRC32() const;
 
         bool operator==(const TRD_SECTION_DESCRIPTOR& other) const {
-            return crc == other.crc && sectionStatusCode == other.sectionStatusCode &&
+            return crc == other.crc && _reserved0 == other._reserved0 &&
                 tblCount == other.tblCount && _reserved1 == other._reserved1 &&
                 tblDynamicOffset == other.tblDynamicOffset &&
                 tblRegistryOffset == other.tblRegistryOffset && _reserved2 == other._reserved2 &&

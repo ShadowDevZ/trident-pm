@@ -2,9 +2,46 @@ Ltrident/
 
 /current goal
 
+/dynamic tables
+-actual data written right after building
+-data can be appended easily
+-table removal is bit more tricky. Sure we can just memset it to 0 and invalidate the treg
+entry but that would leave holes and would be prone to corruption.
+Instead of inplace editing we just to make copy of the whole file and append sections accordingly.
+No user would ever modify these sections. This would be very rare operation to do after creation
+and possible use would be limited.
+-each dtbl needs to provide size function in which way we can reserve the data in treg before writing
+
+
+/treg
+-simply flat model with no inplace editing for now, all data has to be read then rewritten 
+this section is very small compared to single dtbl entry so it doesnt matter much
+
+-what if user decides to add new dtbl section after creation ?
+where would ideal treg placement be then as it can also grow
+in size? probably right thing would be to use the same approach as the removal of section
+to just create new file and copy it accordingly, we could also in theory append the new section
+and if shorter than the treg we would also need to take into consideration of the floating bad data
+that would remain. OR we could copy the treg into memory truncate the file till the start of the treg
+add the new section then append the treg aggain for larger files this might be beneficial in the future
+but for now its too much hassle for no reward as no user would ever modify it manually as there is no
+reason for that. 
+
+
+/sd lock status
+-very very bad and error prone approach i chose that it should be compactly stored inside sd
+-best approach lock file next to it with appropriate flag and process PID, timestamp. Dont know if this 
+should directly be handled by libtrpm instead of the client ?
+
+/open
+-map file to memory option when opening, we already have API wrappers around fstream
+and serialization, we just need to extend these function with option for mapped files
+and bound checking
+
+
+
 
 TEST ENDIANNESS ON PPC EMULATOR
-properly separate implementation details from the exposed API and include dirs
 
 
 DO NOT STORE THE FILE SIZE BY INCREMENTING. INSTEAD AT THE VERY END OF WRITING TO THE PACKAGE
@@ -15,3 +52,7 @@ but the actual trpm launcher, most likely bubblewrap or libsandbox2 with custom 
 for this would be too much hustle and open billion vulnerabilities as I have 0 to none experience with BPF and seccomp 
 for this toy project this would however break the system compatibility on non linux systems
 optional feature ?
+
+- long term goal do gui frontend to some dev tool to see inside
+the package instead of plain cli, something with ui like UEFItool
+made with qt6, user could in tree view in some section click resource/extract...

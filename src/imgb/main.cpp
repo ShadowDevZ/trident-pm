@@ -75,8 +75,7 @@ int main(void) {
     auto trpkgSD = ltTrPkg.sd();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
-    Impl::TRD_SD_UPDATEFIELD sdUpd = {.sectionStatusCode{Impl::SectionStatusFlag::ReadLockTreg},
-                                      .tblCount = UINT32_MAX,
+    Impl::TRD_SD_UPDATEFIELD sdUpd = {.tblCount = UINT32_MAX,
                                       .tblDynamicOffset = 0x1337CAFFEEDDDDDD,
                                       .tblRegistryOffset = 0xEEEEEEEEEEEEEEEE};
     trpkgSD.changeReadyStatus(true);

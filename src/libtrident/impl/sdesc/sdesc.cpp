@@ -132,8 +132,8 @@ std::expected<void, Trd::Err::TrdError>
 TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update,
                               std::optional<bool> setReadyStatus, bool checkReady) {
     Impl::TRD_SECTION_DESCRIPTOR sdTemp = trpkg.trdSD;
-    if (update.sectionStatusCode)
-        sdTemp.sectionStatusCode = *update.sectionStatusCode;
+    // if (update.sectionStatusCode)
+    //     sdTemp.sectionStatusCode = *update.sectionStatusCode;
     if (update.tblCount)
         sdTemp.tblCount = *update.tblCount;
     if (update.tblDynamicOffset)

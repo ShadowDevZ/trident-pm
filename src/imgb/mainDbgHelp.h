@@ -98,7 +98,7 @@ inline void print_header(const Trd::TRD_HEADER& hdr) {
 inline void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
     dbgprintf("[SD_START - SIZE(real:%luB, work:%luB)]\n", sizeof(sd), sd.size());
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
-    dbgprintf("\tSection status %u\n", static_cast<Trd::u16>(sd.sectionStatusCode));
+    dbgprintf("\tReserved0: %u\n", sd._reserved0);
     dbgprintf("\tTblcount: %u\n", sd.tblCount);
     dbgprintf("\tReserved1: %u\n", sd._reserved1);
     dbgprintf("\tDtbl offset: 0x%lX\n", sd.tblDynamicOffset);
