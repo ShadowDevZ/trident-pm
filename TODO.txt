@@ -10,6 +10,8 @@ entry but that would leave holes and would be prone to corruption.
 Instead of inplace editing we just to make copy of the whole file and append sections accordingly.
 No user would ever modify these sections. This would be very rare operation to do after creation
 and possible use would be limited.
+-For inplace editing we can just set some tombstone and quickly lookup hole large enough for the data
+then pad the hole with 0's
 -each dtbl needs to provide size function in which way we can reserve the data in treg before writing
 
 
@@ -38,8 +40,13 @@ should directly be handled by libtrpm instead of the client ?
 and serialization, we just need to extend these function with option for mapped files
 and bound checking
 
+/bitmap
+SD section some reserved field should be the bitmap for fast checking the dtbls
+if present. UTBLS are not there so according to specs if we are checking tbl 
+with number higher than 65535 then we cannot check as utbls are not hardcoded
 
-
+/paging
+-page dynsec large sections
 
 TEST ENDIANNESS ON PPC EMULATOR
 

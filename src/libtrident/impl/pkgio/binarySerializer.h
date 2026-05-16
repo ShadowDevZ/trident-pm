@@ -265,7 +265,7 @@ namespace Trd::Impl {
             return sizeof(T) + elementSize(args...);
         }
 
-        /**
+               /**
          * @brief Adds data for serialization
          *
          * @tparam T trivially copyable object

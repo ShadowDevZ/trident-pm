@@ -14,8 +14,6 @@ using namespace Trd;
 
 #include "err/callback.h"
 
-//HEAVILY WIP, DO NOT USE THIS BRANCH TESTING ONLY, multiple things are disabled
-#warning "Testing branch only, everything is broken here, dont use"
 /*
 void cb_data(const Trd::Err::TrdError& e) {
     std::cout << "callback reg called!\n";
@@ -75,9 +73,12 @@ int main(void) {
     auto trpkgSD = ltTrPkg.sd();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
-    Impl::TRD_SD_UPDATEFIELD sdUpd = {.tblCount = UINT32_MAX,
-                                      .tblDynamicOffset = 0x1337CAFFEEDDDDDD,
-                                      .tblRegistryOffset = 0xEEEEEEEEEEEEEEEE};
+    Impl::SD_TBLENTRY dynamic{.offset = 0x1337CAFFEEDDDDDD, .size = 8};
+    Impl::SD_TBLENTRY regt{.offset = 0xEEEEEEEEEEEEEEEE, .size = 8};
+    Impl::TRD_SD_UPDATEFIELD sdUpd;
+    sdUpd.tblDynamic = dynamic;
+    sdUpd.tblRegistry = regt;
+
     trpkgSD.changeReadyStatus(true);
     TASSERT("UpdateSD()", trpkgSD.updateSD(sdUpd));
 

@@ -98,12 +98,11 @@ inline void print_header(const Trd::TRD_HEADER& hdr) {
 inline void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
     dbgprintf("[SD_START - SIZE(real:%luB, work:%luB)]\n", sizeof(sd), sd.size());
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
-    dbgprintf("\tReserved0: %u\n", sd._reserved0);
-    dbgprintf("\tTblcount: %u\n", sd.tblCount);
+
+    dbgprintf("\tDtbl offset: 0x%lX\n", sd.tblDynamic.offset);
+    dbgprintf("\tTreg offset: 0x%lX\n", sd.tblRegistry.offset);
     dbgprintf("\tReserved1: %u\n", sd._reserved1);
-    dbgprintf("\tDtbl offset: 0x%lX\n", sd.tblDynamicOffset);
-    dbgprintf("\tTreg offset: 0x%lX\n", sd.tblRegistryOffset);
-    dbgprintf("\tReserved2: %lu\n", sd._reserved2);
+    dbgprintf("\tReserved2: %lu\n", sd._reserved2.size() * sizeof(u64));
     dbgprintf("\tReady status: %s\n", u8b_isTrue(sd.sdReady) ? "true" : "false");
     dbgprintf("\tID byte: 0x%X\n", sd.idByte);
     dbgprintf("[SD_END]\n\n");

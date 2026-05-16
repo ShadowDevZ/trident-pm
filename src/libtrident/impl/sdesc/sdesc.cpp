@@ -5,6 +5,7 @@
 
 #include "sdesc.h"
 #include "libtrident.h"
+#include "sdescHelper.h"
 using namespace Trd;
 using eCode = Err::Code;
 
@@ -81,7 +82,7 @@ TrSectionDescriptor::iFieldCheckSD(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
                   sd.size());
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
     }
-    if (sd._reserved1 != 0 || sd._reserved2 != 0) {
+    if (!Impl::IResvFieldCheck(sd._reserved2) || sd._reserved1 != 0) {
         return std::unexpected(Err::TrdError(eCode::ReservedFieldViolated));
     }
     if (!u8b_valid(sd.sdReady)) {
@@ -102,7 +103,9 @@ TrSectionDescriptor::iValidateSD(const Impl::TRD_SECTION_DESCRIPTOR& sd, bool ch
     }
     // if the SD is marked as ready then we are expecting all of these fields to be filled with existing
     // information, todo there should be a call to function which checks if the offsets are actually correct
-    if (sd.sdReady && (sd.tblCount == 0 || sd.tblDynamicOffset == 0 || sd.tblRegistryOffset == 0)) {
+    if (sd.sdReady &&
+        (sd.tblDynamic.offset == 0 || sd.tblRegistry.offset == 0 || sd.tblDynamic.size == 0 ||
+         sd.tblRegistry.size == 0)) {
         return std::unexpected(Err::TrdError(eCode::SectionCorrupted));
     }
     auto crc = iCheckCRC(sd);
@@ -134,12 +137,10 @@ TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update,
     Impl::TRD_SECTION_DESCRIPTOR sdTemp = trpkg.trdSD;
     // if (update.sectionStatusCode)
     //     sdTemp.sectionStatusCode = *update.sectionStatusCode;
-    if (update.tblCount)
-        sdTemp.tblCount = *update.tblCount;
-    if (update.tblDynamicOffset)
-        sdTemp.tblDynamicOffset = *update.tblDynamicOffset;
-    if (update.tblRegistryOffset)
-        sdTemp.tblRegistryOffset = *update.tblRegistryOffset;
+    if (update.tblDynamic)
+        sdTemp.tblDynamic = *update.tblDynamic;
+    if (update.tblRegistry)
+        sdTemp.tblRegistry = *update.tblRegistry;
 
     sdTemp.crc = sdTemp.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
     if (setReadyStatus)

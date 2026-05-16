@@ -32,12 +32,16 @@ namespace Trd::Impl {
         };
     };
 */
-    typedef struct {
+    struct SD_TBLENTRY {
+        uint64_t offset;
+        uint64_t size;
+    };
+    struct TRD_SD_UPDATEFIELD {
         //std::optional<SectionStatusFlag::Flag> sectionStatusCode{SectionStatusFlag::Clear};
-        std::optional<u32> tblCount;
-        std::optional<u64> tblDynamicOffset;
-        std::optional<u64> tblRegistryOffset;
-    } TRD_SD_UPDATEFIELD;
+
+        std::optional<SD_TBLENTRY> tblDynamic;
+        std::optional<SD_TBLENTRY> tblRegistry;
+    };
 
     struct TRD_SECTION_DESCRIPTOR : Impl::SerializableData {
         u32 crc;
@@ -47,21 +51,21 @@ namespace Trd::Impl {
 
         // u16
         //SectionStatusFlag::Flag sectionStatusCode{SectionStatusFlag::Clear};
-        u16 _reserved0;
-        u32 tblCount;
-        u32 _reserved1;
-        u64 tblDynamicOffset;
-        u64 tblRegistryOffset;
-        u64 _reserved2;
+
+        SD_TBLENTRY tblDynamic{};
+        SD_TBLENTRY tblRegistry{};
+        //u32 _reserved2[2];
+        std::array<u64, 3> _reserved2{0, 0, 0};
+        u16 _reserved1{0};
         u8_bool sdReady;
         // why simply not use const here ? using const prevents struct assigning as const
         // cannot be assigned
         u8 idByte{Consts::SD::TRD_SD_IDBYTE};
 
         constexpr u64 size() const override {
-            return Impl::BinarySerializer::elementSize(crc, _reserved0, sdReady, tblCount,
-                                                       tblDynamicOffset, tblRegistryOffset,
-                                                       _reserved1, _reserved2, idByte);
+            return Impl::BinarySerializer::elementSize(
+                crc, sdReady, tblDynamic.offset, tblDynamic.size, tblRegistry.offset,
+                tblRegistry.size, idByte, _reserved2, _reserved1);
         }
         // again in code we shouldnt even bother what is idByte outside of validating external SD struct
         std::optional<std::vector<u8>> serialize() const override;
@@ -71,10 +75,10 @@ namespace Trd::Impl {
         std::optional<u32> checksumCRC32() const;
 
         bool operator==(const TRD_SECTION_DESCRIPTOR& other) const {
-            return crc == other.crc && _reserved0 == other._reserved0 &&
-                tblCount == other.tblCount && _reserved1 == other._reserved1 &&
-                tblDynamicOffset == other.tblDynamicOffset &&
-                tblRegistryOffset == other.tblRegistryOffset && _reserved2 == other._reserved2 &&
+            return crc == other.crc && tblDynamic.offset == other.tblDynamic.offset &&
+                tblDynamic.size == other.tblDynamic.size &&
+                tblRegistry.offset == other.tblRegistry.offset &&
+                tblRegistry.size == other.tblRegistry.size && _reserved2 == other._reserved2 &&
                 sdReady == other.sdReady;
         }
     };
