@@ -48,6 +48,8 @@ target_include_directories(${TRDLIB} PUBLIC
     src/libtrident
     src/libtrident/impl/pkgio
     src/libtrident/impl/header
+    src/libtrident/impl/dtbl/section
+    src/libtrident/impl
  #   src/libtrident/impl/uid
  #   src/libtrident/impl/uid/suid
     src/libtrident/impl/sdesc

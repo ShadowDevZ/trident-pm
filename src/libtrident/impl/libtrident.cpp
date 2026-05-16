@@ -7,6 +7,7 @@
 
 #include "trheader.h"
 #include "sdesc.h"
+#include "dynamicTable.h"
 using namespace Trd;
 using namespace Trd::Impl;
 
@@ -15,6 +16,9 @@ TrFileHeader TrPkg::header() {
 }
 TrSectionDescriptor TrPkg::sd() {
     return TrSectionDescriptor(*this);
+}
+DtblDirectory TrPkg::dtbl() {
+    return DtblDirectory(*this);
 }
 
 void Trd::TrPkg::closePkg() {

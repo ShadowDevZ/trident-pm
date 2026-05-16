@@ -50,3 +50,44 @@ again dtbl is dumb by design as all the work is done by treg calls which will be
 end user like for example TREG_META Trd::queryTableMetadata(STBL_PAYLOAD,preferExtended=false)
 then we call Trd::ReadDtbl(STBL_PAYLOAD, &myoutputbuff, tregMeta) where treg meta contains size,...
 */
+#include "datatypes.h"
+//all section manipulations have to be done via treg interface
+//tbl is just a dumb array
+
+//all operations that do modifications like updating values will be added later
+namespace Trd {
+    class TrPkg;
+
+    class DtblDirectory {
+      public:
+        u64 getOffset() const;
+
+        /* checks whether the treg is already written as if it is we either have
+        to block the operation OR copy the small treg into memory then we can truncate the data
+        append the section and add back the treg which is risky so better approach would be probably
+        to create carbon copy of the file including header and treg and then recreate the dtbl and treg
+        instead of doing it inplace as a single error could render the whole package unusable.
+        This will be a bool to check if user wants to do it in place*/
+        bool isSafeToAccess() const;
+        void updateSdEntry();
+        void invalidateSDEntry();
+        void checkSDEntry();
+        void writeSDEntry();
+        void reblankRawEntry();
+        void readBackSDEntry();
+
+        void writeRawEntry();
+        void readRawEntry();
+        void readEntryChunkData();
+        void writeEntryChunkData();
+
+        //probably add to treg instead
+        //void findFreeHole();
+
+        explicit DtblDirectory(TrPkg& pkg) : trpkg(pkg) {};
+
+      private:
+        friend class TrPkg;
+        TrPkg& trpkg;
+    };
+};

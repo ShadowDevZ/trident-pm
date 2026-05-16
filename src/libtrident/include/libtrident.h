@@ -17,11 +17,11 @@
 
 #include "hrddefs.h"
 #include "sdescdefs.h"
-
 namespace Trd {
 
     class TrFileHeader;
     class TrSectionDescriptor;
+    class DtblDirectory;
 
     class TrPkg {
       public:
@@ -37,10 +37,11 @@ namespace Trd {
            * @return TrFileHeader
            */
         TrFileHeader header();
+        DtblDirectory dtbl();
         /**
            * @brief Method to manipulate the Section Descriptor (TOC)
            *
-           * @return TrSectionDescriptor
+           * @return TrSectiaccessModelonDescriptor
            */
         TrSectionDescriptor sd();
 
@@ -79,6 +80,7 @@ namespace Trd {
         // TrFileHeader headerSection;
         friend class TrFileHeader;
         friend class TrSectionDescriptor;
+        friend class DtblDirectory;
         // std::shared_ptr<TRDFstreamObject> fInfo;
     };
 };
