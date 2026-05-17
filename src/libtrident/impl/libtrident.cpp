@@ -68,12 +68,10 @@ void Trd::TrPkg::openPackage(const std::filesystem::path& path, const TRDAccessM
     TRDFstreamObject fInfo{};
 
     fInfo.acccessModel = accessModel;
-    fInfo.checksumSize = std::filesystem::file_size(path);
 
     // fInfo.hFile->seekg(0, std::ios::beg);
 
     dbgprintf("Seek offset %lu\n", static_cast<u64>(fsPkg->tellg()));
-    dbgprintf("File size %luB\n", static_cast<u64>(fInfo.checksumSize));
 
     fInfo.hFile = fsPkg;
 
