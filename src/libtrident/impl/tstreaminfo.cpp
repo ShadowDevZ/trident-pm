@@ -50,14 +50,11 @@ void TStreamInfo::setFileStreamInfo(const TRDFstreamObject& info) {
 }
 
 // does not check for endianness, the data should already be passed in as LE object
-void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
+void TStreamInfo::writeTStream(const char* data, u64 size) {
     if (!checkFileStreamInfo() || !data || size < 1) {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
-    // for compatibility across different CPUS and to improve performance on x86/64
-    if (!BinarySerializer::expectAlignedDataOrDie(size)) {
-        return;
-    }
+
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
@@ -65,10 +62,6 @@ void TStreamInfo::writeTStream(const char* data, u64 size, bool increment) {
     xfInfo.hFile->write(data, size);
     if (!xfInfo.hFile) {
         throw std::ios_base::failure("WriteLeData() Failed");
-    }
-
-    if (increment) {
-        xfInfo.checksumSize += size;
     }
 }
 // does not check for endianness, the data is retrieved as native endianness
@@ -78,9 +71,6 @@ void TStreamInfo::readTStream(char* s, u64 size) const {
     }
     if (!checkFileStreamInfo() || !s || size < 1) {
         throw std::runtime_error("WriteLeStream(validate) Failed");
-    }
-    if (!BinarySerializer::expectAlignedDataOrDie(size)) {
-        return;
     }
 
     xfInfo.hFile->read(s, size);
@@ -109,10 +99,10 @@ i64 TStreamInfo::getSeekPos() const {
     return pos;
 }
 
-void TStreamInfo::writePadding(u16 size, int value, bool increment) {
+void TStreamInfo::writePadding(u16 size, int value) {
     // char padding[size];
     std::vector<char> padding(size);
     std::ranges::fill(padding, value);
     // std::memset(padding, value, sizeof(padding));
-    writeTStream(reinterpret_cast<const char*>(padding.data()), padding.size(), increment);
+    writeTStream(reinterpret_cast<const char*>(padding.data()), padding.size());
 }

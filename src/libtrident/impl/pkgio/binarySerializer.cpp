@@ -43,9 +43,9 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, u64 offset) {
 }
 //todo use std expected instead of exceptions
 std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
-                                                      u64 size, bool checkAlignment) {
+                                                      u64 size, bool requireAlignment) {
 
-    if (!checkAlignment || !isDataSizeAligned(size)) {
+    if (!requireAlignment || !isDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
     }
     if (!tStream.checkFileStreamInfo()) {
@@ -60,12 +60,17 @@ std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tS
     tStream.setSeekPos(ogSeek);
     return data;
 }
+
 void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
-                                          const std::vector<u8>& data, i64 seekPos,
-                                          std::ios_base::seekdir seekDir) {
+                                          const std::vector<u8>& data, bool requireAlignment,
+                                          i64 seekPos, std::ios_base::seekdir seekDir) {
     //todo make this boilerplate in all classes a function
+
     if (data.empty()) {
         throw std::invalid_argument("Empty buffer was passed");
+    }
+    if (!requireAlignment || !isDataSizeAligned(data.size())) {
+        throw std::invalid_argument("Data size not aligned");
     }
     if (!tStream.checkFileStreamInfo()) {
         throw std::runtime_error("CheckFileStreamInfo() failed");
@@ -73,11 +78,8 @@ void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
     const i64 ogSeek = tStream.getSeekPos();
 
     tStream.setSeekPos(seekPos, seekDir);
-    if (!expectAlignedDataOrDie(data.size())) {
-        throw std::invalid_argument("Unaligned data");
-    }
 
-    tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size(), true);
+    tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size());
     tStream.setSeekPos(ogSeek);
 }
 

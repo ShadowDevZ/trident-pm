@@ -16,7 +16,7 @@ namespace Trd::Impl {
         std::filesystem::path absolutePath;
         std::shared_ptr<std::fstream> hFile;
         //does not represent actual file size, but sizeof(whole file - header), not utilized yet
-        u64 checksumSize{0};
+        // u64 checksumSize{0};
         TRDAccessModel acccessModel{};
         //for future use, atime
         Impl::PortableStat pStat{};
@@ -49,16 +49,17 @@ namespace Trd::Impl {
         i64 getSeekPos() const;
 
         template <typename T>
-        void writeTStream(const T& t, u64 size, bool increment = true) {
-            writeTStream(reinterpret_cast<const char*>(&t), size, increment);
+        void writeTStream(const T& t, u64 size) {
+            writeTStream(reinterpret_cast<const char*>(&t), size);
         }
         template <typename T>
-        void writeTStream(T& t, bool increment = true) {
-            writeTStream(t, sizeof(t), increment);
+        void writeTStream(T& t) {
+            writeTStream(t, sizeof(t));
         }
+
         //throws std::invalid_argument runtime error or anything by FileOperations::WriteLeData
-        void writeTStream(const char* data, u64 size, bool increment = true);
-        void writePadding(u16 size, int value = 0, bool increment = true);
+        void writeTStream(const char* data, u64 size);
+        void writePadding(u16 size, int value = 0);
 
         template <typename T>
         void readTStream(T& t, u64 size) const {

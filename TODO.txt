@@ -45,6 +45,10 @@ SD section some reserved field should be the bitmap for fast checking the dtbls
 if present. UTBLS are not there so according to specs if we are checking tbl 
 with number higher than 65535 then we cannot check as utbls are not hardcoded
 
+/journal
+big write operatiions on DYNSEC_PAGING need to be journaled on operations done inplace
+on small operations just do COW
+
 /paging
 -page dynsec large sections
 

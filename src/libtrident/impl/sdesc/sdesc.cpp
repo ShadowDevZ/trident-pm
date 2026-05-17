@@ -57,7 +57,8 @@ TrSectionDescriptor::IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd) 
     if (!startOffset.has_value())
         return std::unexpected(Err::TrdError(eCode::BadObject));
 
-    Impl::BinarySerializer::writeDataToTStream(sdStream, serializer.value(), startOffset.value());
+    Impl::BinarySerializer::writeDataToTStream(sdStream, serializer.value(), true,
+                                               startOffset.value());
 
     return {};
 }
@@ -172,7 +173,8 @@ TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
     if (!startOffset || !endOffset || size != Consts::SD::TRD_SECTIONSD_SIZE)
         return std::unexpected(Err::TrdError(eCode::SectionSizeViolated));
 
-    auto readData = Impl::BinarySerializer::readDataFromTStream(tStream, startOffset.value(), size);
+    auto readData =
+        Impl::BinarySerializer::readDataFromTStream(tStream, startOffset.value(), size, true);
     if (!sd.deserialize(readData)) {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
     }

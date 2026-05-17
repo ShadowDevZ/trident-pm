@@ -51,6 +51,8 @@ end user like for example TREG_META Trd::queryTableMetadata(STBL_PAYLOAD,preferE
 then we call Trd::ReadDtbl(STBL_PAYLOAD, &myoutputbuff, tregMeta) where treg meta contains size,...
 */
 #include "datatypes.h"
+#include <optional>
+#include "trderr.h"
 //all section manipulations have to be done via treg interface
 //tbl is just a dumb array
 
@@ -60,7 +62,7 @@ namespace Trd {
 
     class DtblDirectory {
       public:
-        u64 getOffset() const;
+        std::expected<u64, Trd::Err::TrdError> getOffset() const;
 
         /* checks whether the treg is already written as if it is we either have
         to block the operation OR copy the small treg into memory then we can truncate the data
@@ -87,6 +89,7 @@ namespace Trd {
         explicit DtblDirectory(TrPkg& pkg) : trpkg(pkg) {};
 
       private:
+        std::expected<u64, Trd::Err::TrdError> findFreeOffset() const;
         friend class TrPkg;
         TrPkg& trpkg;
     };

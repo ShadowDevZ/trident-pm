@@ -36,8 +36,8 @@ std::expected<TRD_HEADER, Err::TrdError> TrFileHeader::readBack(Impl::TStreamInf
 
     EXP_TRY(tStream.checkFileStreamInfo());
 
-    auto readData =
-        Impl::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET, hdr.size());
+    auto readData = Impl::BinarySerializer::readDataFromTStream(tStream, TRD_HDR_START_OFFSET,
+                                                                hdr.size(), true);
     if (!hdr.deserialize(readData)) {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
     }
@@ -99,7 +99,8 @@ std::expected<void, Err::TrdError> TrFileHeader::write() {
         return std::unexpected(Err::TrdError(eCode::SerializerFailure));
     }
     // hdrStream.writeTStream(serializer.value());
-    Impl::BinarySerializer::writeDataToTStream(hdrStream, serializer.value(), TRD_HDR_START_OFFSET);
+    Impl::BinarySerializer::writeDataToTStream(hdrStream, serializer.value(), true,
+                                               TRD_HDR_START_OFFSET);
 
     return {};
 }

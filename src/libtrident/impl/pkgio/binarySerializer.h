@@ -265,7 +265,7 @@ namespace Trd::Impl {
             return sizeof(T) + elementSize(args...);
         }
 
-               /**
+        /**
          * @brief Adds data for serialization
          *
          * @tparam T trivially copyable object
@@ -291,16 +291,18 @@ namespace Trd::Impl {
          * @return std::optional<std::vector<u8>> the serialized data if present
          */
         std::optional<std::vector<u8>> getFormattedData(bool autoAlign = false);
+
         /**
-         * @brief Writes the provided vector buffer to the TStream
-         *
-         * @param tStream tStream instance
-         * @param data vector retrieved by getFormattedData()
-         * @param seekPos fseek position where to sttart writing
-         * @param seekDir seek direction
+         * @brief Same as writeAlignedDataToTStream but requires the data to be aligned
+         * 
+         * @param tStream 
+         * @param data 
+         * @param requireAlignment throws std::invalid_argument if data is misaligned
+         * @param seekPos 
+         * @param seekDir 
          */
         static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, const std::vector<u8>& data,
-                                       i64 seekPos = 0,
+                                       bool requireAlignment, i64 seekPos = 0,
                                        std::ios_base::seekdir seekDir = std::ios::beg);
 
         /**
@@ -308,11 +310,11 @@ namespace Trd::Impl {
          * @param tStream tStream instance
          * @param seekPos fseek position where to sttart writing
          * @param size size of the data to read
-         * @param checkAlignment throws std::invalid_argument if data is misaligned
+         * @param requireAlignment throws std::invalid_argument if data is misaligned
          * @return std::vector<u8> unserialized raw data from file
          */
         static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
-                                                   u64 size, bool checkAlignment = true);
+                                                   u64 size, bool requireAlignment);
     };
     /**
      * @brief Generates CRC32 and handles endianness for multiple types and containers
