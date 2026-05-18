@@ -28,7 +28,7 @@ configure() {
 
 build() {
     echo "Building project..."
-    cmake --build build || {
+    cmake -B build -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" || {
         echo "!!! If you are building for the first time, run '$0 regen [debug|release]'"
         exit 1
     }

@@ -8,7 +8,6 @@ namespace Trd {
     //basic datatypes
 
     using u8 = uint8_t;
-    //using u8_bool = u8;
 
     using u16 = uint16_t;
     using u32 = uint32_t;
