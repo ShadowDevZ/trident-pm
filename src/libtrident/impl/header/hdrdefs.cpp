@@ -25,8 +25,7 @@ bool TRD_HEADER::deserialize(const std::vector<u8>& dataIn) {
     bs.readTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum,
                    dynFileLen, _reserved0);
 
-    dbgprintf("xsize:%ld:\n", bs.getReadOffset());
-    if (bs.getReadOffset() != this->size() || _reserved0 != 0) {
+        if (bs.getReadOffset() != this->size() || _reserved0 != 0) {
         return false;
     }
     return true;

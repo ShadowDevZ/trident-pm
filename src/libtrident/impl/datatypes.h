@@ -8,7 +8,7 @@ namespace Trd {
     //basic datatypes
 
     using u8 = uint8_t;
-    using u8_bool = u8;
+    //using u8_bool = u8;
 
     using u16 = uint16_t;
     using u32 = uint32_t;
@@ -27,19 +27,27 @@ namespace Trd {
 
     //used instead of the C++ bool because bool does not have standard size
     //the size could be anywhere from 1 byte, to make things platform independent we have to improvise
-    template <typename T>
-        requires std::same_as<T, u8_bool>
-    constexpr bool u8b_valid(T b) {
-        return (b == 1 || b == 0);
-    }
+    namespace u8bool {
+        enum class type : u8 {
+            False = 0,
+            True = 1
+        };
+        constexpr type fromUint8(u8 b) {
+            if (b != 1 && b != 0)
+                throw std::invalid_argument("Type of u8_bool was set to not boolean value");
+            return static_cast<type>(b);
+        }
+        constexpr type fromBool(bool b) noexcept {
+            return b ? type::True : type::False;
+        }
+        constexpr bool toBool(type b) noexcept {
+            return static_cast<u8>(b) != 0;
+        }
+        constexpr u8 toUint8(type b) noexcept {
+            return static_cast<u8>(b);
+        }
 
-    template <typename T>
-        requires std::same_as<T, u8_bool>
-    constexpr bool u8b_isTrue(T b) {
-        if (!u8b_valid(b))
-            throw std::invalid_argument("u8b was assigned non boolean value");
-        return (b == 1 ? true : false);
-    }
+    };
 
 #ifdef EXP_TRY
 #error "TRY macro already defined"

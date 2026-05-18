@@ -1,10 +1,39 @@
 #include "dynamicTable.h"
 #include "libtrident.h"
+#include "trderr.h"
 #include "sdesc.h"
 using namespace Trd;
 using namespace Trd::Impl;
+using eCode = Err::Code;
+//mind you this is not static because now its only stupidly byte next after
+//but in theory this section could be placed anywhere in the file
+std::expected<u64, Trd::Err::TrdError> DtblDirectory::getOffset() {
+    EXP_TRY(internalSD.read(false));
+    auto off = internalSD.getEndOffset();
+    if (!off.has_value())
+        return off.error();
 
-std::expected<u64, Trd::Err::TrdError> DtblDirectory::findFreeOffset() const {
-    EXP_TRY(Trd::TrSectionDescriptor::isSdPresent(trpkg.fstrInfo));
-    return 12;
+    return off.value() + 1;
+}
+std::expected<void, Trd::Err::TrdError> DtblDirectory::writeSDEntry(u64 offset, u64 size,
+                                                                    bool available) {
+    //this could get invalidated real quick
+    EXP_TRY(internalSD.read(false));
+    SD_TBLENTRY dtblEntry{available};
+    dtblEntry.offset = offset;
+    dtblEntry.size = size;
+    TRD_SD_UPDATEFIELD suf;
+    suf.tblDynamic = dtblEntry;
+
+    EXP_TRY(internalSD.updateSD(suf, std::nullopt, false));
+
+    return {};
+}
+
+std::expected<void, Trd::Err::TrdError> DtblDirectory::invalidateSDEntry() {
+    return writeSDEntry(0, 0, false);
+}
+std::expected<SD_TBLENTRY, Trd::Err::TrdError> DtblDirectory::readSDEntry() {
+    EXP_TRY(internalSD.read(false));
+    return internalSD.getSD().tblDynamic;
 }

@@ -73,8 +73,14 @@ int main(void) {
     auto trpkgSD = ltTrPkg.sd();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
-    Impl::SD_TBLENTRY dynamic{.offset = 0x1337CAFFEEDDDDDD, .size = 8};
-    Impl::SD_TBLENTRY regt{.offset = 0xEEEEEEEEEEEEEEEE, .size = 8};
+    Impl::SD_TBLENTRY dynamic{true};
+    dynamic.offset = 0x1337CAFFEEDDDDDD;
+    dynamic.size = 8;
+    dynamic.available = u8bool::type::True;
+    Impl::SD_TBLENTRY regt{true};
+    regt.offset = 0xEEEEEEEEEEEEEEEE;
+    regt.size = 8;
+
     Impl::TRD_SD_UPDATEFIELD sdUpd;
     sdUpd.tblDynamic = dynamic;
     sdUpd.tblRegistry = regt;

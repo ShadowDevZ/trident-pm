@@ -74,7 +74,7 @@ inline void PrintBuildTarget() {
 #ifdef _LIBTRIDENT_DEBUG
 
 inline void print_header(const Trd::TRD_HEADER& hdr) {
-    dbgprintf("[HEADER_START - SIZE(real:%luB, work:%luB)]\n", sizeof(hdr), hdr.size());
+    dbgprintf("[HEADER_START - SIZE(mem:%luB, disk:%luB)]\n", sizeof(hdr), hdr.size());
     dbgprintf("\tMagic: [ ");
     for (auto const& it : hdr.magic) {
         dbgprintf("%X ", it);
@@ -96,14 +96,20 @@ inline void print_header(const Trd::TRD_HEADER& hdr) {
 }
 
 inline void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
-    dbgprintf("[SD_START - SIZE(real:%luB, work:%luB)]\n", sizeof(sd), sd.size());
+    dbgprintf("[SD_START - SIZE(mem:%luB, disk:%luB)]\n", sizeof(sd), sd.size());
     dbgprintf("\tCRC: 0x%X\n", sd.crc);
+    dbgprintf("\t  (DTBL)\n");
+    dbgprintf("\t    offset: 0x%lX\n", sd.tblDynamic.offset);
+    dbgprintf("\t    size: 0x%lX\n", sd.tblDynamic.size);
+    dbgprintf("\t    available: %s\n", u8bool::toBool(sd.tblDynamic.available) ? "true" : "false");
 
-    dbgprintf("\tDtbl offset: 0x%lX\n", sd.tblDynamic.offset);
-    dbgprintf("\tTreg offset: 0x%lX\n", sd.tblRegistry.offset);
+    dbgprintf("\t  (TREG)\n");
+    dbgprintf("\t    offset: 0x%lX\n", sd.tblRegistry.offset);
+    dbgprintf("\t    size: 0x%lX\n", sd.tblRegistry.size);
+    dbgprintf("\t    available: %s\n", u8bool::toBool(sd.tblRegistry.available) ? "true" : "false");
     dbgprintf("\tReserved1: %u\n", sd._reserved1);
-    dbgprintf("\tReserved2: %lu\n", sd._reserved2.size() * sizeof(u64));
-    dbgprintf("\tReady status: %s\n", u8b_isTrue(sd.sdReady) ? "true" : "false");
+    dbgprintf("\tReserved2: %lu\n", sd._reserved2.size() * sizeof(u8));
+    dbgprintf("\tReady status: %s\n", u8bool::toBool(sd.sdReady) ? "true" : "false");
     dbgprintf("\tID byte: 0x%X\n", sd.idByte);
     dbgprintf("[SD_END]\n\n");
 }

@@ -33,8 +33,9 @@ namespace Trd::Impl {
     };
 */
     struct SD_TBLENTRY {
-        uint64_t offset;
-        uint64_t size;
+        uint64_t offset{0};
+        uint64_t size{0};
+        u8bool::type available{u8bool::type::False};
     };
     struct TRD_SD_UPDATEFIELD {
         //std::optional<SectionStatusFlag::Flag> sectionStatusCode{SectionStatusFlag::Clear};
@@ -55,17 +56,18 @@ namespace Trd::Impl {
         SD_TBLENTRY tblDynamic{};
         SD_TBLENTRY tblRegistry{};
         //u32 _reserved2[2];
-        std::array<u64, 3> _reserved2{0, 0, 0};
+        std::array<u8, 22> _reserved2{};
         u16 _reserved1{0};
-        u8_bool sdReady;
+        u8bool::type sdReady{u8bool::type::False};
         // why simply not use const here ? using const prevents struct assigning as const
         // cannot be assigned
         u8 idByte{Consts::SD::TRD_SD_IDBYTE};
 
         constexpr u64 size() const override {
             return Impl::BinarySerializer::elementSize(
-                crc, sdReady, tblDynamic.offset, tblDynamic.size, tblRegistry.offset,
-                tblRegistry.size, idByte, _reserved2, _reserved1);
+                crc, sdReady, tblDynamic.offset, tblDynamic.size, tblDynamic.available,
+                tblRegistry.offset, tblRegistry.size, tblRegistry.available, idByte, _reserved2,
+                _reserved1);
         }
         // again in code we shouldnt even bother what is idByte outside of validating external SD struct
         std::optional<std::vector<u8>> serialize() const override;
@@ -77,9 +79,11 @@ namespace Trd::Impl {
         bool operator==(const TRD_SECTION_DESCRIPTOR& other) const {
             return crc == other.crc && tblDynamic.offset == other.tblDynamic.offset &&
                 tblDynamic.size == other.tblDynamic.size &&
+                tblDynamic.available == other.tblDynamic.available &&
                 tblRegistry.offset == other.tblRegistry.offset &&
-                tblRegistry.size == other.tblRegistry.size && _reserved2 == other._reserved2 &&
-                sdReady == other.sdReady;
+                tblRegistry.size == other.tblRegistry.size &&
+                tblRegistry.available == other.tblRegistry.available &&
+                _reserved2 == other._reserved2 && sdReady == other.sdReady;
         }
     };
 };

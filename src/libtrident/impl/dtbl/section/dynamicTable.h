@@ -53,16 +53,24 @@ then we call Trd::ReadDtbl(STBL_PAYLOAD, &myoutputbuff, tregMeta) where treg met
 #include "datatypes.h"
 #include <optional>
 #include "trderr.h"
+#include "sdesc.h"
 //all section manipulations have to be done via treg interface
 //tbl is just a dumb array
 
 //all operations that do modifications like updating values will be added later
 namespace Trd {
+
+    struct TstreamChunk {
+        //will substract until 0
+        u32 noChunksLeft;
+        u32 chunkLength;
+        std::array<u8, 4096> chunkData;
+    };
     class TrPkg;
 
     class DtblDirectory {
       public:
-        std::expected<u64, Trd::Err::TrdError> getOffset() const;
+        std::expected<u64, Trd::Err::TrdError> getOffset();
 
         /* checks whether the treg is already written as if it is we either have
         to block the operation OR copy the small treg into memory then we can truncate the data
@@ -71,10 +79,10 @@ namespace Trd {
         instead of doing it inplace as a single error could render the whole package unusable.
         This will be a bool to check if user wants to do it in place*/
         bool isSafeToAccess() const;
-        void updateSdEntry();
-        void invalidateSDEntry();
-        void checkSDEntry();
-        void writeSDEntry();
+
+        std::expected<void, Trd::Err::TrdError> invalidateSDEntry();
+        std::expected<Impl::SD_TBLENTRY, Trd::Err::TrdError> readSDEntry();
+        std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
         void reblankRawEntry();
         void readBackSDEntry();
 
@@ -86,11 +94,11 @@ namespace Trd {
         //probably add to treg instead
         //void findFreeHole();
 
-        explicit DtblDirectory(TrPkg& pkg) : trpkg(pkg) {};
+        explicit DtblDirectory(TrPkg& pkg) : trpkg(pkg), internalSD{pkg} {};
 
       private:
-        std::expected<u64, Trd::Err::TrdError> findFreeOffset() const;
         friend class TrPkg;
         TrPkg& trpkg;
+        TrSectionDescriptor internalSD;
     };
 };
