@@ -60,13 +60,7 @@ then we call Trd::ReadDtbl(STBL_PAYLOAD, &myoutputbuff, tregMeta) where treg met
 //all operations that do modifications like updating values will be added later
 namespace Trd {
 
-    struct TstreamChunk {
-        //will substract until 0
-        u32 noChunksLeft;
-        u32 chunkLength;
-        std::array<u8, 4096> chunkData;
-    };
-    class TrPkg;
+        class TrPkg;
 
     class DtblDirectory {
       public:

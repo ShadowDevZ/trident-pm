@@ -54,6 +54,13 @@
 
     */
 #define LT_DEBUG_ENDIAN_FORCE 0
+/**
+ * @brief Forces the stream output to be passed as chunks to the tstream
+ * even for small functions
+ * 0: off
+ * 1: on
+ */
+#define LT_TSTREAM_ALWAYS_BUFFER 0
 
 #else
 #define dbgprintf(...)                                                                             \

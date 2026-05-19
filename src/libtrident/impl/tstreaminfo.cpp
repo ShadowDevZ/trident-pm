@@ -4,6 +4,7 @@
 #include "binarySerializer.h"
 #include <cstring>
 #include <ranges>
+#include "chunkData.h"
 using namespace Trd;
 using namespace Trd::Impl;
 
@@ -14,18 +15,6 @@ std::expected<void, Err::TrdError> TStreamInfo::checkFileStreamInfo() const {
         return std::unexpected(Err::TrdError{Err::Code::FileOpenFailure});
     }
     return {};
-}
-Err::Code streamRemoteIsOpen(const TRDFstreamObject& info) {
-    if (info.acccessModel._internal == _TrdInternalIO::IoClosed) {
-        return Err::Code::FileOpenFailure;
-    }
-
-    if (!info.hFile || !info.hFile->is_open() || (!info.fileOpened)) {
-
-        return Err::Code::FileOpenFailure;
-    }
-
-    return Err::Code::Success;
 }
 
 std::expected<void, Err::TrdError> TStreamInfo::isOpen() const {
@@ -58,8 +47,29 @@ void TStreamInfo::writeTStream(const char* data, u64 size) {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
+#if LT_IO_ALWAYS_CHUNK == 1
+    // xfInfo.hFile->write(data, size);
+    IOChunkData cw{xfInfo};
+    u64 remaining = size;
+    const char* cursorData = data;
 
+#ifdef _LIBTRIDENT_DEBUG_VERBOSE
+    bool next = false;
+    u32 noChunks = IOChunkData::calculateChunkCount(size);
+    u32 chunksDone = 0;
+    do {
+        next = cw.writeNextChunk(cursorData, remaining);
+        chunksDone++;
+        dbgprintf("--processing chunk %u/%u\n\n\n", chunksDone, noChunks);
+    } while (next);
+#else
+    while (cw.writeNextChunk(cursorData, remaining)) {};
+#endif
+
+#else
     xfInfo.hFile->write(data, size);
+#endif
+
     if (!xfInfo.hFile) {
         throw std::ios_base::failure("WriteLeData() Failed");
     }

@@ -8,21 +8,9 @@
 #include <filesystem>
 #include <expected>
 #include "filemgmnt.h"
+#include "tstreamDefs.h"
 //#include "ioflags.h"
 namespace Trd::Impl {
-
-    struct TRDFstreamObject {
-        //todo enforce PATHMAX and use const char* to avoid unnecessary memory allocation
-        std::filesystem::path absolutePath;
-        std::shared_ptr<std::fstream> hFile;
-        //does not represent actual file size, but sizeof(whole file - header), not utilized yet
-        // u64 checksumSize{0};
-        TRDAccessModel acccessModel{};
-        //for future use, atime
-        Impl::PortableStat pStat{};
-        //struct stat64 fileStat;
-        bool fileOpened{false};
-    };
 
     class TStreamInfo {
       private:
