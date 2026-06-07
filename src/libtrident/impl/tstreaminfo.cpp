@@ -75,17 +75,41 @@ void TStreamInfo::writeTStream(const char* data, u64 size) {
     }
 }
 // does not check for endianness, the data is retrieved as native endianness
+//readTStream can never be read into chunk as this requires singular object to be returned
+//if you need to read alrge amounts of data consider manually using readNextChunk
+/* for example
+ IOChunkData cw{xfInfo};
+    u64 remaining = size;
+
+
+    bool next = false;
+    u32 noChunks = IOChunkData::calculateChunkCount(size);
+    u32 chunksDone = 0;
+    do {
+        auto chunk = cw.readNextChunk(remaining);
+        if (!chunk)
+            break;
+        next = remaining > 0;
+        chunksDone++;
+        dbgprintf("--read processing chunk %u/%u(%uB)\n\n\n", chunksDone, noChunks,
+                  chunk.value().bytesRead);
+
+        memcpy(s, chunk.value().data.data(), chunk.value().bytesRead);
+    } while (next);
+
+*/
 void TStreamInfo::readTStream(char* s, u64 size) const {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
     if (!checkFileStreamInfo() || !s || size < 1) {
-        throw std::runtime_error("WriteLeStream(validate) Failed");
+        throw std::runtime_error("ReadLeStream(validate) Failed");
     }
 
     xfInfo.hFile->read(s, size);
+
     if (!xfInfo.hFile) {
-        throw std::ios_base::failure("WriteLeData() Failed");
+        throw std::ios_base::failure("ReadLeData() Failed");
     }
 }
 

@@ -8,7 +8,10 @@ namespace Trd::Impl {
      * @brief for performing manual chunked IO operations 
      * 
      */
-
+    struct IOReadChunk {
+        std::array<u8, Consts::Binary::IO_CHUNK_SIZE> data;
+        u32 bytesRead; // may be smaller then IO_CHUNK_SIZE
+    };
     class IOChunkData {
       private:
         TRDFstreamObject xfInfo{};
@@ -23,5 +26,6 @@ namespace Trd::Impl {
         static u32 calculateChunkCount(u64 size) {
             return (size + Consts::Binary::IO_CHUNK_SIZE - 1) / Consts::Binary::IO_CHUNK_SIZE;
         }
+        std::optional<IOReadChunk> readNextChunk(u64& remaining);
     };
 };
