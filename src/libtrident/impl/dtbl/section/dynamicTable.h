@@ -5,6 +5,7 @@
  * 
  */
 #pragma once
+//this file is only used by treg and should not be handled directly
 /*
 treg is kept in memory and written as footer
 basically what we need is through treg obtain
@@ -60,10 +61,16 @@ then we call Trd::ReadDtbl(STBL_PAYLOAD, &myoutputbuff, tregMeta) where treg met
 //all operations that do modifications like updating values will be added later
 namespace Trd {
 
-        class TrPkg;
+    class TrPkg;
 
     class DtblDirectory {
       public:
+        /**
+         * @brief Returns the location of the first byte where DTBL starts
+         * Do not add + 1 to the result. The returned value is already a seek offset
+         * to the first byte where you can perform IO operations on
+         * 
+         */
         std::expected<u64, Trd::Err::TrdError> getOffset();
 
         /* checks whether the treg is already written as if it is we either have
@@ -76,12 +83,22 @@ namespace Trd {
 
         std::expected<void, Trd::Err::TrdError> invalidateSDEntry();
         std::expected<Impl::SD_TBLENTRY, Trd::Err::TrdError> readSDEntry();
+        /**
+         * @brief Writes the SD table entry for the DTBL
+         * 
+         * @param offset fseek ofset to the starting byte of the DTBL directory
+         * @param size total size of the whole DTBL directory section. Size NEEDS to match
+         * @param available if true section contains valid data that can be trusted and checked
+         * otherwise it can contain any data if false
+         * @return std::expected<void, Trd::Err::TrdError> 
+         */
         std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
         void reblankRawEntry();
         void readBackSDEntry();
 
-        void writeRawEntry();
-        void readRawEntry();
+        std::expected<void, Trd::Err::TrdError> writeRawEntry(std::span<const u8> data,
+                                                              u64 writeOffset);
+        std::expected<std::vector<u8>, Trd::Err::TrdError> readRawEntry(u64 readOffset);
         void readEntryChunkData();
         void writeEntryChunkData();
 

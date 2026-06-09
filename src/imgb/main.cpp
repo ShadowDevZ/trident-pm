@@ -7,7 +7,7 @@
 #include "trheader.h"
 #include <cstdlib>
 #include "systemspecific/common/include/filemgmnt.h"
-
+#include "dynamicTable.h"
 #include "mainDbgHelp.h"
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
@@ -32,7 +32,7 @@ int main(void) {
     //ltTrPkg.OpenPackage("./test.tpx", IOFLAGS::ACCESS_RW | IOFLAGS::CREATE_NEW);
 
     //u32 reg = Err::TrdErrorCallback::instance().registerCallback(cb_data);
-
+    //Header
     auto trPkgHdr = ltTrPkg.header();
 
 #ifdef _LIBTRIDENT_DEBUG
@@ -70,6 +70,7 @@ int main(void) {
     auto vxa = trPkgHdr.getHeader();
     print_header(vxa);
 #endif
+    //SD
     auto trpkgSD = ltTrPkg.sd();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
@@ -88,6 +89,17 @@ int main(void) {
     trpkgSD.changeReadyStatus(true);
     TASSERT("UpdateSD()", trpkgSD.updateSD(sdUpd));
 
+    //DTBL
+
+    Trd::DtblDirectory dtblDir(ltTrPkg);
+    //value_or to fix compiler warning, if it indeed returns 0 then writeRawEntry will fail
+    auto dtblOffset = dtblDir.getOffset().value_or(0);
+    TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, 1024, false));
+
+    std::vector<u8> data(1024, 0xFF);
+    TASSERT("DtblWriteRawEntry()", dtblDir.writeRawEntry(data, dtblOffset));
+
+    //output
     auto rbSd = trpkgSD.getSD();
     TASSERT("ReadbackSD()", trpkgSD.read());
     if (rbSd != ltTrPkg.sd().getSD()) {

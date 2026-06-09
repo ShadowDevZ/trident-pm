@@ -11,10 +11,8 @@ using eCode = Err::Code;
 
 std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
     // header needs to exist before any sd data is written
-    auto present = TrFileHeader::isHeaderPresent(trpkg.fstrInfo);
-    if (!present) {
-        return std::unexpected(present.error());
-    }
+    EXP_TRY(TrFileHeader::isHeaderPresent(trpkg.fstrInfo));
+
     if (u8bool::toBool(trpkg.trdSD.sdReady))
         throw std::runtime_error("Cannot make SD blank as SD was marked with status READY");
 
@@ -25,6 +23,7 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::createWriteBlank() {
     return IwriteSDNoValidate(trpkg.trdSD);
 };
 std::expected<void, Err::TrdError> TrSectionDescriptor::write() {
+    EXP_TRY(TrFileHeader::isHeaderPresent(trpkg.fstrInfo));
     auto valid = iValidateSD(trpkg.trdSD, false);
     if (!valid.has_value())
         return std::unexpected(valid.error());
@@ -169,6 +168,7 @@ std::expected<Impl::TRD_SECTION_DESCRIPTOR, Err::TrdError>
 TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
 
     EXP_TRY(tStream.checkFileStreamInfo());
+    EXP_TRY(TrFileHeader::isHeaderPresent(tStream));
     Impl::TRD_SECTION_DESCRIPTOR sd{};
     auto startOffset = getStartOffset();
     auto endOffset = getEndOffset();
@@ -197,6 +197,7 @@ std::expected<void, Err::TrdError> TrSectionDescriptor::read(bool checkReady) {
 }
 std::expected<void, Err::TrdError> TrSectionDescriptor::isSdPresent(Impl::TStreamInfo& streamInfo) {
     //sd returned is already validated no need to call iValidateSD()
+    EXP_TRY(TrFileHeader::isHeaderPresent(streamInfo));
     auto optSD = readBack(streamInfo);
     if (!optSD)
         return std::unexpected(optSD.error());

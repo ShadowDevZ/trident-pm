@@ -61,15 +61,15 @@ std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tS
     return data;
 }
 
-void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
-                                          const std::vector<u8>& data, bool requireAlignment,
-                                          i64 seekPos, std::ios_base::seekdir seekDir) {
+void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::span<const u8> data,
+                                          bool requireAlignment, i64 seekPos,
+                                          std::ios_base::seekdir seekDir) {
     //todo make this boilerplate in all classes a function
 
     if (data.empty()) {
         throw std::invalid_argument("Empty buffer was passed");
     }
-    if (!requireAlignment || !isDataSizeAligned(data.size())) {
+    if (requireAlignment && !isDataSizeAligned(data.size())) {
         throw std::invalid_argument("Data size not aligned");
     }
     if (!tStream.checkFileStreamInfo()) {

@@ -301,7 +301,7 @@ namespace Trd::Impl {
          * @param seekPos 
          * @param seekDir 
          */
-        static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, const std::vector<u8>& data,
+        static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::span<const u8> data,
                                        bool requireAlignment, i64 seekPos = 0,
                                        std::ios_base::seekdir seekDir = std::ios::beg);
 
