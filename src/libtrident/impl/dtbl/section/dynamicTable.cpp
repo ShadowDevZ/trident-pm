@@ -55,7 +55,20 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawEntry(std::span<c
             Err::TrdError(eCode::SectionSizeViolated, 1,
                           "Tried to perform write operation in place of header or offset"));
     //sd needs to be present alongside the header
+    EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
     EXP_TRY(readSDEntry());
     BinarySerializer::writeDataToTStream(trpkg.fstrInfo, data, false, writeOffset);
     return {};
+}
+std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawEntry(u64 readOffset,
+                                                                               u64 size) const {
+    std::vector<u8> readData(size);
+    EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
+
+    if (readOffset < Consts::Header::LT_HDR_SZB_01A + Consts::SD::TRD_SECTIONSD_SIZE)
+        return std::unexpected(
+            Err::TrdError(eCode::SectionSizeViolated, 1,
+                          "Tried to perform read operation in place of header or offset"));
+    readData = BinarySerializer::readDataFromTStream(trpkg.fstrInfo, readOffset, size, false);
+    return readData;
 }

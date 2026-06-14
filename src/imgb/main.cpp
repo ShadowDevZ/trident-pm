@@ -98,6 +98,18 @@ int main(void) {
 
     std::vector<u8> data(1024, 0xFF);
     TASSERT("DtblWriteRawEntry()", dtblDir.writeRawEntry(data, dtblOffset));
+    auto checkRead = dtblDir.readRawEntry(dtblOffset, 1024);
+    if (!checkRead) {
+        dbgprintf("dtbl readback fail\n");
+        return 1;
+    }
+    const auto& readData = checkRead.value();
+    if (readData != data) {
+        dbgprintf("dtbl read check failed\n");
+        return 1;
+    } else {
+        dbgprintf("dtbl read ok\n");
+    }
 
     //output
     auto rbSd = trpkgSD.getSD();

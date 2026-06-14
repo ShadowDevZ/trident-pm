@@ -45,7 +45,7 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, u64 offset) {
 std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
                                                       u64 size, bool requireAlignment) {
 
-    if (!requireAlignment || !isDataSizeAligned(size)) {
+    if (requireAlignment && !isDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
     }
     if (!tStream.checkFileStreamInfo()) {

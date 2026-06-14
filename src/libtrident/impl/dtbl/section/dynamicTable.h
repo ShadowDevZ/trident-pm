@@ -93,12 +93,11 @@ namespace Trd {
          * @return std::expected<void, Trd::Err::TrdError> 
          */
         std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
-        void reblankRawEntry();
-        void readBackSDEntry();
 
         std::expected<void, Trd::Err::TrdError> writeRawEntry(std::span<const u8> data,
                                                               u64 writeOffset);
-        std::expected<std::vector<u8>, Trd::Err::TrdError> readRawEntry(u64 readOffset);
+        std::expected<std::vector<u8>, Trd::Err::TrdError> readRawEntry(u64 readOffset,
+                                                                        u64 size) const;
         void readEntryChunkData();
         void writeEntryChunkData();
 
