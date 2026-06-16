@@ -36,6 +36,8 @@ namespace Trd::Impl {
         //throws std::iosbase::failure on exception
         i64 getSeekPos() const;
 
+        void flushData();
+
         template <typename T>
         void writeTStream(const T& t, u64 size) {
             writeTStream(reinterpret_cast<const char*>(&t), size);

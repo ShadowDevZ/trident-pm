@@ -7,6 +7,7 @@
 #include "filemgmnt.h"
 #include <zlib.h>
 #include <cstring>
+#include "chunkData.h"
 using namespace Trd;
 using namespace Trd::Impl;
 
@@ -43,7 +44,8 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, u64 offset) {
 }
 //todo use std expected instead of exceptions
 std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
-                                                      u64 size, bool requireAlignment) {
+                                                      u64 size, bool requireAlignment,
+                                                      bool keepOriginalSeek) {
 
     if (requireAlignment && !isDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
@@ -57,13 +59,15 @@ std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tS
     // data.reserve(size);
 
     tStream.readTStream(reinterpret_cast<char*>(data.data()), size);
-    tStream.setSeekPos(ogSeek);
+    if (keepOriginalSeek)
+        tStream.setSeekPos(ogSeek);
+
     return data;
 }
 
 void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::span<const u8> data,
                                           bool requireAlignment, i64 seekPos,
-                                          std::ios_base::seekdir seekDir) {
+                                          std::ios_base::seekdir seekDir, bool keepOriginalSeek) {
     //todo make this boilerplate in all classes a function
 
     if (data.empty()) {
@@ -78,9 +82,18 @@ void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::
     const i64 ogSeek = tStream.getSeekPos();
 
     tStream.setSeekPos(seekPos, seekDir);
+    /*IOChunkData chunkData{tStream};
+    chunkData.setupWrite(data, seekPos);
+    bool next = false;
+    do {
+        next = chunkData.writeNextChunk2();
+        auto debug = chunkData.getWriteData().value();
+        dbgprintf("--cwrite2 %u/%u\n", debug.chunksDone, debug.noChunks);
+    } while (next);*/
+    tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size_bytes());
 
-    tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size());
-    tStream.setSeekPos(ogSeek);
+    if (keepOriginalSeek)
+        tStream.setSeekPos(ogSeek);
 }
 
 std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign) {

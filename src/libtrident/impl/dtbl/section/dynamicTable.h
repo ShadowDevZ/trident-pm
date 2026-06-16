@@ -55,6 +55,7 @@ then we call Trd::ReadDtbl(STBL_PAYLOAD, &myoutputbuff, tregMeta) where treg met
 #include <optional>
 #include "trderr.h"
 #include "sdesc.h"
+#include "chunkData.h"
 //all section manipulations have to be done via treg interface
 //tbl is just a dumb array
 
@@ -98,8 +99,10 @@ namespace Trd {
                                                               u64 writeOffset);
         std::expected<std::vector<u8>, Trd::Err::TrdError> readRawEntry(u64 readOffset,
                                                                         u64 size) const;
-        void readEntryChunkData();
-        void writeEntryChunkData();
+        //todo also validate SD and if safe to write
+        std::expected<void, Trd::Err::TrdError> writeEntryInChunks(std::span<const u8> data,
+                                                                   u64 writeOffset);
+        std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> readEntryChunk();
 
         //probably add to treg instead
         //void findFreeHole();
@@ -107,6 +110,9 @@ namespace Trd {
         explicit DtblDirectory(TrPkg& pkg) : trpkg(pkg), internalSD{pkg} {};
 
       private:
+        constexpr u64 badOffset() const {
+            return Consts::Header::LT_HDR_SZB_01A + Consts::SD::TRD_SECTIONSD_SIZE;
+        }
         friend class TrPkg;
         TrPkg& trpkg;
         TrSectionDescriptor internalSD;

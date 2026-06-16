@@ -303,7 +303,8 @@ namespace Trd::Impl {
          */
         static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::span<const u8> data,
                                        bool requireAlignment, i64 seekPos = 0,
-                                       std::ios_base::seekdir seekDir = std::ios::beg);
+                                       std::ios_base::seekdir seekDir = std::ios::beg,
+                                       bool keepOriginalSeek = true);
 
         /**
          * @brief Reads data from TStream as vector with unserialized data.
@@ -314,7 +315,8 @@ namespace Trd::Impl {
          * @return std::vector<u8> unserialized raw data from file
          */
         static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
-                                                   u64 size, bool requireAlignment);
+                                                   u64 size, bool requireAlignment,
+                                                   bool keepOriginalSeek = true);
     };
     /**
      * @brief Generates CRC32 and handles endianness for multiple types and containers

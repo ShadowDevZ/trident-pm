@@ -8,6 +8,7 @@
 #include "trheader.h"
 #include "trdconsts.h"
 #include "ccattribs.h"
+#include <chrono>
 //only included in main file during testing so this is ok
 using namespace Trd;
 
@@ -138,6 +139,24 @@ inline void print_stat(const Trd::Impl::PortableStat& ps) {
               << "\n  CTIME: " << to_time_t(aux.times.lastMetadataChange)
               << "\n  MTIME: " << to_time_t(aux.times.lastModify) << '\n';
 }
+
+class BenchDbgTimer {
+  private:
+    std::string text;
+    std::chrono::high_resolution_clock::time_point start;
+
+  public:
+    explicit BenchDbgTimer(std::string text) :
+        text(std::move(text)), start(std::chrono::high_resolution_clock::now()) {};
+
+    ~BenchDbgTimer() {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        dbgprintf("[\x1B[35m%s] took %ld ms/ %ld us\n\x1B[0m", text.c_str(), ms, us);
+    }
+};
 
 #endif
 

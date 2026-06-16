@@ -94,11 +94,19 @@ int main(void) {
     Trd::DtblDirectory dtblDir(ltTrPkg);
     //value_or to fix compiler warning, if it indeed returns 0 then writeRawEntry will fail
     auto dtblOffset = dtblDir.getOffset().value_or(0);
-    TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, 1024, false));
 
-    std::vector<u8> data(1024, 0xFF);
-    TASSERT("DtblWriteRawEntry()", dtblDir.writeRawEntry(data, dtblOffset));
-    auto checkRead = dtblDir.readRawEntry(dtblOffset, 1024);
+    constexpr auto dummySize = UINT8_MAX;
+    TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, dummySize, false));
+
+    std::vector<u8> data(dummySize, 0xFF);
+
+    {
+        BenchDbgTimer t("DtblWriteChunk");
+        // TASSERT("DtblWriteRawEntry()", dtblDir.writeRawEntry(data, dtblOffset));
+        TASSERT("DtblWriteRawEntry()", dtblDir.writeEntryInChunks(data, dtblOffset));
+    }
+
+    auto checkRead = dtblDir.readRawEntry(dtblOffset, dummySize);
     if (!checkRead) {
         dbgprintf("dtbl readback fail\n");
         return 1;
@@ -107,9 +115,8 @@ int main(void) {
     if (readData != data) {
         dbgprintf("dtbl read check failed\n");
         return 1;
-    } else {
-        dbgprintf("dtbl read ok\n");
     }
+    dbgprintf("dtbl read ok\n");
 
     //output
     auto rbSd = trpkgSD.getSD();

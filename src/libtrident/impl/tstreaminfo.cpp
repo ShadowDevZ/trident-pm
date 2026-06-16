@@ -47,13 +47,14 @@ void TStreamInfo::writeTStream(const char* data, u64 size) {
     if (size == 0) {
         throw std::invalid_argument("Size was 0");
     }
-#if LT_IO_ALWAYS_CHUNK == 1
+    /*
+#if LT_IO_ALWAYS_CHUNK == 0
     // xfInfo.hFile->write(data, size);
     IOChunkData cw{xfInfo};
     u64 remaining = size;
     const char* cursorData = data;
 
-#ifdef _LIBTRIDENT_DEBUG_VERBOSE
+#ifndef _LIBTRIDENT_DEBUG_VERBOSE
     bool next = false;
     u32 noChunks = IOChunkData::calculateChunkCount(size);
     u32 chunksDone = 0;
@@ -65,10 +66,18 @@ void TStreamInfo::writeTStream(const char* data, u64 size) {
 #else
     while (cw.writeNextChunk(cursorData, remaining)) {};
 #endif
-
-#else
+*/
+    /*
+    IOChunkData chunkData{*this};
+    chunkData.setupWrite(data, seekPos);
+    bool next = false;
+    do {
+        next = chunkData.writeNextChunk2();
+        auto debug = chunkData.getWriteData().value();
+        dbgprintf("--cwrite2 %u/%u\n", debug.chunksDone, debug.noChunks);
+    } while (next);
+*/
     xfInfo.hFile->write(data, size);
-#endif
 
     if (!xfInfo.hFile) {
         throw std::ios_base::failure("WriteLeData() Failed");
@@ -131,6 +140,11 @@ i64 TStreamInfo::getSeekPos() const {
         throw std::ios_base::failure("tellg() failed");
     }
     return pos;
+}
+void TStreamInfo::flushData() {
+    xfInfo.hFile->flush();
+    if (!xfInfo.hFile)
+        throw std::runtime_error("failed to flush fstream object");
 }
 
 void TStreamInfo::writePadding(u16 size, int value) {

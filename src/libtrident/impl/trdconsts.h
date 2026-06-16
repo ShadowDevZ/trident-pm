@@ -56,7 +56,7 @@ namespace Trd::Consts::Binary {
      * written for 64 bit incompatible
      */
     constexpr u16 BSERIALIZE_DATA_ALIGN = 8;
-    constexpr u32 IO_CHUNK_SIZE = 4096;
+    constexpr u32 IO_CHUNK_SIZE = 256 * 1024; // 256KiB;
 }
 
 namespace Trd::Consts::Err {

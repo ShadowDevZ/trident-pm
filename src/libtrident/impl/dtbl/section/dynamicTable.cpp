@@ -18,7 +18,7 @@ std::expected<u64, Trd::Err::TrdError> DtblDirectory::getOffset() {
 std::expected<void, Trd::Err::TrdError> DtblDirectory::writeSDEntry(u64 offset, u64 size,
                                                                     bool available) {
 
-    if (available && offset < Consts::Header::LT_HDR_SZB_01A + Consts::SD::TRD_SECTIONSD_SIZE)
+    if (available && offset < badOffset())
         return std::unexpected(
             Err::TrdError(eCode::SectionSizeViolated, 1,
                           "Tried to perform write operation in place of header or offset"));
@@ -50,7 +50,7 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawEntry(std::span<c
     if (data.empty())
         return std::unexpected(
             Err::TrdError(eCode::InvalidFuncArg, 1, "Empty data array was passed"));
-    if (writeOffset < Consts::Header::LT_HDR_SZB_01A + Consts::SD::TRD_SECTIONSD_SIZE)
+    if (writeOffset < badOffset())
         return std::unexpected(
             Err::TrdError(eCode::SectionSizeViolated, 1,
                           "Tried to perform write operation in place of header or offset"));
@@ -65,10 +65,36 @@ std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawEntry(u
     std::vector<u8> readData(size);
     EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
 
-    if (readOffset < Consts::Header::LT_HDR_SZB_01A + Consts::SD::TRD_SECTIONSD_SIZE)
+    if (readOffset < badOffset())
         return std::unexpected(
             Err::TrdError(eCode::SectionSizeViolated, 1,
                           "Tried to perform read operation in place of header or offset"));
     readData = BinarySerializer::readDataFromTStream(trpkg.fstrInfo, readOffset, size, false);
     return readData;
+}
+std::expected<void, Trd::Err::TrdError> DtblDirectory::writeEntryInChunks(std::span<const u8> data,
+                                                                          u64 writeOffset) {
+
+    if (data.empty())
+        return std::unexpected(Err::TrdError(eCode::NullObject, 1, "data was empty"));
+    if (writeOffset < badOffset())
+        return std::unexpected(
+            Err::TrdError(eCode::SectionSizeViolated, 1,
+                          "Tried to perform read operation in place of header or offset"));
+
+    IOChunkData chunkData{trpkg.getTstream()};
+    chunkData.setupWrite(data, writeOffset);
+    bool next = false;
+    do {
+        next = chunkData.writeNextChunk();
+
+#ifdef _LIBTRIDENT_DEBUG_VERBOSE
+        auto debug = chunkData.getWriteData();
+        [[unlikely]]
+        if (!debug)
+            throw std::runtime_error("writedata ctx was empty/internal error");
+        dbgprintf("__cwrite2 %u/%u\n", debug.value().chunksDone, debug.value().noChunks);
+#endif
+    } while (next);
+    return {};
 }
