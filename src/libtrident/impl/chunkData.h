@@ -9,8 +9,9 @@ namespace Trd::Impl {
      * 
      */
     struct IOReadChunk {
-        std::array<u8, Consts::Binary::IO_CHUNK_SIZE> data;
-        u32 bytesRead; // may be smaller then IO_CHUNK_SIZE
+        std::vector<u8> data;
+
+        // u32 bytesRead; // may be smaller then IO_CHUNK_SIZE
     };
     struct IOWriteData {
         std::span<const u8> remaining{};

@@ -50,13 +50,14 @@ std::optional<IOReadChunk> IOChunkData::readNextChunk() {
     if (readData.remaining == 0)
         return std::nullopt;
     //could not flushing the data cause problems ? i honestly dont know but rather be safe than sorry
-    xfInfo.flushData();
+    //xfInfo.flushData();
 
     u32 toRead = static_cast<u32>(std::min<u64>(readData.remaining, Consts::Binary::IO_CHUNK_SIZE));
     IOReadChunk readChunk{};
-    auto dataVector =
+    //auto dataVector =
+    readChunk.data =
         BinarySerializer::readDataFromTStream(xfInfo, readData._readSeek, toRead, false);
-    std::ranges::move(dataVector, readChunk.data.begin());
+    // std::ranges::move(dataVector, readChunk.data.begin());
 
     u32 readBytes = static_cast<u32>(fstrObj.hFile->gcount());
     if (!fstrObj.hFile)
@@ -64,7 +65,11 @@ std::optional<IOReadChunk> IOChunkData::readNextChunk() {
     if (readBytes == 0)
         return std::nullopt; //EOF?
 
-    readChunk.bytesRead = readBytes;
+    [[unlikely]]
+    if (readChunk.data.size() > Consts::Binary::IO_CHUNK_SIZE)
+        throw std::runtime_error("IO_CHUNK size was bigger than max allowed IO_CHUNK_SIZE");
+
+    // readChunk.bytesRead = readBytes;
     readData._readSeek += readBytes;
     readData.remaining -= readBytes;
     readData.chunksDone++;

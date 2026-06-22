@@ -74,7 +74,7 @@ std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawEntry(u
 }
 std::expected<void, Trd::Err::TrdError> DtblDirectory::writeEntryInChunks(std::span<const u8> data,
                                                                           u64 writeOffset) {
-
+    //todo call tregHaveValidEntry(writeOffset)
     if (data.empty())
         return std::unexpected(Err::TrdError(eCode::NullObject, 1, "data was empty"));
     if (writeOffset < badOffset())
@@ -97,4 +97,31 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeEntryInChunks(std::s
 #endif
     } while (next);
     return {};
+}
+DtblDirectory::DtblDirectory(TrPkg& pkg) :
+    trpkg{pkg}, internalSD{pkg}, readChunkBuffer{pkg.fstrInfo} {};
+
+std::expected<void, Trd::Err::TrdError> DtblDirectory::readEntryChunkSetup(u64 setupRead,
+                                                                           u64 size) {
+    if (setupRead < badOffset())
+        return std::unexpected(
+            Err::TrdError(eCode::SectionSizeViolated, 1,
+                          "Tried to perform read operation in place of header or offset"));
+    EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
+    readChunkBuffer.setupRead(setupRead, size);
+    return {};
+}
+
+std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> DtblDirectory::readNextEntryChunk() {
+
+    auto r = readChunkBuffer.readNextChunk();
+    if (!r)
+        return std::unexpected(Err::TrdError(eCode::FileReadFailure, 1, "chunk read fail"));
+    const auto& readChunk = r.value();
+    if (readChunk.data.empty())
+        return std::unexpected(
+            Err::TrdError(eCode::FileReadFailure, 1, "read 0 bytes inside chunk"));
+
+    return readChunk;
+    //todo call tregHaveValidEntry(writeOffset)
 }

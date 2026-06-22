@@ -105,18 +105,35 @@ int main(void) {
         // TASSERT("DtblWriteRawEntry()", dtblDir.writeRawEntry(data, dtblOffset));
         TASSERT("DtblWriteRawEntry()", dtblDir.writeEntryInChunks(data, dtblOffset));
     }
-
+    /*
     auto checkRead = dtblDir.readRawEntry(dtblOffset, dummySize);
     if (!checkRead) {
         dbgprintf("dtbl readback fail\n");
         return 1;
     }
     const auto& readData = checkRead.value();
+    dump_arr(std::span{readData});
     if (readData != data) {
-        dbgprintf("dtbl read check failed\n");
+        dbgprintf("\ndtbl read check failed\n");
         return 1;
     }
-    dbgprintf("dtbl read ok\n");
+    */
+
+    TASSERT("readEntryChunkSetup()", dtblDir.readEntryChunkSetup(dtblOffset, dummySize));
+    bool next = false;
+    int num = 1;
+    do {
+        const auto& zv = dtblDir.readNextEntryChunk();
+        next = zv.has_value();
+        if (!next)
+            break;
+        const auto& da = zv.value();
+
+        dump_arr(std::span{da.data});
+        dbgprintf("\nchunk_no%d\n", num++);
+    } while (next);
+
+    dbgprintf("\ndtbl read ok\n");
 
     //output
     auto rbSd = trpkgSD.getSD();

@@ -95,6 +95,17 @@ inline void print_header(const Trd::TRD_HEADER& hdr) {
     dbgprintf("\tFile length 0x%lXB\n", hdr.dynFileLen);
     dbgprintf("[HEADER_END]\n");
 }
+template <typename T>
+void dump_arr(std::span<T> t) {
+    constexpr size_t dumpArrElimit = 128;
+    size_t szRead = t.size() > dumpArrElimit ? dumpArrElimit : t.size();
+
+    for (size_t i = 0; i < szRead; ++i) {
+        dbgprintf("%X%c", t[i], ((i + 1) % 16 == 0 ? '\n' : ' '));
+    }
+    if (t.size() > dumpArrElimit)
+        dbgprintf("\n...(%ld more)", t.size() - dumpArrElimit);
+}
 
 inline void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
     dbgprintf("[SD_START - SIZE(mem:%luB, disk:%luB)]\n", sizeof(sd), sd.size());

@@ -48,13 +48,13 @@ void TStreamInfo::writeTStream(const char* data, u64 size) {
         throw std::invalid_argument("Size was 0");
     }
     /*
-#if LT_IO_ALWAYS_CHUNK == 0
+#if LT_IO_ALWAYS_CHUNK == 1
     // xfInfo.hFile->write(data, size);
     IOChunkData cw{xfInfo};
     u64 remaining = size;
     const char* cursorData = data;
 
-#ifndef _LIBTRIDENT_DEBUG_VERBOSE
+#ifdef _LIBTRIDENT_DEBUG_VERBOSE
     bool next = false;
     u32 noChunks = IOChunkData::calculateChunkCount(size);
     u32 chunksDone = 0;

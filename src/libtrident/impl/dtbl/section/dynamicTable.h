@@ -102,12 +102,22 @@ namespace Trd {
         //todo also validate SD and if safe to write
         std::expected<void, Trd::Err::TrdError> writeEntryInChunks(std::span<const u8> data,
                                                                    u64 writeOffset);
-        std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> readEntryChunk();
+        /**
+         * @brief reads entry in chunks
+         * 
+         * @param readOffset if set, used as setup as to where to start reading from
+         * otherwise continues reading from last position
+         * @return std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> 
+         */
+        std::expected<void, Trd::Err::TrdError> readEntryChunkSetup(u64 setupRead, u64 size);
+        std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> readNextEntryChunk();
 
         //probably add to treg instead
         //void findFreeHole();
 
-        explicit DtblDirectory(TrPkg& pkg) : trpkg(pkg), internalSD{pkg} {};
+        //constructor in source file because TrPkg is forward declared
+        // and cannot initialized IOChunkData
+        explicit DtblDirectory(TrPkg& pkg); // : trpkg(pkg), internalSD{pkg} {}
 
       private:
         constexpr u64 badOffset() const {
@@ -116,5 +126,6 @@ namespace Trd {
         friend class TrPkg;
         TrPkg& trpkg;
         TrSectionDescriptor internalSD;
+        Impl::IOChunkData readChunkBuffer;
     };
 };
