@@ -45,8 +45,8 @@ std::expected<SD_TBLENTRY, Trd::Err::TrdError> DtblDirectory::readSDEntry() {
     EXP_TRY(internalSD.read(false));
     return internalSD.getSD().tblDynamic;
 }
-std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawEntry(std::span<const u8> data,
-                                                                     u64 writeOffset) {
+std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawRegion(std::span<const u8> data,
+                                                                      u64 writeOffset) {
     if (data.empty())
         return std::unexpected(
             Err::TrdError(eCode::InvalidFuncArg, 1, "Empty data array was passed"));
@@ -60,8 +60,8 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawEntry(std::span<c
     BinarySerializer::writeDataToTStream(trpkg.fstrInfo, data, false, writeOffset);
     return {};
 }
-std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawEntry(u64 readOffset,
-                                                                               u64 size) const {
+std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawRegion(u64 readOffset,
+                                                                                u64 size) const {
     std::vector<u8> readData(size);
     EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
 
@@ -72,8 +72,8 @@ std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawEntry(u
     readData = BinarySerializer::readDataFromTStream(trpkg.fstrInfo, readOffset, size, false);
     return readData;
 }
-std::expected<void, Trd::Err::TrdError> DtblDirectory::writeEntryInChunks(std::span<const u8> data,
-                                                                          u64 writeOffset) {
+std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRegionInChunks(std::span<const u8> data,
+                                                                           u64 writeOffset) {
     //todo call tregHaveValidEntry(writeOffset)
     if (data.empty())
         return std::unexpected(Err::TrdError(eCode::NullObject, 1, "data was empty"));
@@ -101,8 +101,8 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeEntryInChunks(std::s
 DtblDirectory::DtblDirectory(TrPkg& pkg) :
     trpkg{pkg}, internalSD{pkg}, readChunkBuffer{pkg.fstrInfo} {};
 
-std::expected<void, Trd::Err::TrdError> DtblDirectory::readEntryChunkSetup(u64 setupRead,
-                                                                           u64 size) {
+std::expected<void, Trd::Err::TrdError> DtblDirectory::readRegionChunkSetup(u64 setupRead,
+                                                                            u64 size) {
     if (setupRead < badOffset())
         return std::unexpected(
             Err::TrdError(eCode::SectionSizeViolated, 1,
@@ -112,7 +112,7 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::readEntryChunkSetup(u64 s
     return {};
 }
 
-std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> DtblDirectory::readNextEntryChunk() {
+std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> DtblDirectory::readNextRegionChunk() {
 
     auto r = readChunkBuffer.readNextChunk();
     if (!r)

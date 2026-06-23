@@ -95,13 +95,13 @@ namespace Trd {
          */
         std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
 
-        std::expected<void, Trd::Err::TrdError> writeRawEntry(std::span<const u8> data,
-                                                              u64 writeOffset);
-        std::expected<std::vector<u8>, Trd::Err::TrdError> readRawEntry(u64 readOffset,
-                                                                        u64 size) const;
+        std::expected<void, Trd::Err::TrdError> writeRawRegion(std::span<const u8> data,
+                                                               u64 writeOffset);
+        std::expected<std::vector<u8>, Trd::Err::TrdError> readRawRegion(u64 readOffset,
+                                                                         u64 size) const;
         //todo also validate SD and if safe to write
-        std::expected<void, Trd::Err::TrdError> writeEntryInChunks(std::span<const u8> data,
-                                                                   u64 writeOffset);
+        std::expected<void, Trd::Err::TrdError> writeRegionInChunks(std::span<const u8> data,
+                                                                    u64 writeOffset);
         /**
          * @brief reads entry in chunks
          * 
@@ -109,8 +109,8 @@ namespace Trd {
          * otherwise continues reading from last position
          * @return std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> 
          */
-        std::expected<void, Trd::Err::TrdError> readEntryChunkSetup(u64 setupRead, u64 size);
-        std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> readNextEntryChunk();
+        std::expected<void, Trd::Err::TrdError> readRegionChunkSetup(u64 setupRead, u64 size);
+        std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> readNextRegionChunk();
 
         //probably add to treg instead
         //void findFreeHole();

@@ -92,7 +92,7 @@ int main(void) {
     //DTBL
 
     Trd::DtblDirectory dtblDir(ltTrPkg);
-    //value_or to fix compiler warning, if it indeed returns 0 then writeRawEntry will fail
+    //value_or to fix compiler warning, if it indeed returns 0 then writeRawRegion will fail
     auto dtblOffset = dtblDir.getOffset().value_or(0);
 
     constexpr auto dummySize = UINT8_MAX;
@@ -102,11 +102,11 @@ int main(void) {
 
     {
         BenchDbgTimer t("DtblWriteChunk");
-        // TASSERT("DtblWriteRawEntry()", dtblDir.writeRawEntry(data, dtblOffset));
-        TASSERT("DtblWriteRawEntry()", dtblDir.writeEntryInChunks(data, dtblOffset));
+        // TASSERT("DtblwriteRawRegion()", dtblDir.writeRawRegion(data, dtblOffset));
+        TASSERT("DtblwriteRawRegion()", dtblDir.writeRegionInChunks(data, dtblOffset));
     }
     /*
-    auto checkRead = dtblDir.readRawEntry(dtblOffset, dummySize);
+    auto checkRead = dtblDir.readRawRegion(dtblOffset, dummySize);
     if (!checkRead) {
         dbgprintf("dtbl readback fail\n");
         return 1;
@@ -119,11 +119,11 @@ int main(void) {
     }
     */
 
-    TASSERT("readEntryChunkSetup()", dtblDir.readEntryChunkSetup(dtblOffset, dummySize));
+    TASSERT("readRegionChunkSetup()", dtblDir.readRegionChunkSetup(dtblOffset, dummySize));
     bool next = false;
     int num = 1;
     do {
-        const auto& zv = dtblDir.readNextEntryChunk();
+        const auto& zv = dtblDir.readNextRegionChunk();
         next = zv.has_value();
         if (!next)
             break;
