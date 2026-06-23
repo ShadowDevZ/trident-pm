@@ -20,7 +20,7 @@ void BinarySerializer::addRaw(const void* data, u64 size) {
     if (!data || size == 0) {
         throw std::invalid_argument("AddRaw() failed. Data or size is 0");
     }
-    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+    const std::byte* bytes = static_cast<const std::byte*>(data);
     bufferData.insert(bufferData.end(), bytes, bytes + size);
 }
 
@@ -37,15 +37,16 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, u64 offset) {
     if (size == 0) {
         throw std::runtime_error("Read 0 bytes");
     }
-    uint8_t* bytes = reinterpret_cast<uint8_t*>(dataOut);
+    u8* bytes = reinterpret_cast<u8*>(dataOut);
     std::memcpy(bytes, bufferData.data() + offset, size);
 
     return size;
 }
 //todo use std expected instead of exceptions
-std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
-                                                      u64 size, bool requireAlignment,
-                                                      bool keepOriginalSeek) {
+std::vector<std::byte> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream,
+                                                             i64 seekPos, u64 size,
+                                                             bool requireAlignment,
+                                                             bool keepOriginalSeek) {
 
     if (requireAlignment && !isDataSizeAligned(size)) {
         throw std::invalid_argument("Data size not aligned");
@@ -55,7 +56,7 @@ std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tS
     }
     const i64 ogSeek = tStream.getSeekPos();
     tStream.setSeekPos(seekPos);
-    std::vector<u8> data(size);
+    std::vector<std::byte> data(size);
     // data.reserve(size);
 
     tStream.readTStream(reinterpret_cast<char*>(data.data()), size);
@@ -65,9 +66,10 @@ std::vector<u8> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tS
     return data;
 }
 
-void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::span<const u8> data,
-                                          bool requireAlignment, i64 seekPos,
-                                          std::ios_base::seekdir seekDir, bool keepOriginalSeek) {
+void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
+                                          std::span<const std::byte> data, bool requireAlignment,
+                                          i64 seekPos, std::ios_base::seekdir seekDir,
+                                          bool keepOriginalSeek) {
     //todo make this boilerplate in all classes a function
 
     if (data.empty()) {
@@ -90,13 +92,13 @@ void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::
         auto debug = chunkData.getWriteData().value();
         dbgprintf("--cwrite2 %u/%u\n", debug.chunksDone, debug.noChunks);
     } while (next);*/
-    tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size_bytes());
-
+    // tStream.writeTStream(reinterpret_cast<const char*>(data.data()), data.size_bytes());
+    tStream.writeTStream(data);
     if (keepOriginalSeek)
         tStream.setSeekPos(ogSeek);
 }
 
-std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign) {
+std::optional<std::vector<std::byte>> BinarySerializer::getFormattedData(bool autoAlign) {
     if (bufferData.empty()) {
         return std::nullopt;
     }
@@ -110,8 +112,8 @@ std::optional<std::vector<u8>> BinarySerializer::getFormattedData(bool autoAlign
             dbgprintf("--Unaligned data serialized\nog:%luB new: %luB\n", vSize, alignSize + vSize);
         }
     }
-
-    bufferData.insert(bufferData.end(), alignSize, 0);
+    //todo find why its there and remove if needed
+    bufferData.insert(bufferData.end(), alignSize, std::byte{0}); //??? what the fuck is this ???
 #ifdef _LIBTRIDENT_DEBUG_VERBOSE
     dbgDumpData();
 #endif
@@ -168,10 +170,10 @@ bool BinarySerializer::expectAlignedDataOrDie(u64 size) {
 TRD_DBG_BUILD_ONLY void BinarySerializer::dbgDumpData() const {
     const auto& data = getData();
 
-    dbgprintf("=====BS_DATA_DUMP(%lu,%s)======\n{", (data.size() * sizeof(u8)),
+    dbgprintf("=====BS_DATA_DUMP(%lu,%s)======\n{", (data.size() * sizeof(std::byte)),
               isDataSizeAligned(data.size()) ? "aligned" : "!aligned");
     for (const auto& x : data) {
-        dbgprintf(" 0x0%x ", x);
+        dbgprintf(" 0x0%x ", static_cast<u8>(x));
     }
     dbgprintf("}\n===========\n");
 }

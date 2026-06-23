@@ -25,9 +25,9 @@ namespace Trd::Impl {
         /**
          * @brief Function to be called to retrieve the serialized data
          * 
-         * @return std::optional<std::vector<u8>> serialized data returned by getFormattedData()
+         * @return std::optional<std::vector<std::byte>> serialized data returned by getFormattedData()
          */
-        virtual std::optional<std::vector<u8>> serialize() const = 0;
+        virtual std::optional<std::vector<std::byte>> serialize() const = 0;
         /**
          * @brief Function to be called which manually deserializes and assigns the data
          * 
@@ -35,7 +35,7 @@ namespace Trd::Impl {
          * @return true if serialization succeeded
          * @return false if serialization failed, caller is reponsible for handling the error
          */
-        virtual bool deserialize(const std::vector<u8>& dataIn) = 0;
+        virtual bool deserialize(const std::vector<std::byte>& dataIn) = 0;
         /**
          * @brief optional, data checksumed using Impl::Crc32Gen
          * 

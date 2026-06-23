@@ -16,8 +16,9 @@ namespace Trd::Consts {
 namespace Trd::Consts::Header {
     //when printing dont forget to add NULL terminator
     /// TRPX magic number
-    constexpr u8 TRD_HDR_MAGIC[] = {0x93, 0x54, 0x52, 0x44,
-                                    0x21, 0x12, 0x2E, 0x53}; //\223TRD!\x12.S
+    constexpr std::byte TRD_HDR_MAGIC[] = {std::byte{0x93}, std::byte{0x54}, std::byte{0x52},
+                                           std::byte{0x44}, std::byte{0x21}, std::byte{0x12},
+                                           std::byte{0x2E}, std::byte{0x53}}; //\223TRD!\x12.S
     /// extended signature for additional checking
     constexpr u16 TRD_HDR_EXTENDED_SIGNATURE = 0xbf97;
 
@@ -42,7 +43,7 @@ namespace Trd::Consts::Header {
 namespace Trd::Consts::SD {
     /// size of SD section as defined by the documentation
     constexpr u16 TRD_SECTIONSD_SIZE = 64;
-    constexpr u8 TRD_SD_IDBYTE = 0x5D;
+    constexpr std::byte TRD_SD_IDBYTE = std::byte{0x5D};
 };
 namespace Trd::Consts::SUID {
     /// maximum length of the SUID string containing the predefined UUID of a specific section without NULL terminator

@@ -9,12 +9,12 @@ namespace Trd::Impl {
      * 
      */
     struct IOReadChunk {
-        std::vector<u8> data;
+        std::vector<std::byte> data;
 
         // u32 bytesRead; // may be smaller then IO_CHUNK_SIZE
     };
     struct IOWriteData {
-        std::span<const u8> remaining{};
+        std::span<const std::byte> remaining{};
         u32 noChunks{0};
         u32 chunksDone{0};
         u64 _writeSeek{0};
@@ -66,7 +66,7 @@ namespace Trd::Impl {
         bool writeNextChunk();
         std::optional<IOReadChunk> readNextChunk();
 
-        void setupWrite(std::span<const u8> data, u64 offsetWrite);
+        void setupWrite(std::span<const std::byte> data, u64 offsetWrite);
         void setupRead(u64 offsetRead, u64 size);
         static constexpr u32 chunkSize() {
             return Consts::Binary::IO_CHUNK_SIZE;

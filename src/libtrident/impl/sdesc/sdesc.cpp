@@ -186,7 +186,7 @@ TrSectionDescriptor::readBack(Impl::TStreamInfo& tStream) {
     return sd;
 }
 
-std::expected<void, Err::TrdError> TrSectionDescriptor::read(bool checkReady) {
+std::expected<void, Err::TrdError> TrSectionDescriptor::read(bool checkReady) const {
     auto optSD = readBack(trpkg.fstrInfo);
     if (!optSD) {
         return std::unexpected(optSD.error());

@@ -64,7 +64,7 @@ namespace Trd {
          *
          * @return std::expected<void, Err::TrdError>
          */
-        std::expected<void, Err::TrdError> read(bool checkReady = true);
+        std::expected<void, Err::TrdError> read(bool checkReady = true) const;
         /**
          * @brief Function to check if VALID SD exists
          * This function should be called outside of the class for example in dtbl

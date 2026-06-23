@@ -39,12 +39,12 @@ void TStreamInfo::setFileStreamInfo(const TRDFstreamObject& info) {
 }
 
 // does not check for endianness, the data should already be passed in as LE object
-void TStreamInfo::writeTStream(const char* data, u64 size) {
-    if (!checkFileStreamInfo() || !data || size < 1) {
+void TStreamInfo::writeTStream(std::span<const std::byte> data) {
+    if (!checkFileStreamInfo()) {
         throw std::runtime_error("WriteLeStream(validate) Failed");
     }
 
-    if (size == 0) {
+    if (data.empty()) {
         throw std::invalid_argument("Size was 0");
     }
     /*
@@ -77,7 +77,7 @@ void TStreamInfo::writeTStream(const char* data, u64 size) {
         dbgprintf("--cwrite2 %u/%u\n", debug.chunksDone, debug.noChunks);
     } while (next);
 */
-    xfInfo.hFile->write(data, size);
+    xfInfo.hFile->write(reinterpret_cast<const char*>(data.data()), data.size_bytes());
 
     if (!xfInfo.hFile) {
         throw std::ios_base::failure("WriteLeData() Failed");
@@ -147,10 +147,10 @@ void TStreamInfo::flushData() {
         throw std::runtime_error("failed to flush fstream object");
 }
 
-void TStreamInfo::writePadding(u16 size, int value) {
+void TStreamInfo::writePadding(u16 size, std::byte value) {
     // char padding[size];
-    std::vector<char> padding(size);
-    std::ranges::fill(padding, value);
+    std::vector<std::byte> padding(size, value);
+    // std::ranges::fill(padding, value);
     // std::memset(padding, value, sizeof(padding));
-    writeTStream(reinterpret_cast<const char*>(padding.data()), padding.size());
+    writeTStream(padding);
 }

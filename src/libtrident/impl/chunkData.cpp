@@ -7,7 +7,7 @@
 
 using namespace Trd;
 using namespace Trd::Impl;
-void IOChunkData::setupWrite(std::span<const u8> data, u64 offsetWrite) {
+void IOChunkData::setupWrite(std::span<const std::byte> data, u64 offsetWrite) {
     if (data.empty())
         throw std::runtime_error("empty (null) data passed");
     writeData.chunksDone = 0;

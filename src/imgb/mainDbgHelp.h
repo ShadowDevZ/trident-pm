@@ -78,7 +78,7 @@ inline void print_header(const Trd::TRD_HEADER& hdr) {
     dbgprintf("[HEADER_START - SIZE(mem:%luB, disk:%luB)]\n", sizeof(hdr), hdr.size());
     dbgprintf("\tMagic: [ ");
     for (auto const& it : hdr.magic) {
-        dbgprintf("%X ", it);
+        dbgprintf("%X ", static_cast<u8>(it));
     }
     dbgprintf("]\n");
     dbgprintf("\tExtened Signature: 0x%X\n", hdr.exSignature);
@@ -101,7 +101,7 @@ void dump_arr(std::span<T> t) {
     size_t szRead = t.size() > dumpArrElimit ? dumpArrElimit : t.size();
 
     for (size_t i = 0; i < szRead; ++i) {
-        dbgprintf("%X%c", t[i], ((i + 1) % 16 == 0 ? '\n' : ' '));
+        dbgprintf("%X%c", static_cast<u8>(t[i]), ((i + 1) % 16 == 0 ? '\n' : ' '));
     }
     if (t.size() > dumpArrElimit)
         dbgprintf("\n...(%ld more)", t.size() - dumpArrElimit);
@@ -120,9 +120,9 @@ inline void print_sd(const Trd::Impl::TRD_SECTION_DESCRIPTOR& sd) {
     dbgprintf("\t    size: 0x%lX\n", sd.tblRegistry.size);
     dbgprintf("\t    available: %s\n", u8bool::toBool(sd.tblRegistry.available) ? "true" : "false");
     dbgprintf("\tReserved1: %u\n", sd._reserved1);
-    dbgprintf("\tReserved2: %lu\n", sd._reserved2.size() * sizeof(u8));
+    dbgprintf("\tReserved2: %lu\n", sd._reserved2.size() * sizeof(std::byte));
     dbgprintf("\tReady status: %s\n", u8bool::toBool(sd.sdReady) ? "true" : "false");
-    dbgprintf("\tID byte: 0x%X\n", sd.idByte);
+    dbgprintf("\tID byte: 0x%X\n", static_cast<u8>(sd.idByte));
     dbgprintf("[SD_END]\n\n");
 }
 
@@ -183,7 +183,7 @@ struct NTC_INFO_TEST : Trd::Impl::SerializableData {
     //std::array<uint32_t,2> c{};
 
     //the sum of sizeof of all elements must be properly aligned
-    std::optional<std::vector<Trd::u8>> serialize() const override {
+    std::optional<std::vector<std::byte>> serialize() const override {
         Trd::Impl::BinarySerializer bs;
         bs.addTrivial(x); //2B
         bs.addTrivial(y); //4B
@@ -193,9 +193,9 @@ struct NTC_INFO_TEST : Trd::Impl::SerializableData {
         return bs.getFormattedData();
     }
 
-    //wip idea   void bs::ReadTrivial<T>(const std::vector<u8>& in, const char* outData);
+    //wip idea   void bs::ReadTrivial<T>(const std::vector<std::byte>& in, const char* outData);
     //if return is false caller throws std::invalid_argument exception
-    bool deserialize(const std::vector<Trd::u8>& dataIn) override {
+    bool deserialize(const std::vector<std::byte>& dataIn) override {
         //on error throws exception
         Trd::Impl::BinarySerializer bs(dataIn);
         Trd::u64 xsize = 0;

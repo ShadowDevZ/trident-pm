@@ -41,12 +41,12 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeSDEntry(u64 offset, 
 std::expected<void, Trd::Err::TrdError> DtblDirectory::invalidateSDEntry() {
     return writeSDEntry(0, 0, false);
 }
-std::expected<SD_TBLENTRY, Trd::Err::TrdError> DtblDirectory::readSDEntry() {
+std::expected<SD_TBLENTRY, Trd::Err::TrdError> DtblDirectory::readSDEntry() const {
     EXP_TRY(internalSD.read(false));
     return internalSD.getSD().tblDynamic;
 }
-std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawRegion(std::span<const u8> data,
-                                                                      u64 writeOffset) {
+std::expected<void, Trd::Err::TrdError>
+DtblDirectory::writeRawRegion(std::span<const std::byte> data, u64 writeOffset) const {
     if (data.empty())
         return std::unexpected(
             Err::TrdError(eCode::InvalidFuncArg, 1, "Empty data array was passed"));
@@ -60,9 +60,9 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRawRegion(std::span<
     BinarySerializer::writeDataToTStream(trpkg.fstrInfo, data, false, writeOffset);
     return {};
 }
-std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawRegion(u64 readOffset,
-                                                                                u64 size) const {
-    std::vector<u8> readData(size);
+std::expected<std::vector<std::byte>, Trd::Err::TrdError>
+DtblDirectory::readRawRegion(u64 readOffset, u64 size) const {
+    std::vector<std::byte> readData(size);
     EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
 
     if (readOffset < badOffset())
@@ -72,8 +72,8 @@ std::expected<std::vector<u8>, Trd::Err::TrdError> DtblDirectory::readRawRegion(
     readData = BinarySerializer::readDataFromTStream(trpkg.fstrInfo, readOffset, size, false);
     return readData;
 }
-std::expected<void, Trd::Err::TrdError> DtblDirectory::writeRegionInChunks(std::span<const u8> data,
-                                                                           u64 writeOffset) {
+std::expected<void, Trd::Err::TrdError>
+DtblDirectory::writeRegionInChunks(std::span<const std::byte> data, u64 writeOffset) const {
     //todo call tregHaveValidEntry(writeOffset)
     if (data.empty())
         return std::unexpected(Err::TrdError(eCode::NullObject, 1, "data was empty"));
@@ -125,3 +125,5 @@ std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> DtblDirectory::readNex
     return readChunk;
     //todo call tregHaveValidEntry(writeOffset)
 }
+
+std::expected<void, Trd::Err::TrdError> DtblDirectory::zeroeOutRegion(u64 writeOffset, u64 len) {};

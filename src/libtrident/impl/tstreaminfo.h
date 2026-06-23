@@ -38,18 +38,9 @@ namespace Trd::Impl {
 
         void flushData();
 
-        template <typename T>
-        void writeTStream(const T& t, u64 size) {
-            writeTStream(reinterpret_cast<const char*>(&t), size);
-        }
-        template <typename T>
-        void writeTStream(T& t) {
-            writeTStream(t, sizeof(t));
-        }
-
         //throws std::invalid_argument runtime error or anything by FileOperations::WriteLeData
-        void writeTStream(const char* data, u64 size);
-        void writePadding(u16 size, int value = 0);
+        void writeTStream(std::span<const std::byte> t);
+        void writePadding(u16 size, std::byte value = std::byte{0});
 
         template <typename T>
         void readTStream(T& t, u64 size) const {

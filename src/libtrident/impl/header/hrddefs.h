@@ -74,7 +74,7 @@ namespace Trd {
 
         //why simply not use const here ? using const prevents struct assigning as const
         //cannot be assigned
-        std::array<u8, 8> magic = std::to_array(Consts::Header::TRD_HDR_MAGIC);
+        std::array<std::byte, 8> magic = std::to_array(Consts::Header::TRD_HDR_MAGIC);
         u16 exSignature = Consts::Header::TRD_HDR_EXTENDED_SIGNATURE;
         u16 fmtVersion = Consts::Header::TRD_HDR_INVALID_VERSION;
 
@@ -93,9 +93,9 @@ namespace Trd {
                                                        dynFileLen, _reserved0);
         }
 
-        std::optional<std::vector<u8>> serialize() const override;
+        std::optional<std::vector<std::byte>> serialize() const override;
 
-        bool deserialize(const std::vector<u8>& dataIn) override;
+        bool deserialize(const std::vector<std::byte>& dataIn) override;
 
         std::optional<u32> checksumCRC32() const override;
     };

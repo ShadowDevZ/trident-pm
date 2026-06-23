@@ -40,7 +40,7 @@ namespace Trd::Impl {
      */
     class BinarySerializer {
       private:
-        std::vector<uint8_t> bufferData{};
+        std::vector<std::byte> bufferData{};
         std::endian emulEndianness{std::endian::native};
         u64 readOffset = 0;
 
@@ -86,9 +86,9 @@ namespace Trd::Impl {
 
         BinarySerializer(std::endian emulated = std::endian::native) : emulEndianness(emulated) {}
         // second constructor for deserialize()
-        BinarySerializer(const std::vector<uint8_t>& data,
-                         std::endian emulated = std::endian::native, u64 xOffset = 0) :
-            bufferData(data), emulEndianness(emulated), readOffset(xOffset) {}
+        BinarySerializer(std::vector<std::byte> data, std::endian emulated = std::endian::native,
+                         u64 xOffset = 0) :
+            bufferData(std::move(data)), emulEndianness(emulated), readOffset(xOffset) {}
 
         template <ConTriviablyCopyable T>
         // reverses byte order of variable
@@ -149,14 +149,14 @@ namespace Trd::Impl {
                 readOffset = offset;
         }
 
-        const std::vector<uint8_t>& getData() const {
+        const std::vector<std::byte>& getData() const {
             return bufferData;
         }
-        std::vector<uint8_t>& getData() {
+        std::vector<std::byte> getData() {
             return bufferData;
         }
         u64 getDataSize() const {
-            return (getData().size() * sizeof(u8));
+            return (getData().size() * sizeof(std::byte));
         }
 #ifdef _LIBTRIDENT_DEBUG
         TRD_DBG_BUILD_ONLY void dbgDumpData() const;
@@ -288,9 +288,9 @@ namespace Trd::Impl {
          *
          * @param autoAlign false by default. This option generally should not be set to true
          * as this could mees up the offsets
-         * @return std::optional<std::vector<u8>> the serialized data if present
+         * @return std::optional<std::vector<std::byte>> the serialized data if present
          */
-        std::optional<std::vector<u8>> getFormattedData(bool autoAlign = false);
+        std::optional<std::vector<std::byte>> getFormattedData(bool autoAlign = false);
 
         /**
          * @brief Same as writeAlignedDataToTStream but requires the data to be aligned
@@ -301,8 +301,9 @@ namespace Trd::Impl {
          * @param seekPos 
          * @param seekDir 
          */
-        static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream, std::span<const u8> data,
-                                       bool requireAlignment, i64 seekPos = 0,
+        static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
+                                       std::span<const std::byte> data, bool requireAlignment,
+                                       i64 seekPos = 0,
                                        std::ios_base::seekdir seekDir = std::ios::beg,
                                        bool keepOriginalSeek = true);
 
@@ -312,11 +313,12 @@ namespace Trd::Impl {
          * @param seekPos fseek position where to sttart writing
          * @param size size of the data to read
          * @param requireAlignment throws std::invalid_argument if data is misaligned
-         * @return std::vector<u8> unserialized raw data from file
+         * @return std::vector<std::byte> unserialized raw data from file
          */
-        static std::vector<u8> readDataFromTStream(Trd::Impl::TStreamInfo& tStream, i64 seekPos,
-                                                   u64 size, bool requireAlignment,
-                                                   bool keepOriginalSeek = true);
+        static std::vector<std::byte> readDataFromTStream(Trd::Impl::TStreamInfo& tStream,
+                                                          i64 seekPos, u64 size,
+                                                          bool requireAlignment,
+                                                          bool keepOriginalSeek = true);
     };
     /**
      * @brief Generates CRC32 and handles endianness for multiple types and containers

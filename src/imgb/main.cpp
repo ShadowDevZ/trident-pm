@@ -98,7 +98,7 @@ int main(void) {
     constexpr auto dummySize = UINT8_MAX;
     TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, dummySize, false));
 
-    std::vector<u8> data(dummySize, 0xFF);
+    std::vector<std::byte> data(dummySize, std::byte{0xFF});
 
     {
         BenchDbgTimer t("DtblWriteChunk");
@@ -142,6 +142,8 @@ int main(void) {
         dbgprintf("eread!fail\n");
         return 1;
     }
+    // ltTrPkg.getTstream().setSeekPos(0, std::ios::end);
+    // ltTrPkg.getTstream().writePadding(12, 0xCC);
 
 #ifdef _LIBTRIDENT_DEBUG
     print_sd(rbSd);

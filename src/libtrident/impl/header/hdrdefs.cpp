@@ -2,7 +2,7 @@
 
 using namespace Trd;
 
-std::optional<std::vector<u8>> TRD_HEADER::serialize() const {
+std::optional<std::vector<std::byte>> TRD_HEADER::serialize() const {
     if (_reserved0 != 0) {
         //todo check here the fields that should be const like header so we dont have to check manually
         //in code always, as the header field only matters when doing CRC, serialization and deserialization
@@ -10,22 +10,22 @@ std::optional<std::vector<u8>> TRD_HEADER::serialize() const {
     }
     Trd::Impl::BinarySerializer bs;
 
-    bs.addContainer(std::span<const u8>(magic));
+    bs.addContainer(std::span<const std::byte>(magic));
     bs.addTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum,
                   dynFileLen, _reserved0);
 
     return bs.getFormattedData();
 }
 
-bool TRD_HEADER::deserialize(const std::vector<u8>& dataIn) {
+bool TRD_HEADER::deserialize(const std::vector<std::byte>& dataIn) {
     Impl::BinarySerializer bs(dataIn);
 
-    bs.readContainer(std::span<u8>(magic));
+    bs.readContainer(std::span<std::byte>(magic));
 
     bs.readTrivial(exSignature, fmtVersion, compression, buildFlags, architecture, dynHdrChksum,
                    dynFileLen, _reserved0);
 
-        if (bs.getReadOffset() != this->size() || _reserved0 != 0) {
+    if (bs.getReadOffset() != this->size() || _reserved0 != 0) {
         return false;
     }
     return true;

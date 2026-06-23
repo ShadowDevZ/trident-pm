@@ -83,7 +83,7 @@ namespace Trd {
         bool isSafeToAccess() const;
 
         std::expected<void, Trd::Err::TrdError> invalidateSDEntry();
-        std::expected<Impl::SD_TBLENTRY, Trd::Err::TrdError> readSDEntry();
+        std::expected<Impl::SD_TBLENTRY, Trd::Err::TrdError> readSDEntry() const;
         /**
          * @brief Writes the SD table entry for the DTBL
          * 
@@ -94,14 +94,17 @@ namespace Trd {
          * @return std::expected<void, Trd::Err::TrdError> 
          */
         std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
+        std::expected<void, Trd::Err::TrdError> reserveDataRegion(u64 writeOffset, u64 len);
 
-        std::expected<void, Trd::Err::TrdError> writeRawRegion(std::span<const u8> data,
-                                                               u64 writeOffset);
-        std::expected<std::vector<u8>, Trd::Err::TrdError> readRawRegion(u64 readOffset,
-                                                                         u64 size) const;
+        std::expected<void, Trd::Err::TrdError> zeroeOutRegion(u64 writeOffset, u64 len);
+
+        std::expected<void, Trd::Err::TrdError> writeRawRegion(std::span<const std::byte> data,
+                                                               u64 writeOffset) const;
+        std::expected<std::vector<std::byte>, Trd::Err::TrdError> readRawRegion(u64 readOffset,
+                                                                                u64 size) const;
         //todo also validate SD and if safe to write
-        std::expected<void, Trd::Err::TrdError> writeRegionInChunks(std::span<const u8> data,
-                                                                    u64 writeOffset);
+        std::expected<void, Trd::Err::TrdError> writeRegionInChunks(std::span<const std::byte> data,
+                                                                    u64 writeOffset) const;
         /**
          * @brief reads entry in chunks
          * 

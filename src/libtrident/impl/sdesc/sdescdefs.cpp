@@ -3,7 +3,7 @@
 using namespace Trd;
 using namespace Impl;
 
-std::optional<std::vector<u8>> TRD_SECTION_DESCRIPTOR::serialize() const {
+std::optional<std::vector<std::byte>> TRD_SECTION_DESCRIPTOR::serialize() const {
     if (!IResvFieldCheck(_reserved2) || _reserved1 != 0 || idByte != Consts::SD::TRD_SD_IDBYTE) {
 
         return std::nullopt;
@@ -15,7 +15,7 @@ std::optional<std::vector<u8>> TRD_SECTION_DESCRIPTOR::serialize() const {
 
     return bs.getFormattedData();
 }
-bool TRD_SECTION_DESCRIPTOR::deserialize(const std::vector<u8>& dataIn) {
+bool TRD_SECTION_DESCRIPTOR::deserialize(const std::vector<std::byte>& dataIn) {
     Impl::BinarySerializer bs(dataIn);
 
     bs.readTrivial(crc, sdReady, tblDynamic.offset, tblDynamic.size, tblDynamic.available,
