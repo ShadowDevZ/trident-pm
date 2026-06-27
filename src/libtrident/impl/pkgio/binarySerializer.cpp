@@ -112,8 +112,8 @@ std::optional<std::vector<std::byte>> BinarySerializer::getFormattedData(bool au
             dbgprintf("--Unaligned data serialized\nog:%luB new: %luB\n", vSize, alignSize + vSize);
         }
     }
-    //todo find why its there and remove if needed
-    bufferData.insert(bufferData.end(), alignSize, std::byte{0}); //??? what the fuck is this ???
+
+    // bufferData.insert(bufferData.end(), alignSize, std::byte{0}); //???
 #ifdef _LIBTRIDENT_DEBUG_VERBOSE
     dbgDumpData();
 #endif

@@ -74,13 +74,14 @@ int main(void) {
     auto trpkgSD = ltTrPkg.sd();
     TASSERT("CreateSD()", trpkgSD.createWriteBlank());
     // print_sd(trpkgSD.getSD());
-    Impl::SD_TBLENTRY dynamic{true};
+    Impl::SD_TBLENTRY dynamic{};
     dynamic.offset = 0x1337CAFFEEDDDDDD;
     dynamic.size = 8;
     dynamic.available = u8bool::type::True;
-    Impl::SD_TBLENTRY regt{true};
+    Impl::SD_TBLENTRY regt{};
     regt.offset = 0xEEEEEEEEEEEEEEEE;
     regt.size = 8;
+    regt.available = u8bool::type::False;
 
     Impl::TRD_SD_UPDATEFIELD sdUpd;
     sdUpd.tblDynamic = dynamic;
@@ -95,10 +96,10 @@ int main(void) {
     //value_or to fix compiler warning, if it indeed returns 0 then writeRawRegion will fail
     auto dtblOffset = dtblDir.getOffset().value_or(0);
 
-    constexpr auto dummySize = UINT8_MAX;
+    constexpr auto dummySize = 64;
     TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, dummySize, false));
 
-    std::vector<std::byte> data(dummySize, std::byte{0xFF});
+    std::vector<std::byte> data(dummySize, std::byte{0xAB});
 
     {
         BenchDbgTimer t("DtblWriteChunk");
@@ -134,7 +135,8 @@ int main(void) {
     } while (next);
 
     dbgprintf("\ndtbl read ok\n");
-
+    TASSERT("DtblZeroeOut()", dtblDir.invalidateRegion(dtblOffset + dummySize, 6));
+    TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, dtblOffset + dummySize, true));
     //output
     auto rbSd = trpkgSD.getSD();
     TASSERT("ReadbackSD()", trpkgSD.read());

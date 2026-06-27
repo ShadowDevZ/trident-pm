@@ -27,9 +27,10 @@ std::expected<void, Trd::Err::TrdError> DtblDirectory::writeSDEntry(u64 offset, 
                                              "Tried to write valid SD entry with size 0"));
 
     EXP_TRY(internalSD.read(false));
-    SD_TBLENTRY dtblEntry{available};
+    SD_TBLENTRY dtblEntry;
     dtblEntry.offset = offset;
     dtblEntry.size = size;
+    dtblEntry.available = u8bool::fromBool(available);
     TRD_SD_UPDATEFIELD suf;
     suf.tblDynamic = dtblEntry;
 
@@ -126,4 +127,8 @@ std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> DtblDirectory::readNex
     //todo call tregHaveValidEntry(writeOffset)
 }
 
-std::expected<void, Trd::Err::TrdError> DtblDirectory::zeroeOutRegion(u64 writeOffset, u64 len) {};
+std::expected<void, Trd::Err::TrdError> DtblDirectory::invalidateRegion(u64 writeOffset,
+                                                                        u64 len) const {
+    std::vector<std::byte> data(len, std::byte{0xFF});
+    return writeRawRegion(data, writeOffset);
+};

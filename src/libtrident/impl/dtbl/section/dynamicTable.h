@@ -94,9 +94,8 @@ namespace Trd {
          * @return std::expected<void, Trd::Err::TrdError> 
          */
         std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
-        std::expected<void, Trd::Err::TrdError> reserveDataRegion(u64 writeOffset, u64 len);
 
-        std::expected<void, Trd::Err::TrdError> zeroeOutRegion(u64 writeOffset, u64 len);
+        std::expected<void, Trd::Err::TrdError> invalidateRegion(u64 writeOffset, u64 len) const;
 
         std::expected<void, Trd::Err::TrdError> writeRawRegion(std::span<const std::byte> data,
                                                                u64 writeOffset) const;
