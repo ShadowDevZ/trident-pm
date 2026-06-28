@@ -9,6 +9,7 @@
 #include "systemspecific/common/include/filemgmnt.h"
 #include "dynamicTable.h"
 #include "mainDbgHelp.h"
+#include "treg/tregDefs.h"
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
 
@@ -137,6 +138,9 @@ int main(void) {
     dbgprintf("\ndtbl read ok\n");
     TASSERT("DtblZeroeOut()", dtblDir.invalidateRegion(dtblOffset + dummySize, 6));
     TASSERT("DtblWriteSDEntry()", dtblDir.writeSDEntry(dtblOffset, dtblOffset + dummySize, true));
+
+    //treg
+
     //output
     auto rbSd = trpkgSD.getSD();
     TASSERT("ReadbackSD()", trpkgSD.read());
@@ -144,6 +148,13 @@ int main(void) {
         dbgprintf("eread!fail\n");
         return 1;
     }
+    Impl::TregHeader testHeader{};
+    testHeader.regSizeTotal = 0xBEBACCCCCAFF;
+    testHeader._reserved = 0;
+    testHeader.regRootOffset = 0x11111111111;
+    const auto tregData = testHeader.serialize().value();
+    Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), tregData, false,
+                                               dtblOffset + dummySize + 6);
     // ltTrPkg.getTstream().setSeekPos(0, std::ios::end);
     // ltTrPkg.getTstream().writePadding(12, 0xCC);
 

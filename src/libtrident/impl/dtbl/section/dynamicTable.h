@@ -93,17 +93,19 @@ namespace Trd {
          * otherwise it can contain any data if false
          * @return std::expected<void, Trd::Err::TrdError> 
          */
-        std::expected<void, Trd::Err::TrdError> writeSDEntry(u64 offset, u64 size, bool available);
+        std::expected<void, Trd::Err::TrdError> writeSDEntry(file_offset offset, u64 size,
+                                                             bool available);
 
-        std::expected<void, Trd::Err::TrdError> invalidateRegion(u64 writeOffset, u64 len) const;
+        std::expected<void, Trd::Err::TrdError> invalidateRegion(file_offset writeOffset,
+                                                                 u64 len) const;
 
         std::expected<void, Trd::Err::TrdError> writeRawRegion(std::span<const std::byte> data,
-                                                               u64 writeOffset) const;
-        std::expected<std::vector<std::byte>, Trd::Err::TrdError> readRawRegion(u64 readOffset,
-                                                                                u64 size) const;
+                                                               file_offset writeOffset) const;
+        std::expected<std::vector<std::byte>, Trd::Err::TrdError>
+        readRawRegion(file_offset readOffset, u64 size) const;
         //todo also validate SD and if safe to write
         std::expected<void, Trd::Err::TrdError> writeRegionInChunks(std::span<const std::byte> data,
-                                                                    u64 writeOffset) const;
+                                                                    file_offset writeOffset) const;
         /**
          * @brief reads entry in chunks
          * 
@@ -111,7 +113,8 @@ namespace Trd {
          * otherwise continues reading from last position
          * @return std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> 
          */
-        std::expected<void, Trd::Err::TrdError> readRegionChunkSetup(u64 setupRead, u64 size);
+        std::expected<void, Trd::Err::TrdError> readRegionChunkSetup(file_offset setupRead,
+                                                                     u64 size);
         std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> readNextRegionChunk();
 
         //probably add to treg instead
@@ -120,11 +123,11 @@ namespace Trd {
         //constructor in source file because TrPkg is forward declared
         // and cannot initialized IOChunkData
         explicit DtblDirectory(TrPkg& pkg); // : trpkg(pkg), internalSD{pkg} {}
-
-      private:
-        constexpr u64 badOffset() const {
+        static constexpr file_offset badOffset() {
             return Consts::Header::LT_HDR_SZB_01A + Consts::SD::TRD_SECTIONSD_SIZE;
         }
+
+      private:
         friend class TrPkg;
         TrPkg& trpkg;
         TrSectionDescriptor internalSD;

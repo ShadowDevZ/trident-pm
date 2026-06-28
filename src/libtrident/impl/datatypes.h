@@ -22,7 +22,7 @@ namespace Trd {
 
     using IO_OpenFlag = uint32_t;
 
-    using foffset_t = uint64_t;
+    using file_offset = uint64_t;
 
     //used instead of the C++ bool because bool does not have standard size
     //the size could be anywhere from 1 byte, to make things platform independent we have to improvise

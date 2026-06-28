@@ -66,8 +66,8 @@ namespace Trd::Impl {
         bool writeNextChunk();
         std::optional<IOReadChunk> readNextChunk();
 
-        void setupWrite(std::span<const std::byte> data, u64 offsetWrite);
-        void setupRead(u64 offsetRead, u64 size);
+        void setupWrite(std::span<const std::byte> data, file_offset offsetWrite);
+        void setupRead(file_offset offsetRead, u64 size);
         static constexpr u32 chunkSize() {
             return Consts::Binary::IO_CHUNK_SIZE;
         }

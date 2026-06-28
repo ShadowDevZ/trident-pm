@@ -33,8 +33,8 @@ namespace Trd::Impl {
     };
 */
     struct SD_TBLENTRY {
-        uint64_t offset{0};
-        uint64_t size{0};
+        file_offset offset{0};
+        u64 size{0};
         u8bool::type available{u8bool::type::False};
     };
     struct TRD_SD_UPDATEFIELD {

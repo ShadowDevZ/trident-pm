@@ -29,4 +29,24 @@ to do COW the entire treg. In future i definitely want windows like registry whe
 without copying to the new file and deleting certain tables, finding holes (cellsize negative if free like some fs do it)
 
 also we need an interface for CELLDATA tables so the tables are required to fill the basic info
+
+each cell should contain header crc ?
 */
+namespace Trd::Impl {
+    enum class EntryDatatype : u8 {
+        i8 = 0,
+        i16 = 1,
+        i32 = 2,
+        i64 = 3,
+        u8 = 4,
+        u16 = 5,
+        u32 = 6,
+        u64 = 7,
+        f32 = 8,
+        f64 = 9,
+        cstr = 10, // null terminated
+        binDataLE = 11,
+        binDataBE = 12,
+        u8_bool = 13
+    };
+};

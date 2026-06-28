@@ -42,11 +42,11 @@ namespace Trd::Impl {
       private:
         std::vector<std::byte> bufferData{};
         std::endian emulEndianness{std::endian::native};
-        u64 readOffset = 0;
+        file_offset readOffset = 0;
 
         template <ConTriviablyCopyable T>
         // returns number of bytes read
-        u64 iReadTrivialEx(u64 offset, T& t) {
+        u64 iReadTrivialEx(file_offset offset, T& t) {
             // removed assertion because we might pass enum
             // static_assert(std::is_fundamental_v<std::remove_pointer_t<T>>, "Only fundamental types are supported.");
             // nulllptr handlerd here
@@ -87,7 +87,7 @@ namespace Trd::Impl {
         BinarySerializer(std::endian emulated = std::endian::native) : emulEndianness(emulated) {}
         // second constructor for deserialize()
         BinarySerializer(std::vector<std::byte> data, std::endian emulated = std::endian::native,
-                         u64 xOffset = 0) :
+                         file_offset xOffset = 0) :
             bufferData(std::move(data)), emulEndianness(emulated), readOffset(xOffset) {}
 
         template <ConTriviablyCopyable T>
@@ -141,10 +141,10 @@ namespace Trd::Impl {
          * @return false
          */
         static bool expectAlignedDataOrDie(u64 size);
-        u64 getReadOffset() const {
+        file_offset getReadOffset() const {
             return readOffset;
         }
-        void setReadOffset(u64 offset) {
+        void setReadOffset(file_offset offset) {
             if (offset != UINT64_MAX)
                 readOffset = offset;
         }
@@ -193,8 +193,8 @@ namespace Trd::Impl {
          * @return u64 offset to increase the readSize by
          */
         template <typename... Ts>
-        u64 readTrivialEx(u64 offset, Ts&... args) {
-            u64 zOffset = offset;
+        u64 readTrivialEx(file_offset offset, Ts&... args) {
+            file_offset zOffset = offset;
             ((zOffset += iReadTrivialEx(zOffset, args)), ...);
             // we have to substract from the original offset otherwise we may get misleading results
             // when offset is nonzero
@@ -214,13 +214,13 @@ namespace Trd::Impl {
          * @return u64 offset to increase the readSize by
          */
         template <ConTriviablyCopyable T>
-        u64 readContainerEx(std::span<T> arr, u64 offset = 0) {
+        u64 readContainerEx(std::span<T> arr, file_offset offset = 0) {
 
             if (arr.empty()) {
                 throw std::invalid_argument("Array is empty");
             }
             u64 bytesRead = 0;
-            u64 bytePos = offset;
+            file_offset bytePos = offset;
 
             for (u64 i = 0; i < arr.size(); ++i) {
                 const u64 readSize = readTrivialEx(bytePos, arr[i]);
@@ -249,7 +249,7 @@ namespace Trd::Impl {
          * This function doesn't do any endianness checking nor handling. Do not pass data with improper
          * endianness otherwise the written data will get corrupted
          */
-        TRD_UNSAFE_API u64 readRaw(void* dataOut, u64 size, u64 offset = 0);
+        TRD_UNSAFE_API u64 readRaw(void* dataOut, u64 size, file_offset offset = 0);
 
         constexpr static u64 elementSize() {
             return 0;
@@ -303,7 +303,7 @@ namespace Trd::Impl {
          */
         static void writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
                                        std::span<const std::byte> data, bool requireAlignment,
-                                       i64 seekPos = 0,
+                                       file_offset seekPos = 0,
                                        std::ios_base::seekdir seekDir = std::ios::beg,
                                        bool keepOriginalSeek = true);
 
@@ -316,7 +316,7 @@ namespace Trd::Impl {
          * @return std::vector<std::byte> unserialized raw data from file
          */
         static std::vector<std::byte> readDataFromTStream(Trd::Impl::TStreamInfo& tStream,
-                                                          i64 seekPos, u64 size,
+                                                          file_offset seekPos, u64 size,
                                                           bool requireAlignment,
                                                           bool keepOriginalSeek = true);
     };
