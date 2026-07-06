@@ -14,10 +14,19 @@ dynamic fields and table specific information that will be embedded most likely 
 byte array that will be handled by each TABLE differently if needed
 
 the binary data layout will look something like this 
-[treg header RHDR (few bytes)]
-[byte array dump] CELL_TYPE (KEY,VALUE,ATTRIBUTER),
-                  CELL_INFO CELL_PARSING_REQUIRED_FLAG
-SIZEOF(CELL), CELLDATA
+
+[treg header] [key section] [value section] [attribute section] [data pool]
+to have aligned offsets properly i decided to store the large variable strings/ binary data
+and in future to avoid repetition strings all of the data instead of being duplicit is stored here
+
+now we can dynamically calculate where each section inside treg starts and ends
+    start_key = sizeof(rhdr)
+    start_value = start_key + (no_key_entries * sizeof(key_entry))
+    start_attr = start_value + (no_val_entries * sizeof(val_entry))
+    pool_start = start_attr + (no_attr_entries * sizeof(attr_entry)) 
+
+
+
 if parser doesnt know what is some certain table doing they can just currentOffset += cellSize
 
 cell data info varies depending whether its K,V, or A, they share in common the CELL_INFO struct

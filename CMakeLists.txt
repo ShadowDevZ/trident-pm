@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(trident-pm)
 
 ###find_package(LibXml2 REQUIRED)
-find_package(ZLIB REQUIRED)
+###find_package(ZLIB REQUIRED)
 
 set(TRDLIB "libtrdpm")
 
@@ -54,19 +54,22 @@ target_include_directories(${TRDLIB} PUBLIC
  #   src/libtrident/impl/uid/suid
     src/libtrident/impl/sdesc
     src/libtrident/impl/systemspecific/common/include/
+    src/libs
 )
+
+
 ###target_include_directories(${TRDLIB} PRIVATE ${LIBXML2_INCLUDE_DIR})
 ###target_link_libraries(${TRDLIB} PRIVATE ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
 
 target_precompile_headers(${TRDLIB} PRIVATE src/libtrident/pch.h)
 
-target_link_libraries(${TRDLIB} PRIVATE ZLIB::ZLIB)
+###target_link_libraries(${TRDLIB} PRIVATE ZLIB::ZLIB)
 # --- Executable targets (only if not building library-only) ---
 option(TRD_BUILD_LIBONLY "Do not build the trpm standalone app" OFF)
 
 if(NOT TRD_BUILD_LIBONLY)
     add_executable(${TRDBLD} ${TRD_IMG_BUILDER} ${LIBS_EXTERNAL})
-    target_include_directories(${TRDBLD} PRIVATE ${LIBXML2_INCLUDE_DIR})
-    target_link_libraries(${TRDBLD} PRIVATE ${TRDLIB} ${LIBXML2_LIBRARIES} ZLIB::ZLIB)
+   ## target_include_directories(${TRDBLD} PRIVATE ${LIBXML2_INCLUDE_DIR})
+    target_link_libraries(${TRDBLD} PRIVATE ${TRDLIB})
     target_link_options(${TRDBLD} PRIVATE -pie)
 endif()

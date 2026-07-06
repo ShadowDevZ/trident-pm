@@ -5,7 +5,7 @@
 #include <cerrno>
 #include <format>
 #include "filemgmnt.h"
-#include <zlib.h>
+
 #include <cstring>
 #include "chunkData.h"
 using namespace Trd;

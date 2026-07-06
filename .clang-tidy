@@ -102,7 +102,7 @@ WarningsAsErrors: '*'
 
 HeaderFilterRegex: '.*(hpp|h)' 
 FormatStyle: file
-
+ExcludeHeaderFilterRegex: '.*/boost/.*'
 CheckOptions:
   performance-for-range-copy.WarnOnAllAutoCopies: true
   performance-inefficient-string-concatenation.StrictMode: true

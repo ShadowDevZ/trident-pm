@@ -16,7 +16,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <vector>
-#include <zlib.h>
+#include "boost/crc.hpp"
 // todo add most basic IO function here
 // internal functions used by TStream
 namespace Trd::Impl {
@@ -326,17 +326,17 @@ namespace Trd::Impl {
      */
     class Crc32Gen {
       private:
-        u32 crc{};
+        boost::crc_32_type crc{};
 
       public:
         /// retrieves the calculated CRC32 value
         /// @return
         u32 getCrc32() const {
-            return crc;
+            return crc.checksum();
         }
         /// clears the internal buffer
         void reset() {
-            crc = 0;
+            crc.reset();
         }
 
         template <typename... Ts>
@@ -373,19 +373,21 @@ namespace Trd::Impl {
         void addData(const std::span<const T> bytes) {
             // BE, reverse  byte order
             if (!BinarySerializer::isLittleEndian()) {
-                std::vector<T> data;
+                std::vector<T> data(bytes.begin(), bytes.end());
                 // resize instead of reserve, this is not mistake
                 // because begin iterator wont work otherwise
-                data.resize(bytes.size());
-                std::copy(bytes.begin(), bytes.end(), data.begin());
+                // data.resize(bytes.size());
+                //   std::copy(bytes.begin(), bytes.end(), data.begin());
                 for (auto& x : data) {
                     BinarySerializer::reverseByteOrderInPlace(x);
                 }
-                crc = ::crc32(crc, reinterpret_cast<const Bytef*>(data.data()),
-                              static_cast<u32>(data.size() * sizeof(T)));
+                crc.process_bytes(data.data(), data.size() * sizeof(T));
+                // crc = ::crc32(crc, reinterpret_cast<const Bytef*>(data.data()),
+                //              static_cast<u32>(data.size() * sizeof(T)));
             } else {
-                crc = ::crc32(crc, reinterpret_cast<const Bytef*>(bytes.data()),
-                              static_cast<u32>(bytes.size_bytes()));
+                crc.process_bytes(bytes.data(), bytes.size_bytes());
+                // crc = ::crc32(crc, reinterpret_cast<const Bytef*>(bytes.data()),
+                //               static_cast<u32>(bytes.size_bytes()));
             }
         }
     };

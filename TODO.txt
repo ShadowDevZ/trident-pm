@@ -13,7 +13,8 @@ and possible use would be limited.
 -For inplace editing we can just set some tombstone and quickly lookup hole large enough for the data
 then pad the hole with 0's
 -each dtbl needs to provide size function in which way we can reserve the data in treg before writing
-
+/padding
+-proper aligning of whole structs to 8 bytes, calculating padding for the dtbls on runtime
 
 /treg
 -simply flat model with no inplace editing for now, all data has to be read then rewritten 

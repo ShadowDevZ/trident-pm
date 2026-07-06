@@ -7,5 +7,4 @@ This repo holds the library and app for testing
 The project is highly WIP and is not production ready
 For documentation regarding the TRD format refer to https://github.com/ShadowDevZ/trident-format-spec
 # Used libraries
-- Libxml2
-- Zlib
+- Boost - CRC
