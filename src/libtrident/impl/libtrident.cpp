@@ -8,6 +8,7 @@
 #include "trheader.h"
 #include "sdesc.h"
 #include "dynamicTable.h"
+#include "treg/treg.h"
 using namespace Trd;
 using namespace Trd::Impl;
 
@@ -19,6 +20,9 @@ TrSectionDescriptor TrPkg::sd() {
 }
 DtblDirectory TrPkg::dtbl() {
     return DtblDirectory(*this);
+}
+Treg TrPkg::treg() {
+    return Treg(*this);
 }
 
 void Trd::TrPkg::closePkg() {

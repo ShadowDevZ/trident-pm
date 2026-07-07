@@ -17,11 +17,16 @@
 
 #include "hrddefs.h"
 #include "sdescdefs.h"
+
+#if CHAR_BIT != 8
+#error "Unsupported platform"
+#endif
 namespace Trd {
 
     class TrFileHeader;
     class TrSectionDescriptor;
     class DtblDirectory;
+    class Treg;
 
     class TrPkg {
       public:
@@ -44,6 +49,7 @@ namespace Trd {
            * @return TrSectiaccessModelonDescriptor
            */
         TrSectionDescriptor sd();
+        Treg treg();
 
         const Trd::Impl::TStreamInfo& getTstream() const {
             return fstrInfo;

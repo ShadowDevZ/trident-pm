@@ -3,12 +3,12 @@
 using namespace Trd;
 using namespace Trd::Impl;
 std::optional<std::vector<std::byte>> TregHeader::serialize() const {
-    if (_reserved != 0 || _reserved1 != 0 || magic != Consts::Treg::TREG_MAGIC ||
-        regRootOffset < DtblDirectory::badOffset())
+    if (_reserved1 != 0 || magic != Consts::Treg::TREG_MAGIC)
         return std::nullopt;
 
     Trd::Impl::BinarySerializer bs;
-    bs.addTrivial(magic, flags, regRootOffset, regSizeTotal, _reserved, _reserved1);
+    bs.addTrivial(magic, flags, keyEntriesCount, valEntriesCount, attrEntriesCount, poolSize,
+                  checksum, _reserved1);
     return bs.getFormattedData();
 }
 

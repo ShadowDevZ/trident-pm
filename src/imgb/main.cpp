@@ -149,9 +149,9 @@ int main(void) {
         return 1;
     }
     Impl::TregHeader testHeader{};
-    testHeader.regSizeTotal = 0xBEBACCCCCAFF;
-    testHeader._reserved = 0;
-    testHeader.regRootOffset = 0x11111111111;
+    testHeader.poolSize = 0xBEBACCCCCAFF;
+    testHeader._reserved1 = 0;
+    testHeader.checksum = 0x11111111111;
     const auto tregData = testHeader.serialize().value();
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), tregData, false,
                                                dtblOffset + dummySize + 6);

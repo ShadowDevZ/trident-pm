@@ -4,6 +4,7 @@
 #include <optional>
 #include "trderr.h"
 #include "dynamicTable.h"
+#include "tregDefs.h"
 /*
 this will be the most complex part of the whole format and WILL be rewritten multiple times
 because it will be bug infested mess if we want things as in place operations and such in future
@@ -41,21 +42,21 @@ also we need an interface for CELLDATA tables so the tables are required to fill
 
 each cell should contain header crc ?
 */
-namespace Trd::Impl {
-    enum class EntryDatatype : u8 {
-        i8 = 0,
-        i16 = 1,
-        i32 = 2,
-        i64 = 3,
-        u8 = 4,
-        u16 = 5,
-        u32 = 6,
-        u64 = 7,
-        f32 = 8,
-        f64 = 9,
-        cstr = 10, // null terminated
-        binDataLE = 11,
-        binDataBE = 12,
-        u8_bool = 13
+namespace Trd {
+    class TrPkg;
+
+    class Treg {
+        static inline bool AttrIsTrivial(Impl::TregAttrDatatype type) {
+            constexpr int lastTrivialAttrIndex = 10;
+            if (static_cast<u8>(type) <= lastTrivialAttrIndex)
+                return true;
+            return false;
+        };
+
+        explicit Treg(TrPkg& pkg) : trpkg(pkg) {};
+
+      private:
+        friend class TrPkg;
+        TrPkg& trpkg;
     };
 };
