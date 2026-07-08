@@ -160,8 +160,9 @@ bool BinarySerializer::expectAlignedDataOrDie(u64 size) {
     const bool aligned = isDataSizeAligned(size);
     if (!aligned) {
 
-        throw std::runtime_error("Passed data was not properly aligned got: " +
-                                 std::to_string(size));
+        throw std::runtime_error(
+            "Passed data was not properly aligned got: " + std::to_string(size) +
+            " exp: " + std::to_string(getByteAlignment(size)));
     }
     //just in case the assertion fails
     return aligned;

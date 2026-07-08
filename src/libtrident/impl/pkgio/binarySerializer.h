@@ -148,6 +148,9 @@ namespace Trd::Impl {
             if (offset != UINT64_MAX)
                 readOffset = offset;
         }
+        void resetReadOffset() {
+            setReadOffset(0);
+        }
 
         const std::vector<std::byte>& getData() const {
             return bufferData;

@@ -155,6 +155,7 @@ int main(void) {
     const auto tregData = testHeader.serialize().value();
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), tregData, false,
                                                dtblOffset + dummySize + 6);
+
     // ltTrPkg.getTstream().setSeekPos(0, std::ios::end);
     // ltTrPkg.getTstream().writePadding(12, 0xCC);
 

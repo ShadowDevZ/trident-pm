@@ -5,6 +5,7 @@
 #include "trderr.h"
 #include "dynamicTable.h"
 #include "tregDefs.h"
+#include "binarySerializer.h"
 /*
 this will be the most complex part of the whole format and WILL be rewritten multiple times
 because it will be bug infested mess if we want things as in place operations and such in future
@@ -46,7 +47,56 @@ namespace Trd {
     class TrPkg;
 
     class Treg {
-        static inline bool AttrIsTrivial(Impl::TregAttrDatatype type) {
+        //high level interface
+        //this is ugly
+        struct Attr {
+            std::string attributeName;
+            TregAttrDatatype type;
+            std::vector<std::byte> data;
+
+            static TregAttrDatatype u8(std::string n, u8 v) {
+                return fillTrivial(std::move(n), TregAttrDatatype::u8, v);
+            }
+            static TregAttrDatatype u16(std::string n, u16 v) {
+                return fillTrivial(std::move(n), TregAttrDatatype::u16, v);
+            }
+            static TregAttrDatatype u32(std::string n, u32 v) {
+                return fillTrivial(std::move(n), TregAttrDatatype::u32, v);
+            }
+            static TregAttrDatatype u64(std::string n, u64 v) {
+                return fillTrivial(std::move(n), TregAttrDatatype::u64, v);
+            }
+            //fill later
+            template <typename T>
+            static TregAttrDatatype fillTrivial(std::string name, TregAttrDatatype type, T value) {
+
+                attr.attributeName = std::move(name);
+                attr.type = type;
+
+                Impl::BinarySerializer bs;
+                Attr attr;
+                bs.addTrivial(value);
+                auto fmt = bs.getFormattedData();
+                if (!fmt)
+                    throw std::runtime_error("Attribute data could not be properly serialized");
+                attr.data = fmt.value();
+
+                return attr;
+            }
+        };
+
+        struct Value {
+            std::string value;
+            std::vector<Attr> attrs;
+        };
+
+        struct Key {
+            std::string key;
+            std::vector<Key> children;
+            std::vector<Value> values;
+        };
+
+        static inline bool AttrIsTrivial(TregAttrDatatype type) {
             constexpr int lastTrivialAttrIndex = 10;
             if (static_cast<u8>(type) <= lastTrivialAttrIndex)
                 return true;

@@ -5,12 +5,12 @@
 #include "ccattribs.h"
 #include "serdatacommon.h"
 #include "binarySerializer.h"
-
+#include <variant>
 namespace Trd::Consts::Treg {
     inline constexpr u32 TREG_MAGIC = 0x52444852; //RHDR (BE)
 };
 
-namespace Trd::Impl {
+namespace Trd {
     namespace RegFlags {
         enum Flag : u16 {
             Clear = 0
@@ -71,6 +71,13 @@ namespace Trd::Impl {
 
         u32 firstValIndex;
         u16 valueCount;
+        /*
+        sum of all fields in bytes, there is probably a way better way to do this but i want this 
+        to be static and i dont want to use magic numbers that make no sense
+        */
+        static constexpr int keyRecordSize() {
+            return 18;
+        }
     };
 
     struct TregValueRecord : Impl::SerializableData {
@@ -78,6 +85,9 @@ namespace Trd::Impl {
         u16 valNameLength;
         u32 attrFirstIndex;
         u16 attrCount;
+        static constexpr int valueRecordSize() {
+            return 12;
+        }
     };
     struct TregAttrRecord : Impl::SerializableData {
         u32 attrNamePoolOffset;
@@ -85,13 +95,17 @@ namespace Trd::Impl {
         TregAttrDatatype
             dataType; // if dataType < 11 store data in smallData otherwiese point to pool
         //with LargeData; if dataSize smaller than 8 && dataType < 11 pad with 0's until end
-        union PayloadData {
-            u64 smallData;
-            struct LargeData {
-                u32 payloadPoolOffset;
-                u32 payloadSize;
-            };
+
+        struct PayloadPoolData {
+            u32 payloadPoolOffset;
+            u32 payloadSize;
         };
+        u8 tempPadVal;
+        using TrivialData = std::array<std::byte, 8>;
+        std::variant<TrivialData, PayloadPoolData> payload;
+        static constexpr int attrRecordSize() {
+            return 16;
+        }
     };
 
 };
