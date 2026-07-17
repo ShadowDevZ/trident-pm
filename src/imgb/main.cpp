@@ -148,7 +148,7 @@ int main(void) {
         dbgprintf("eread!fail\n");
         return 1;
     }
-    Impl::TregHeader testHeader{};
+    TregHeader testHeader{};
     testHeader.poolSize = 0xBEBACCCCCAFF;
     testHeader._reserved1 = 0;
     testHeader.checksum = 0x11111111111;

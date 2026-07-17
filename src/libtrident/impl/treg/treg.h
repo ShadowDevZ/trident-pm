@@ -46,67 +46,29 @@ each cell should contain header crc ?
 namespace Trd {
     class TrPkg;
 
+    //todo namespace instead ??
     class Treg {
+      public:
         //high level interface
         //this is ugly
-        struct Attr {
-            std::string attributeName;
-            TregAttrDatatype type;
-            std::vector<std::byte> data;
-
-            static TregAttrDatatype u8(std::string n, u8 v) {
-                return fillTrivial(std::move(n), TregAttrDatatype::u8, v);
-            }
-            static TregAttrDatatype u16(std::string n, u16 v) {
-                return fillTrivial(std::move(n), TregAttrDatatype::u16, v);
-            }
-            static TregAttrDatatype u32(std::string n, u32 v) {
-                return fillTrivial(std::move(n), TregAttrDatatype::u32, v);
-            }
-            static TregAttrDatatype u64(std::string n, u64 v) {
-                return fillTrivial(std::move(n), TregAttrDatatype::u64, v);
-            }
-            //fill later
-            template <typename T>
-            static TregAttrDatatype fillTrivial(std::string name, TregAttrDatatype type, T value) {
-
-                attr.attributeName = std::move(name);
-                attr.type = type;
-
-                Impl::BinarySerializer bs;
-                Attr attr;
-                bs.addTrivial(value);
-                auto fmt = bs.getFormattedData();
-                if (!fmt)
-                    throw std::runtime_error("Attribute data could not be properly serialized");
-                attr.data = fmt.value();
-
-                return attr;
-            }
-        };
-
-        struct Value {
-            std::string value;
-            std::vector<Attr> attrs;
-        };
-
-        struct Key {
-            std::string key;
-            std::vector<Key> children;
-            std::vector<Value> values;
-        };
-
-        static inline bool AttrIsTrivial(TregAttrDatatype type) {
-            constexpr int lastTrivialAttrIndex = 10;
-            if (static_cast<u8>(type) <= lastTrivialAttrIndex)
-                return true;
-            return false;
-        };
 
         explicit Treg(TrPkg& pkg) : trpkg(pkg) {};
 
       private:
         friend class TrPkg;
         TrPkg& trpkg;
+    };
+    class TregHiveSerializer {
+      private:
+        std::vector<TregKeyRecord> keys;
+        std::vector<TregValueRecord> values;
+        std::vector<TregAttrRecord> attrs;
+        std::vector<std::byte> dataPool;
+        bool recordKeys();
+        bool recordValues();
+        bool recordAttributes();
+
+      public:
+        std::expected<std::vector<std::byte>, Trd::Err::TrdError> serialize(const Trd::Key& root);
     };
 };

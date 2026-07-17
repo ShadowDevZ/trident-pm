@@ -103,11 +103,10 @@ std::optional<std::vector<std::byte>> BinarySerializer::getFormattedData(bool au
         return std::nullopt;
     }
 
-    u64 alignSize = 0;
-
     if (autoAlign) {
         const auto& vSize = bufferData.size();
         if (!isDataSizeAligned(vSize)) {
+            u64 alignSize = 0;
             alignSize = getByteAlignment(vSize) - vSize;
             dbgprintf("--Unaligned data serialized\nog:%luB new: %luB\n", vSize, alignSize + vSize);
         }
@@ -117,7 +116,7 @@ std::optional<std::vector<std::byte>> BinarySerializer::getFormattedData(bool au
 #ifdef _LIBTRIDENT_DEBUG_VERBOSE
     dbgDumpData();
 #endif
-    if (!expectAlignedDataOrDie(bufferData.size())) {
+    if (requireAlignment && !expectAlignedDataOrDie(bufferData.size())) {
         return std::nullopt;
     }
 #if defined(_LIBTRIDENT_DEBUG_VERBOSE)

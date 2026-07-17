@@ -108,4 +108,58 @@ namespace Trd {
         }
     };
 
+    struct Attr {
+        std::string attributeName;
+        TregAttrDatatype type;
+        std::vector<std::byte> data;
+
+        static Attr u8(std::string n, u8 v) {
+            return fillTrivial(std::move(n), TregAttrDatatype::u8, v);
+        }
+        static Attr u16(std::string n, u16 v) {
+            return fillTrivial(std::move(n), TregAttrDatatype::u16, v);
+        }
+        static Attr u32(std::string n, u32 v) {
+            return fillTrivial(std::move(n), TregAttrDatatype::u32, v);
+        }
+        static Attr u64(std::string n, u64 v) {
+            return fillTrivial(std::move(n), TregAttrDatatype::u64, v);
+        }
+        //fill later
+        template <typename T>
+        static Attr fillTrivial(std::string name, TregAttrDatatype type, T value,
+                                std::endian forceByteOrder = std::endian::native) {
+
+            Impl::BinarySerializer bs(forceByteOrder, true);
+            Attr attr;
+            attr.attributeName = std::move(name);
+            attr.type = type;
+            bs.addTrivial(value);
+            auto fmt = bs.getFormattedData();
+            if (!fmt)
+                throw std::runtime_error("Attribute data could not be properly serialized");
+            attr.data = fmt.value();
+
+            return attr;
+        }
+    };
+
+    struct Value {
+        std::string value;
+        std::vector<Attr> attrs;
+    };
+
+    struct Key {
+        std::string key;
+        std::vector<Key> children;
+        std::vector<Value> values;
+    };
+
+    static inline bool AttrIsTrivial(TregAttrDatatype type) {
+        constexpr int lastTrivialAttrIndex = 10;
+        if (static_cast<u8>(type) <= lastTrivialAttrIndex)
+            return true;
+        return false;
+    };
+
 };

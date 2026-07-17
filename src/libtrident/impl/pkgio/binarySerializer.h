@@ -43,6 +43,7 @@ namespace Trd::Impl {
         std::vector<std::byte> bufferData{};
         std::endian emulEndianness{std::endian::native};
         file_offset readOffset = 0;
+        bool requireAlignment = true;
 
         template <ConTriviablyCopyable T>
         // returns number of bytes read
@@ -84,11 +85,14 @@ namespace Trd::Impl {
         /// dynamically checks the host endianness
         bool isInstanceLittleEndian() const noexcept;
 
-        BinarySerializer(std::endian emulated = std::endian::native) : emulEndianness(emulated) {}
+        BinarySerializer(std::endian emulated = std::endian::native, bool requireAlignment = true) :
+            emulEndianness(emulated), requireAlignment(requireAlignment) {};
+
         // second constructor for deserialize()
         BinarySerializer(std::vector<std::byte> data, std::endian emulated = std::endian::native,
-                         file_offset xOffset = 0) :
-            bufferData(std::move(data)), emulEndianness(emulated), readOffset(xOffset) {}
+                         file_offset xOffset = 0, bool requireAlignment = true) :
+            bufferData(std::move(data)), emulEndianness(emulated), readOffset(xOffset),
+            requireAlignment(requireAlignment) {};
 
         template <ConTriviablyCopyable T>
         // reverses byte order of variable
@@ -394,5 +398,4 @@ namespace Trd::Impl {
             }
         }
     };
-
 };
