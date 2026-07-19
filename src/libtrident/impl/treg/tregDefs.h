@@ -8,6 +8,9 @@
 #include <variant>
 namespace Trd::Consts::Treg {
     inline constexpr u32 TREG_MAGIC = 0x52444852; //RHDR (BE)
+    inline constexpr u16 KEY_REC_ID = 0x526B; //kR (BE)
+    inline constexpr u16 VAL_REC_ID = 0x5276; //vR (BE)
+    inline constexpr u16 ATTR_REC_ID = 0x5261; //aR (BE)
 };
 
 namespace Trd {
@@ -57,18 +60,21 @@ namespace Trd {
         }
 
         constexpr u64 size() const override {
-            return Impl::BinarySerializer::elementSize(magic, flags, keyEntriesCount,
-                                                       valEntriesCount, attrEntriesCount, poolSize,
-                                                       checksum, _reserved1);
+            constexpr auto x = Impl::BinarySerializer::elementSize(
+                magic, flags, keyEntriesCount, valEntriesCount, attrEntriesCount, poolSize,
+                checksum, _reserved1);
+            static_assert(x == headerSize(), "Size missmatch");
+            return x;
         }
         std::optional<std::vector<std::byte>> serialize() const override;
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
         //doesnt make sense here, only in final TregObject
-        std::optional<Impl::Crc32Gen> checksumCRC32() const;
+        //  std::optional<Impl::Crc32Gen> checksumCRC32() const;
     };
     //singular key record
     struct TregKeyRecord : Impl::SerializableData {
+        u16 identifier = Consts::Treg::KEY_REC_ID; // just a mark to fill instead of padding
         u32 keyNameOffset; //offset in flat vector
         u16 keyNameLength;
         u32 firstChildKeyIndex;
@@ -76,41 +82,81 @@ namespace Trd {
 
         u32 firstValIndex;
         u16 valueCount;
+        u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         /*
         sum of all fields in bytes, there is probably a way better way to do this but i want this 
         to be static and i dont want to use magic numbers that make no sense
         */
         static constexpr int keyRecordSize() {
-            return 18;
+            return 24;
         }
+        constexpr u64 size() const override {
+            constexpr auto x = Impl::BinarySerializer::elementSize(
+                identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
+                firstValIndex, valueCount, recordChecksum);
+
+            static_assert(x == keyRecordSize(), "Size missmatch");
+            return x;
+        }
+        std::optional<std::vector<std::byte>> serialize() const override;
+
+        bool deserialize(const std::vector<std::byte>& dataIn) override;
     };
 
     struct TregValueRecord : Impl::SerializableData {
+        u16 identifier = Consts::Treg::VAL_REC_ID;
         u32 valNameOffset;
         u16 valNameLength;
         u32 attrFirstIndex;
         u16 attrCount;
+        u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         static constexpr int valueRecordSize() {
-            return 12;
+            return 18;
         }
+        constexpr u64 size() const override {
+            constexpr auto x =
+                Impl::BinarySerializer::elementSize(identifier, valNameOffset, valNameLength,
+                                                    attrFirstIndex, attrCount, recordChecksum);
+            static_assert(x == valueRecordSize(), "Size missmatch");
+            return x;
+        }
+        std::optional<std::vector<std::byte>> serialize() const override;
+
+        bool deserialize(const std::vector<std::byte>& dataIn) override;
     };
     struct TregAttrRecord : Impl::SerializableData {
+        u16 identifier = Consts::Treg::ATTR_REC_ID;
         u32 attrNamePoolOffset;
         u16 attrNameLength;
         TregAttrDatatype
-            dataType; // if dataType < 11 store data in smallData otherwiese point to pool
+            datatype; // if dataType < 11 store data in smallData otherwiese point to pool
         //with LargeData; if dataSize smaller than 8 && dataType < 11 pad with 0's until end
 
+        //not part of the struct just definition for variant
         struct PayloadPoolData {
             u32 payloadPoolOffset;
             u32 payloadSize;
         };
-        u8 tempPadVal;
+        //
+        u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         using TrivialData = std::array<std::byte, 8>;
         std::variant<TrivialData, PayloadPoolData> payload;
+
         static constexpr int attrRecordSize() {
-            return 16;
+            return 21; //align everything later we need functioning prototype
         }
+        constexpr u64 size() const override {
+            constexpr auto x =
+                Impl::BinarySerializer::elementSize(identifier, attrNamePoolOffset, attrNameLength,
+                                                    datatype, recordChecksum) +
+                (sizeof(std::byte) * 8);
+            static_assert(x == attrRecordSize(), "Size missmatch");
+            return x;
+            //using sizeof when we are storing struct may or may not work even if packed on all platforms
+        }
+        std::optional<std::vector<std::byte>> serialize() const override;
+
+        bool deserialize(const std::vector<std::byte>& dataIn) override;
     };
 
     struct Attr {
