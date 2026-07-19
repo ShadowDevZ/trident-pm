@@ -341,6 +341,9 @@ namespace Trd::Impl {
         u32 getCrc32() const {
             return crc.checksum();
         }
+        boost::crc_32_type getCrcProviderObj() const {
+            return crc;
+        }
         /// clears the internal buffer
         void reset() {
             crc.reset();

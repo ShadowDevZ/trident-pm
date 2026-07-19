@@ -97,7 +97,7 @@ namespace Trd {
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
 
-        std::optional<u32> checksumCRC32() const override;
+        std::optional<Impl::Crc32Gen> checksumCRC32() const override;
     };
 
 };

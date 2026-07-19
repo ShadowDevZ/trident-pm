@@ -66,9 +66,13 @@ TrSectionDescriptor::IwriteSDNoValidate(const Impl::TRD_SECTION_DESCRIPTOR& sd) 
 // for this (TM)
 std::expected<void, Trd::Err::TrdError>
 TrSectionDescriptor::iCheckCRC(const Impl::TRD_SECTION_DESCRIPTOR& sd) {
-    const u32 genCrc = sd.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
-    if ((genCrc != sd.crc)) {
-        dbgprintf("[CRC_SD] gen %u : exp: %u\n", genCrc, sd.crc);
+    auto genCrc = sd.checksumCRC32();
+    if (!genCrc)
+        return std::unexpected(
+            Err::TrdError(eCode::ChecksumFailure, 1, "no checksum was provided"));
+    u32 cksum = genCrc.value().getCrc32();
+    if ((cksum != sd.crc)) {
+        dbgprintf("[CRC_SD] gen %u : exp: %u\n", cksum, sd.crc);
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     }
     return {};
@@ -146,7 +150,12 @@ TrSectionDescriptor::updateSD(const Impl::TRD_SD_UPDATEFIELD& update,
     if (update.tblRegistry)
         sdTemp.tblRegistry = *update.tblRegistry;
 
-    sdTemp.crc = sdTemp.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
+    auto genCrc = sdTemp.checksumCRC32();
+
+    if (!genCrc)
+        return std::unexpected(
+            Err::TrdError(eCode::ChecksumFailure, 1, "no checksum was provided"));
+    sdTemp.crc = genCrc.value().getCrc32();
     if (setReadyStatus)
 
         sdTemp.sdReady = u8bool::fromBool(setReadyStatus.value());

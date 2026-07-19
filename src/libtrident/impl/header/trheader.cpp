@@ -106,9 +106,13 @@ std::expected<void, Err::TrdError> TrFileHeader::write() {
 }
 
 std::expected<void, Err::TrdError> TrFileHeader::iCheckCRC(const TRD_HEADER& hdr) {
-    const u32 genCrc = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
-    if ((genCrc != hdr.dynHdrChksum)) {
-        dbgprintf("[CRC_HDR] gen %u : exp: %u\n", genCrc, hdr.dynHdrChksum);
+    auto genCrc = hdr.checksumCRC32();
+    if (!genCrc)
+        return std::unexpected(
+            Err::TrdError(eCode::ChecksumFailure, 1, "no checksum was provided"));
+    u32 cksum = genCrc.value().getCrc32();
+    if ((cksum != hdr.dynHdrChksum)) {
+        dbgprintf("[CRC_HDR] gen %u : exp: %u\n", cksum, hdr.dynHdrChksum);
         return std::unexpected(Err::TrdError(eCode::ChecksumFailure));
     }
     return {};
@@ -154,7 +158,12 @@ std::expected<void, Err::TrdError> TrFileHeader::create(const TRD_HDRFIELD_UPDAT
     hdr.buildFlags = *field.buildFlags;
     hdr.architecture = *field.architecture;
     // NOLINTEND(bugprone-unchecked-optional-access)
-    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM); //ignored for now
+    auto genCrc = hdr.checksumCRC32();
+    u32 crc = Consts::TRD_INVALID_CHKSUM;
+    if (genCrc)
+        crc = genCrc.value().getCrc32();
+
+    hdr.dynHdrChksum = crc; //ignored for now
 
     hdr.dynFileLen = UINT64_MAX;
     hdr._reserved0 = 0;
@@ -217,13 +226,19 @@ std::expected<void, Err::TrdError> TrFileHeader::updateHeader(const TRD_HDRFIELD
     if (update.buildFlags)
         hdr.buildFlags = *update.buildFlags;
 
-    hdr.dynHdrChksum = hdr.checksumCRC32().value_or(Consts::TRD_INVALID_CHKSUM);
+    auto genCrc = hdr.checksumCRC32();
+
+    if (!genCrc)
+        return std::unexpected(
+            Err::TrdError(eCode::ChecksumFailure, 1, "no checksum was provided"));
+
+    hdr.dynHdrChksum = genCrc.value().getCrc32();
 
     auto val = iValidateHeader(hdr);
     if (!val.has_value()) {
         return std::unexpected(val.error());
     }
-    trpkg.trdHdr = hdr;
+    trpkg.trdHdr = std::move(hdr);
 
     return TrFileHeader::write();
 }

@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 #include "datatypes.h"
+#include "binarySerializer.h"
 namespace Trd::Impl {
 
     /**
@@ -41,7 +42,7 @@ namespace Trd::Impl {
          * 
          * @return std::optional<u32> crc32 chechksum, if available
          */
-        virtual std::optional<u32> checksumCRC32() const {
+        virtual std::optional<Impl::Crc32Gen> checksumCRC32() const {
             return std::nullopt;
         }
     };

@@ -42,6 +42,7 @@ namespace Trd {
         u64 _reserved;
         u16 _reserved1;
 */
+
         u32 magic{Consts::Treg::TREG_MAGIC};
         RegFlags::Flag flags{RegFlags::Clear};
         u32 keyEntriesCount;
@@ -50,6 +51,10 @@ namespace Trd {
         u64 poolSize;
         u32 checksum; //everything after header until the end of treg section
         u16 _reserved1;
+
+        static constexpr int headerSize() {
+            return 32;
+        }
 
         constexpr u64 size() const override {
             return Impl::BinarySerializer::elementSize(magic, flags, keyEntriesCount,
@@ -60,7 +65,7 @@ namespace Trd {
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
         //doesnt make sense here, only in final TregObject
-        std::optional<u32> checksumCRC32() const;
+        std::optional<Impl::Crc32Gen> checksumCRC32() const;
     };
     //singular key record
     struct TregKeyRecord : Impl::SerializableData {

@@ -28,7 +28,7 @@ bool TRD_SECTION_DESCRIPTOR::deserialize(const std::vector<std::byte>& dataIn) {
 
     return true;
 }
-std::optional<u32> TRD_SECTION_DESCRIPTOR::checksumCRC32() const {
+std::optional<Impl::Crc32Gen> TRD_SECTION_DESCRIPTOR::checksumCRC32() const {
     if (_reserved1 != 0 || !IResvFieldCheck(_reserved2) || idByte != Consts::SD::TRD_SD_IDBYTE) {
         return std::nullopt;
     }
@@ -36,5 +36,5 @@ std::optional<u32> TRD_SECTION_DESCRIPTOR::checksumCRC32() const {
 
     crc.addData(tblDynamic.offset, tblDynamic.size, tblDynamic.available, tblRegistry.offset,
                 tblRegistry.size, tblRegistry.available, _reserved2, _reserved1, idByte);
-    return crc.getCrc32();
+    return crc;
 }

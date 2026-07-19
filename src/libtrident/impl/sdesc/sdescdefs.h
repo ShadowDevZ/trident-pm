@@ -74,7 +74,7 @@ namespace Trd::Impl {
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
 
-        std::optional<u32> checksumCRC32() const;
+        std::optional<Impl::Crc32Gen> checksumCRC32() const;
 
         bool operator==(const TRD_SECTION_DESCRIPTOR& other) const {
             return crc == other.crc && tblDynamic.offset == other.tblDynamic.offset &&
