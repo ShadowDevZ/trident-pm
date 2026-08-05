@@ -159,21 +159,53 @@ namespace Trd {
         bool deserialize(const std::vector<std::byte>& dataIn) override;
     };
 
-    struct Attr {
-        std::string attributeName;
-        TregAttrDatatype type;
-        std::vector<std::byte> data;
+    class Attr {
 
-        static Attr u8(std::string n, u8 v) {
+        /*
+        i8 = 0,
+        i16 = 1,
+        i32 = 2,
+        i64 = 3,
+        u8 = 4,
+        u16 = 5,
+        u32 = 6,
+        u64 = 7,
+        f32 = 8,
+        f64 = 9,
+        u8_bool = 10,
+        cstr = 11, // null terminated
+        binDataLE = 12,
+        binDataBE = 13 //not implemented cu*/
+      public:
+        using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, float, double, bool,
+                                     std::string, std::vector<std::byte>>; //add later
+
+        explicit Attr(std::string name, TregAttrDatatype dtype, Payload payload) :
+            attributeName(std::move(name)), type(dtype), payload(std::move(payload)) {};
+
+        std::string_view getAttrName() const {
+            return attributeName;
+        }
+        TregAttrDatatype getAttrDataType() const {
+            return type;
+        }
+        const Payload& getPayload() const {
+            return payload;
+        }
+        void setPayload(Payload p) {
+            payload = std::move(p);
+        }
+
+        static Attr dataU8(std::string n, u8 v) {
             return fillTrivial(std::move(n), TregAttrDatatype::u8, v);
         }
-        static Attr u16(std::string n, u16 v) {
+        static Attr dataU16(std::string n, u16 v) {
             return fillTrivial(std::move(n), TregAttrDatatype::u16, v);
         }
-        static Attr u32(std::string n, u32 v) {
+        static Attr dataU32(std::string n, u32 v) {
             return fillTrivial(std::move(n), TregAttrDatatype::u32, v);
         }
-        static Attr u64(std::string n, u64 v) {
+        static Attr dataU64(std::string n, u64 v) {
             return fillTrivial(std::move(n), TregAttrDatatype::u64, v);
         }
         //fill later
@@ -182,25 +214,105 @@ namespace Trd {
                                 std::endian forceByteOrder = std::endian::native) {
 
             Impl::BinarySerializer bs(forceByteOrder, true);
-            Attr attr;
-            attr.attributeName = std::move(name);
-            attr.type = type;
             bs.addTrivial(value);
             auto fmt = bs.getFormattedData();
             if (!fmt)
                 throw std::runtime_error("Attribute data could not be properly serialized");
-            attr.data = fmt.value();
 
-            return attr;
+            return Attr(std::move(name), type, std::move(fmt.value()));
         }
+
+        template <typename T>
+        const T& get() const {
+            if (!std::holds_alternative<T>(payload))
+                throw std::runtime_error("Attr::get<T> type missmatch");
+            return std::get<T>(payload);
+        }
+
+      private:
+        std::string attributeName;
+        TregAttrDatatype type;
+        Payload payload;
     };
 
-    struct Value {
-        std::string value;
+    class Value {
+      public:
+        explicit Value(std::string name) : name(std::move(name)) {};
+
+        std::string_view getName() const {
+            return name;
+        }
+        const std::vector<Attr>& getAttrs() const {
+            return attrs;
+        }
+        std::vector<Attr>& getAttrs() {
+            return attrs;
+        }
+        void addAttr(Attr a) {
+            attrs.push_back(std::move(a));
+        }
+        Attr const* findAttr(std::string_view name) const {
+            for (const auto& x : attrs) {
+                if (x.getAttrName() == name)
+                    return &x;
+            }
+            return nullptr;
+        }
+        Attr* findAttr(std::string_view name) {
+            for (auto& x : attrs) {
+                if (x.getAttrName() == name)
+                    return &x;
+            }
+            return nullptr;
+        }
+
+      private:
+        std::string name;
         std::vector<Attr> attrs;
     };
 
-    struct Key {
+    class Key {
+      public:
+        explicit Key(std::string name) : key(std::move(name)) {};
+        std::string_view getName() const {
+            return key;
+        }
+        const std::vector<Key>& getChildren() const {
+            return children;
+        }
+        std::vector<Key>& getChildren() {
+            return children;
+        }
+
+        const std::vector<Value>& getValues() const {
+            return values;
+        }
+        std::vector<Value>& getValues() {
+            return values;
+        }
+
+        void addChild(Key k) {
+            children.push_back(std::move(k));
+        }
+        void addValue(Value v) {
+            values.push_back(std::move(v));
+        }
+        Key* findChild(std::string_view name) {
+            for (auto& x : children) {
+                if (x.getName() == name)
+                    return &x;
+            }
+            return nullptr;
+        }
+        Value* findValue(std::string_view name) {
+            for (auto& x : values) {
+                if (x.getName() == name)
+                    return &x;
+            }
+            return nullptr;
+        }
+
+      private:
         std::string key;
         std::vector<Key> children;
         std::vector<Value> values;
