@@ -183,7 +183,7 @@ namespace Trd {
         explicit Attr(std::string name, TregAttrDatatype dtype, Payload payload) :
             attributeName(std::move(name)), type(dtype), payload(std::move(payload)) {};
 
-        std::string_view getAttrName() const {
+        std::string_view getName() const {
             return attributeName;
         }
         TregAttrDatatype getAttrDataType() const {
@@ -253,14 +253,14 @@ namespace Trd {
         }
         Attr const* findAttr(std::string_view name) const {
             for (const auto& x : attrs) {
-                if (x.getAttrName() == name)
+                if (x.getName() == name)
                     return &x;
             }
             return nullptr;
         }
         Attr* findAttr(std::string_view name) {
             for (auto& x : attrs) {
-                if (x.getAttrName() == name)
+                if (x.getName() == name)
                     return &x;
             }
             return nullptr;
