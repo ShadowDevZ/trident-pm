@@ -33,7 +33,7 @@ namespace Trd {
         u8_bool = 10,
         cstr = 11, // null terminated
         binDataLE = 12,
-        binDataBE = 13 //not implemented currently
+        //   binDataBE = 13 //not implemented currently
     };
 
     struct TregHeader : Impl::SerializableData {
@@ -140,6 +140,7 @@ namespace Trd {
         //
         u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         using TrivialData = std::array<std::byte, 8>;
+        // using TrivialData = std::byte[8];
         std::variant<TrivialData, PayloadPoolData> payload;
 
         static constexpr int attrRecordSize() {
@@ -175,7 +176,7 @@ namespace Trd {
         u8_bool = 10,
         cstr = 11, // null terminated
         binDataLE = 12,
-        binDataBE = 13 //not implemented cu*/
+       */
       public:
         using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, float, double, bool,
                                      std::string, std::vector<std::byte>>; //add later

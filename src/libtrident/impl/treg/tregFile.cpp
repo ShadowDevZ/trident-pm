@@ -1,4 +1,4 @@
-#include "tregDefs.h"
+#include "tregFile.h"
 #include "dtbl/section/dynamicTable.h"
 using namespace Trd;
 using namespace Trd::Impl;

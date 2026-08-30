@@ -4,9 +4,10 @@
 #include <optional>
 #include "trderr.h"
 #include "dynamicTable.h"
-#include "tregDefs.h"
+#include "tregFile.h"
 #include "binarySerializer.h"
 #include <ranges>
+#include <cstring>
 /*
 this will be the most complex part of the whole format and WILL be rewritten multiple times
 because it will be bug infested mess if we want things as in place operations and such in future
@@ -66,37 +67,12 @@ namespace Trd {
         //  std::vector<TregAttrRecord> attrs;
         //  std::vector<std::byte> dataPool;
         using PoolData = std::vector<std::byte>;
-        struct KeyMapPool {
-            const Trd::Key* key;
-            u32 childStart{0};
-            u32 childCount{0};
-        };
-        static std::vector<KeyMapPool> iGetKeyPoolMap(const Key& root) {
-            std::vector<KeyMapPool> plan;
-            plan.push_back({&root, 0, 0});
-            for (size_t i = 0; i < plan.size(); ++i) {
-                std::vector<const Trd::Key*> sorted = iSortByName(plan[i].key->getChildren());
-                plan[i].childStart = static_cast<u32>(plan.size());
-                plan[i].childCount = static_cast<u32>(sorted.size());
-                for (const Key* k : sorted) {
-                    plan.push_back({k, 0, 0});
-                }
-            }
-            return plan;
-        }
+        struct KeyMapPool;
+        static std::vector<KeyMapPool> iRecordKeys(const Key& root);
         //helper, adds data to the datapool and returns the offset to the name and its length
-        static std::pair<u32, u16> iPoolAppendName(PoolData& p, std::string_view name) {
-            u32 offset = static_cast<u32>(p.size());
-            const auto* data = reinterpret_cast<const std::byte*>(name.data());
-            p.insert(p.end(), data, data + name.size());
-            return {offset, static_cast<u16>(name.size())};
-        }
-        static u32 iPoolAppendBytes(PoolData& p, std::span<const std::byte> bytes) {
-            u32 offset = static_cast<u32>(p.size());
-            p.insert(p.end(), reinterpret_cast<const std::byte*>(bytes.data()),
-                     reinterpret_cast<const std::byte*>(bytes.data() + bytes.size_bytes()));
-            return offset;
-        }
+        static std::pair<u32, u16> iPoolAppendName(PoolData& p, std::string_view name);
+        //helper for std::visit
+        static u32 iPoolAppendBytes(PoolData& p, std::span<const std::byte> bytes);
 
         template <typename T>
         static std::vector<const T*> iSortByName(const std::vector<T>& t) {
@@ -108,10 +84,9 @@ namespace Trd {
             std::ranges::sort(sorted, {}, [](const T* p) { return p->getName(); });
             return sorted;
         }
-
-        bool iRecordKeys();
-        bool iRecordValues();
-        bool iRecordAttributes();
+        static TregAttrRecord iRecordAttributes(const Attr& attr, PoolData& pool);
+        static TregValueRecord iRecordValues(const Value& val, PoolData& pool,
+                                             std::vector<TregAttrRecord>& attrRec);
 
       public:
         std::expected<std::vector<std::byte>, Trd::Err::TrdError> build(const Trd::Key& root);

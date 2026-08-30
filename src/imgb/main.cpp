@@ -9,7 +9,7 @@
 #include "systemspecific/common/include/filemgmnt.h"
 #include "dynamicTable.h"
 #include "mainDbgHelp.h"
-#include "treg/tregDefs.h"
+#include "treg/tregFile.h"
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
 
