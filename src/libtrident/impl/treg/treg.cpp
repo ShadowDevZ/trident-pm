@@ -72,8 +72,83 @@ TregValueRecord TregHiveSerializer::iRecordValues(const Value& val, PoolData& po
     std::vector<const Attr*> sortedAttrs = iSortByName(val.getAttrs());
     valRec.attrFirstIndex = static_cast<u32>(attrRec.size());
     valRec.attrCount = static_cast<u16>(sortedAttrs.size());
+
     for (const Attr* a : sortedAttrs) {
         attrRec.push_back(iRecordAttributes(*a, pool));
     }
     return valRec;
+}
+
+std::expected<std::vector<std::byte>, Trd::Err::TrdError>
+TregHiveSerializer::build(const Trd::Key& root) {
+    auto keys = iRecordKeys(root);
+
+    std::vector<TregKeyRecord> keyRec(keys.size());
+    std::vector<TregValueRecord> valRec;
+    std::vector<TregAttrRecord> attrRec;
+    PoolData pool;
+    for (size_t i = 0; i < keys.size(); ++i) {
+        const Key& k = *keys[i].key;
+        auto [nameOff, nameLen] = iPoolAppendName(pool, k.getName());
+        keyRec[i].keyNameLength = nameLen;
+        keyRec[i].keyNameOffset = nameOff;
+        keyRec[i].childKeysCount = keys[i].childCount;
+        keyRec[i].firstChildKeyIndex = keys[i].childStart;
+
+        std::vector<const Value*> sortedVal = iSortByName(k.getValues());
+        keyRec[i].firstValIndex = static_cast<u32>(valRec.size());
+        keyRec[i].valueCount = static_cast<u16>(sortedVal.size());
+        for (const auto* v : sortedVal) {
+            valRec.push_back(iRecordValues(*v, pool, attrRec));
+        }
+    }
+    return serializeData(keyRec, valRec, attrRec, pool);
+}
+
+std::vector<std::byte> TregHiveSerializer::serializeData(const std::vector<TregKeyRecord>& keys,
+                                                         const std::vector<TregValueRecord>& val,
+                                                         const std::vector<TregAttrRecord>& attr,
+                                                         const PoolData& pool) {
+    const auto poolSize = pool.size() * sizeof(std::byte);
+    const u64 bodySize = (keys.size() * TregKeyRecord::keyRecordSize()) +
+        (val.size() * TregValueRecord::valueRecordSize() +
+         (attr.size() * TregAttrRecord::attrRecordSize())) +
+        (poolSize);
+
+    TregHeader hdr;
+    hdr.magic = Trd::Consts::Treg::TREG_MAGIC;
+    hdr.keyEntriesCount = static_cast<u32>(keys.size());
+    hdr.valEntriesCount = static_cast<u32>(val.size());
+    hdr.attrEntriesCount = static_cast<u32>(attr.size());
+    hdr.poolSize = poolSize;
+    hdr._reserved1 = 0;
+
+    std::vector<std::byte> bodyData(bodySize);
+    //serializeEntity(hdr, bodyData);
+    serializeEntity(keys, bodyData);
+    serializeEntity(val, bodyData);
+    serializeEntity(attr, bodyData);
+    bodyData.append_range(std::move(pool));
+
+    Impl::Crc32Gen crcGenerator;
+    crcGenerator.addData(bodyData);
+    hdr.checksum = crcGenerator.getCrc32();
+    auto hdrOpt = hdr.serialize();
+    if (!hdrOpt)
+        throw std::runtime_error("theader serialization failed");
+    auto outData = hdrOpt.value();
+    outData.append_range(std::move(bodyData));
+
+    return outData;
+
+    //we can only now add the header at begging because the checksum doesnt calculate the header
+
+    /*
+    for (const auto& k : keys) {
+        const auto serializedK = k.serialize();
+        if (!serializedK)
+            throw std::runtime_error("failed to serialize tkey");
+        bodyData.append_range(std::move(serializedK.value()));
+    }
+   */
 }

@@ -84,11 +84,27 @@ namespace Trd {
             std::ranges::sort(sorted, {}, [](const T* p) { return p->getName(); });
             return sorted;
         }
+        template <typename T>
+        static void serializeEntity(const T& t, std::vector<std::byte>& out) {
+            for (const auto& x : t) {
+                const auto serialized = x.serialize();
+                if (!serialized)
+                    throw std::runtime_error("failed to serialize entity");
+                out.append_range(std::move(serialized.value()));
+            }
+        }
+
         static TregAttrRecord iRecordAttributes(const Attr& attr, PoolData& pool);
         static TregValueRecord iRecordValues(const Value& val, PoolData& pool,
                                              std::vector<TregAttrRecord>& attrRec);
 
+        static std::vector<std::byte> serializeData(const std::vector<TregKeyRecord>& keys,
+                                                    const std::vector<TregValueRecord>& val,
+                                                    const std::vector<TregAttrRecord>& attr,
+                                                    const PoolData& pool);
+
       public:
-        std::expected<std::vector<std::byte>, Trd::Err::TrdError> build(const Trd::Key& root);
+        static std::expected<std::vector<std::byte>, Trd::Err::TrdError>
+        build(const Trd::Key& root);
     };
 };

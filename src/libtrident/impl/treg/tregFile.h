@@ -53,7 +53,7 @@ namespace Trd {
         u32 attrEntriesCount;
         u64 poolSize;
         u32 checksum; //everything after header until the end of treg section
-        u16 _reserved1;
+        u16 _reserved1 = 0;
 
         static constexpr int headerSize() {
             return 32;
@@ -214,7 +214,7 @@ namespace Trd {
         static Attr fillTrivial(std::string name, TregAttrDatatype type, T value,
                                 std::endian forceByteOrder = std::endian::native) {
 
-            Impl::BinarySerializer bs(forceByteOrder, true);
+            Impl::BinarySerializer bs(forceByteOrder, false);
             bs.addTrivial(value);
             auto fmt = bs.getFormattedData();
             if (!fmt)

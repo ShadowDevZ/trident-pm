@@ -10,6 +10,7 @@
 #include "dynamicTable.h"
 #include "mainDbgHelp.h"
 #include "treg/tregFile.h"
+#include "treg/treg.h"
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
 
@@ -148,6 +149,25 @@ int main(void) {
         dbgprintf("eread!fail\n");
         return 1;
     }
+    Value v1("v1");
+    v1.addAttr(Attr::dataU32("first attr", 56));
+    v1.addAttr(Attr::dataU16("second attr", 12));
+    Key k1("keystore");
+    k1.addValue(std::move(v1));
+
+    Key k2("top");
+    Value v2("v2");
+    v2.addAttr(Attr::dataU64("random attr", 0xFCCC));
+    k2.addValue(v2);
+
+    Key kRoot("root");
+    kRoot.addChild(std::move(k1));
+    kRoot.addChild(std::move(k2));
+
+    auto treg = TregHiveSerializer::build(kRoot).value();
+    Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), treg, false,
+                                               dtblOffset + dummySize + 6);
+    /*
     TregHeader testHeader{};
     testHeader.poolSize = 0xBEBACCCCCAFF;
     testHeader._reserved1 = 0;
@@ -155,6 +175,7 @@ int main(void) {
     const auto tregData = testHeader.serialize().value();
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), tregData, false,
                                                dtblOffset + dummySize + 6);
+*/
 
     // ltTrPkg.getTstream().setSeekPos(0, std::ios::end);
     // ltTrPkg.getTstream().writePadding(12, 0xCC);

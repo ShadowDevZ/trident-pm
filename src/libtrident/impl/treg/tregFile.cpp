@@ -28,7 +28,7 @@ std::optional<std::vector<std::byte>> TregKeyRecord::serialize() const {
     if (identifier != Consts::Treg::KEY_REC_ID) // todo checksum
         return std::nullopt;
 
-    Trd::Impl::BinarySerializer bs;
+    Trd::Impl::BinarySerializer bs(std::endian::native, false);
     bs.addTrivial(identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
                   firstValIndex, valueCount, recordChecksum);
     return bs.getFormattedData();
@@ -49,14 +49,14 @@ std::optional<std::vector<std::byte>> TregValueRecord::serialize() const {
     if (identifier != Consts::Treg::VAL_REC_ID) // todo checksum
         return std::nullopt;
 
-    Trd::Impl::BinarySerializer bs;
+    Trd::Impl::BinarySerializer bs(std::endian::native, false);
     bs.addTrivial(identifier, valNameOffset, valNameLength, attrFirstIndex, attrCount,
                   recordChecksum);
     return bs.getFormattedData();
 }
 
 bool TregValueRecord::deserialize(const std::vector<std::byte>& dataIn) {
-    Impl::BinarySerializer bs(dataIn);
+    Trd::Impl::BinarySerializer bs(std::endian::native, false);
 
     bs.readTrivial(identifier, valNameOffset, valNameLength, attrFirstIndex, attrCount,
                    recordChecksum);
@@ -71,7 +71,7 @@ std::optional<std::vector<std::byte>> TregAttrRecord::serialize() const {
     if (identifier != Consts::Treg::ATTR_REC_ID) // todo checksum
         return std::nullopt;
 
-    Trd::Impl::BinarySerializer bs;
+    Trd::Impl::BinarySerializer bs(std::endian::native, false);
 
     bs.addTrivial(identifier, attrNamePoolOffset, attrNameLength, datatype, recordChecksum);
     if (AttrIsTrivial(datatype) && std::holds_alternative<TrivialData>(payload)) {
