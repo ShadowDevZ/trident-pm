@@ -128,7 +128,8 @@ std::vector<std::byte> TregHiveSerializer::serializeData(const std::vector<TregK
     hdr.poolSize = poolSize;
     hdr._reserved1 = 0;
 
-    std::vector<std::byte> bodyData(bodySize);
+    std::vector<std::byte> bodyData;
+    bodyData.reserve(bodySize);
     //serializeEntity(hdr, bodyData);
     serializeEntity(keys, bodyData);
     serializeEntity(val, bodyData);
