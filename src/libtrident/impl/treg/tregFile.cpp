@@ -107,6 +107,53 @@ bool TregAttrRecord::deserialize(const std::vector<std::byte>& dataIn) {
     }
     return true;
 }
+void TregHeader::dbgInfoPrint() const {
+    dbgprintf("\x1B[33m  [TregHeader]\n"
+              "\tmagic: 0x%X\n\tflags: %u\n\tkeyEntriesCount: %u\n"
+              "\tvalEntriesCount: %u\n\tattrEntriesCount: %u\n"
+              "\tpoolSize: %lu\n\tchecksum: 0x%X\n\t_reserved1: %u\n  [TregHeader]\n\x1B[0m",
+              magic, static_cast<u8>(flags), keyEntriesCount, valEntriesCount, attrEntriesCount,
+              poolSize, checksum, _reserved1);
+}
+
+void TregKeyRecord::dbgInfoPrint() const {
+    dbgprintf(
+        "\x1B[33m  [TregKR]\n"
+        "\tidentifier: 0x%X\n\tkeyNameOffset: %u\n\tkeyNameLength: %u\n"
+        "\tfirstChildKeyIndex: %u\n\tchildKeysCount: %u\n"
+        "\tfirstValIndex: %u\n\tvalueCount: 0x%X\n\trecordChecksum: 0x%X\n  [TregKR]\n\x1B[0m",
+        identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount, firstValIndex,
+        valueCount, recordChecksum);
+}
+void TregValueRecord::dbgInfoPrint() const {
+    dbgprintf("\x1B[33m  [TregVR]\n"
+              "\tidentifier: 0x%X\n\tvalNameOffset: %u\n\tvalNameLength: %u\n"
+              "\tattrFirstIndex: %u\n\tattrCount: %u\n\trecordChecksum: 0x%X\n  [TregVR]\n\x1B[0m",
+              identifier, valNameOffset, valNameLength, attrFirstIndex, attrCount, recordChecksum);
+}
+
+void TregAttrRecord::dbgInfoPrint() const {
+    dbgprintf("\x1B[33m  [TregAR]\n"
+              "\tidentifier: 0x%X\n\tattrNamePoolOffset: %u\n\tattrNameLength: %u\n"
+              "\tdatatype: %u\n\trecordChecksum: 0x%x\n",
+              identifier, attrNamePoolOffset, attrNameLength, static_cast<u8>(datatype),
+              recordChecksum);
+    if (std::holds_alternative<TrivialData>(payload)) {
+        TrivialData td = std::get<TrivialData>(payload);
+        dbgprintf("\tpayload:Trivial\n\t[ ");
+        for (const auto& x : td) {
+            dbgprintf("%02X ", static_cast<u8>(x));
+        }
+        dbgprintf("]\n");
+    } else if (std::holds_alternative<PayloadPoolData>(payload)) {
+        PayloadPoolData ppd = std::get<PayloadPoolData>(payload);
+        dbgprintf("\tpayload:PoolData\n\tppdOffset: %u\n\tppdSize: %u\n", ppd.payloadPoolOffset,
+                  ppd.payloadSize);
+    } else {
+        dbgprintf("payload:INVALID_DATA\n");
+    }
+    dbgprintf("  [TregAR]\n\x1B[0m");
+}
 //std::optional<Impl::Crc32Gen> TregHeader::checksumCRC32() const {
 //    return std::nullopt;
 //}

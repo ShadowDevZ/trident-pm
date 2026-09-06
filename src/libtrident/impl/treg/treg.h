@@ -45,6 +45,11 @@ also we need an interface for CELLDATA tables so the tables are required to fill
 
 each cell should contain header crc ?
 */
+
+/*
+TODO add string and bytes support, restrict key names to [A-Za-z0-9_-]
+fill in record checksums they are invalid
+*/
 namespace Trd {
     class TrPkg;
 
@@ -90,6 +95,7 @@ namespace Trd {
                 const auto serialized = x.serialize();
                 if (!serialized)
                     throw std::runtime_error("failed to serialize entity");
+                x.dbgInfoPrint();
                 out.append_range(std::move(serialized.value()));
             }
         }

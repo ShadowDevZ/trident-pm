@@ -45,5 +45,12 @@ namespace Trd::Impl {
         virtual std::optional<Impl::Crc32Gen> checksumCRC32() const {
             return std::nullopt;
         }
+        /**
+         * @brief debug only function that prints to the stdout info about class if available.
+         * For debug purposes only may be removed in future
+         */
+        virtual void dbgInfoPrint() const {
+            return;
+        }
     };
 }

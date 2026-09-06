@@ -149,23 +149,24 @@ int main(void) {
         dbgprintf("eread!fail\n");
         return 1;
     }
-    Value v1("v1");
-    v1.addAttr(Attr::dataU32("first attr", 56));
-    v1.addAttr(Attr::dataU16("second attr", 12));
-    Key k1("keystore");
+    Value v1("__VALUE1__");
+    v1.addAttr(Attr::dataU32("first attr", UINT32_MAX));
+    v1.addAttr(Attr::dataU16("second attr", UINT16_MAX));
+    Key k1("__KEYstore__");
     k1.addValue((v1));
 
-    Key k2("top");
-    Value v2("v2");
-    v2.addAttr(Attr::dataU64("random attr", 0xFCCC));
+    Key k2("__KEY2__");
+    Value v2("__VALUE2__");
+    v2.addAttr(Attr::dataU64("random attr", UINT64_MAX));
     k2.addValue(v2);
 
-    Key kRoot("root");
+    Key kRoot("\\\\ROOTFS-/.");
     kRoot.addChild(std::move(k1));
     kRoot.addChild(std::move(k2));
     // dbgprintf("XPassTregDataAttr:%u\n",
     //         (u8)v1.getAttrs().at(0).getPayload().index()); //okay so it gets passed wrongly here
     auto treg = TregHiveSerializer::build(kRoot).value();
+    dbgprintf("actual_size: %luB\n", treg.size());
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), treg, false,
                                                dtblOffset + dummySize + 6);
     /*
@@ -182,7 +183,7 @@ int main(void) {
     // ltTrPkg.getTstream().writePadding(12, 0xCC);
 
 #ifdef _LIBTRIDENT_DEBUG
-    print_sd(rbSd);
+    //  print_sd(rbSd);
 #endif
 
     std::cout << "Exit(0)\n";

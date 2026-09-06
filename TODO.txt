@@ -1,5 +1,8 @@
 Ltrident/
 
+TODO add string and bytes support, restrict key names to [A-Za-z0-9_-]
+fill in record checksums they are invalid
+
 /current goal
 
 /dynamic tables

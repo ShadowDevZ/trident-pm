@@ -138,7 +138,10 @@ std::vector<std::byte> TregHiveSerializer::serializeData(const std::vector<TregK
 
     Impl::Crc32Gen crcGenerator;
     crcGenerator.addData(bodyData);
+    dbgprintf("TREG_CKSUM: 0x%X\nexpected:size: %uB\n", crcGenerator.getCrc32(),
+              bodySize + TregHeader::headerSize());
     hdr.checksum = crcGenerator.getCrc32();
+    hdr.dbgInfoPrint();
     auto hdrOpt = hdr.serialize();
     if (!hdrOpt)
         throw std::runtime_error("theader serialization failed");

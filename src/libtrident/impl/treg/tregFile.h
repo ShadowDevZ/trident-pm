@@ -69,6 +69,7 @@ namespace Trd {
         std::optional<std::vector<std::byte>> serialize() const override;
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
+        void dbgInfoPrint() const override;
         //doesnt make sense here, only in final TregObject
         //  std::optional<Impl::Crc32Gen> checksumCRC32() const;
     };
@@ -101,6 +102,7 @@ namespace Trd {
         std::optional<std::vector<std::byte>> serialize() const override;
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
+        void dbgInfoPrint() const override;
     };
 
     struct TregValueRecord : Impl::SerializableData {
@@ -123,6 +125,7 @@ namespace Trd {
         std::optional<std::vector<std::byte>> serialize() const override;
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
+        void dbgInfoPrint() const override;
     };
     struct TregAttrRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::ATTR_REC_ID;
@@ -158,6 +161,7 @@ namespace Trd {
         std::optional<std::vector<std::byte>> serialize() const override;
 
         bool deserialize(const std::vector<std::byte>& dataIn) override;
+        void dbgInfoPrint() const override;
     };
 
     class Attr {
