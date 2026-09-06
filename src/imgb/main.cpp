@@ -153,7 +153,7 @@ int main(void) {
     v1.addAttr(Attr::dataU32("first attr", 56));
     v1.addAttr(Attr::dataU16("second attr", 12));
     Key k1("keystore");
-    k1.addValue(std::move(v1));
+    k1.addValue((v1));
 
     Key k2("top");
     Value v2("v2");
@@ -163,7 +163,8 @@ int main(void) {
     Key kRoot("root");
     kRoot.addChild(std::move(k1));
     kRoot.addChild(std::move(k2));
-
+    // dbgprintf("XPassTregDataAttr:%u\n",
+    //         (u8)v1.getAttrs().at(0).getPayload().index()); //okay so it gets passed wrongly here
     auto treg = TregHiveSerializer::build(kRoot).value();
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), treg, false,
                                                dtblOffset + dummySize + 6);

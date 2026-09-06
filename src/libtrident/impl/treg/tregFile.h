@@ -198,29 +198,16 @@ namespace Trd {
         }
 
         static Attr dataU8(std::string n, u8 v) {
-            return fillTrivial(std::move(n), TregAttrDatatype::u8, v);
+            return Attr(std::move(n), TregAttrDatatype::u8, v);
         }
         static Attr dataU16(std::string n, u16 v) {
-            return fillTrivial(std::move(n), TregAttrDatatype::u16, v);
+            return Attr(std::move(n), TregAttrDatatype::u16, v);
         }
         static Attr dataU32(std::string n, u32 v) {
-            return fillTrivial(std::move(n), TregAttrDatatype::u32, v);
+            return Attr(std::move(n), TregAttrDatatype::u32, v);
         }
         static Attr dataU64(std::string n, u64 v) {
-            return fillTrivial(std::move(n), TregAttrDatatype::u64, v);
-        }
-        //fill later
-        template <typename T>
-        static Attr fillTrivial(std::string name, TregAttrDatatype type, T value,
-                                std::endian forceByteOrder = std::endian::native) {
-
-            Impl::BinarySerializer bs(forceByteOrder, false);
-            bs.addTrivial(value);
-            auto fmt = bs.getFormattedData();
-            if (!fmt)
-                throw std::runtime_error("Attribute data could not be properly serialized");
-
-            return Attr(std::move(name), type, std::move(fmt.value()));
+            return Attr(std::move(n), TregAttrDatatype::u64, v);
         }
 
         template <typename T>
