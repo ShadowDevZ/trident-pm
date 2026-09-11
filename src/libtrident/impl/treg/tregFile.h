@@ -11,6 +11,12 @@ namespace Trd::Consts::Treg {
     inline constexpr u16 KEY_REC_ID = 0x526B; //kR (BE)
     inline constexpr u16 VAL_REC_ID = 0x5276; //vR (BE)
     inline constexpr u16 ATTR_REC_ID = 0x5261; //aR (BE)
+    //stored string is not guaranteed to be null terminated
+    inline constexpr u16 KEYNAME_MAXLEN = 0xFFFF;
+    /*limit for the string/vector for value, 64KiB, treg is NOT a file storage
+    but a metadata registry container, if you need to store large data use DTBL API
+    */
+    inline constexpr u32 VALUE_MAXSIZE = (64 * 1024);
 };
 
 namespace Trd {
@@ -28,12 +34,11 @@ namespace Trd {
         u16 = 5,
         u32 = 6,
         u64 = 7,
-        f32 = 8,
-        f64 = 9,
         u8_bool = 10,
-        cstr = 11, // null terminated
+        cstr = 11,
         binDataLE = 12,
         //   binDataBE = 13 //not implemented currently
+        //symLink = 14 // link to another key,value
     };
 
     struct TregHeader : Impl::SerializableData {
@@ -74,6 +79,7 @@ namespace Trd {
         //  std::optional<Impl::Crc32Gen> checksumCRC32() const;
     };
     //singular key record
+    //all sizes are checked in Key class that fills this record, this class must NOT be used directly
     struct TregKeyRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::KEY_REC_ID; // just a mark to fill instead of padding
         u32 keyNameOffset; //offset in flat vector
@@ -104,7 +110,7 @@ namespace Trd {
         bool deserialize(const std::vector<std::byte>& dataIn) override;
         void dbgInfoPrint() const override;
     };
-
+    //all sizes are checked in Value class that fills this record, this class must NOT be used directly
     struct TregValueRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::VAL_REC_ID;
         u32 valNameOffset;
@@ -127,6 +133,7 @@ namespace Trd {
         bool deserialize(const std::vector<std::byte>& dataIn) override;
         void dbgInfoPrint() const override;
     };
+    //all sizes are checked in Attr class that fills this record, this class must NOT be used directly
     struct TregAttrRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::ATTR_REC_ID;
         u32 attrNamePoolOffset;
@@ -175,18 +182,33 @@ namespace Trd {
         u16 = 5,
         u32 = 6,
         u64 = 7,
-        f32 = 8,
-        f64 = 9,
+       
         u8_bool = 10,
         cstr = 11, // null terminated
         binDataLE = 12,
        */
       public:
-        using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, float, double, bool,
-                                     std::string, std::vector<std::byte>>; //add later
+        //decimal numbers are represented as a string
+        using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, std::string,
+                                     std::vector<std::byte>>; //add later
 
         explicit Attr(std::string name, TregAttrDatatype dtype, Payload payload) :
-            attributeName(std::move(name)), type(dtype), payload(std::move(payload)) {};
+            attributeName(std::move(name)), type(dtype), payload(std::move(payload)) {
+            [[unlikely]]
+            //check key name length size
+            if (attributeName.length() > Consts::Treg::KEYNAME_MAXLEN)
+                throw std::runtime_error("Name exceeded max char limit");
+            //check if payload variant size is valid
+            std::visit(
+                [&](const auto& v) {
+                    if (sizeof(v) > Consts::Treg::VALUE_MAXSIZE)
+                        throw std::runtime_error(
+                            "Exceeded max data length limit of " +
+                            std::to_string(Consts::Treg::VALUE_MAXSIZE) + "B by " +
+                            std::to_string(Consts::Treg::VALUE_MAXSIZE - sizeof(v)) + "B");
+                },
+                this->payload);
+        };
 
         std::string_view getName() const {
             return attributeName;
@@ -201,17 +223,40 @@ namespace Trd {
             payload = std::move(p);
         }
 
+        static Attr dataI8(std::string n, i8 v) {
+            return Attr(std::move(n), TregAttrDatatype::i8, v);
+        }
         static Attr dataU8(std::string n, u8 v) {
             return Attr(std::move(n), TregAttrDatatype::u8, v);
+        }
+        static Attr dataI16(std::string n, i16 v) {
+            return Attr(std::move(n), TregAttrDatatype::i16, v);
         }
         static Attr dataU16(std::string n, u16 v) {
             return Attr(std::move(n), TregAttrDatatype::u16, v);
         }
+        static Attr dataI32(std::string n, i32 v) {
+            return Attr(std::move(n), TregAttrDatatype::i32, v);
+        }
         static Attr dataU32(std::string n, u32 v) {
             return Attr(std::move(n), TregAttrDatatype::u32, v);
         }
+        static Attr dataI64(std::string n, i64 v) {
+            return Attr(std::move(n), TregAttrDatatype::i64, v);
+        }
         static Attr dataU64(std::string n, u64 v) {
             return Attr(std::move(n), TregAttrDatatype::u64, v);
+        }
+        static Attr dataBool(std::string n, bool v) {
+            return Attr(std::move(n), TregAttrDatatype::u8_bool,
+                        static_cast<u8>(u8bool::fromBool(v)));
+        }
+        static Attr dataString(std::string n, std::string v) {
+            return Attr(std::move(n), TregAttrDatatype::cstr, std::move(v));
+        }
+        static Attr dataBinData(std::string n, std::span<std::byte> v) {
+            return Attr(std::move(n), TregAttrDatatype::binDataLE,
+                        std::vector<std::byte>{v.begin(), v.end()});
         }
 
         template <typename T>
@@ -240,9 +285,21 @@ namespace Trd {
         std::vector<Attr>& getAttrs() {
             return attrs;
         }
-        void addAttr(Attr a) {
-            attrs.push_back(std::move(a));
+        inline void updateAttr(const Attr& a) {
+            IManageAttr(a, true);
         }
+        inline void createAttr(const Attr& a) {
+            IManageAttr(a, false);
+        }
+        /**
+         * @brief Deletes attribute from list
+         * 
+         * @param name 
+         * @return true if attribute was found and deleted
+         * @return false if attribute does not exist
+         */
+        bool deleteAttr(std::string_view name);
+
         Attr const* findAttr(std::string_view name) const {
             for (const auto& x : attrs) {
                 if (x.getName() == name)
@@ -261,6 +318,8 @@ namespace Trd {
       private:
         std::string name;
         std::vector<Attr> attrs;
+
+        void IManageAttr(const Attr& a, bool overwrite);
     };
 
     class Key {
@@ -316,5 +375,4 @@ namespace Trd {
             return true;
         return false;
     };
-
 };

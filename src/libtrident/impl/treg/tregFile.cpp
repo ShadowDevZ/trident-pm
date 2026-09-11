@@ -154,6 +154,36 @@ void TregAttrRecord::dbgInfoPrint() const {
     }
     dbgprintf("  [TregAR]\n\x1B[0m");
 }
+
+void Value::IManageAttr(const Attr& a, bool overwrite) {
+    bool foundDuplicit = false;
+    for (const auto& x : attrs) {
+        if (x.getName() == a.getName()) {
+            foundDuplicit = true;
+            break;
+        }
+    }
+    if (foundDuplicit && !overwrite) {
+        throw std::runtime_error("Tried to add existing value");
+    } else if (foundDuplicit && overwrite) {
+        Attr* oldAttr = findAttr(a.getName());
+        [[unlikely]]
+        if (oldAttr == nullptr) //just in case
+            throw std::runtime_error("Attribute does not exist");
+        *oldAttr = a; //replace the old one
+
+    } else {
+        attrs.push_back(std::move(a));
+    }
+}
+
+bool Value::deleteAttr(std::string_view name) {
+    auto noDeleted =
+        std::erase_if(attrs, [name](const Attr& attr) { return attr.getName() == name; });
+    if (noDeleted == 0)
+        return false;
+    return true;
+}
 //std::optional<Impl::Crc32Gen> TregHeader::checksumCRC32() const {
 //    return std::nullopt;
 //}

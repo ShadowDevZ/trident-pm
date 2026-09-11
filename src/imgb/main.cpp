@@ -11,6 +11,7 @@
 #include "mainDbgHelp.h"
 #include "treg/tregFile.h"
 #include "treg/treg.h"
+#include <array>
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
 
@@ -149,15 +150,21 @@ int main(void) {
         dbgprintf("eread!fail\n");
         return 1;
     }
+    //this is only testing interface, actual end user interface will feature registry path
+    // like usage without the details. TODO ALSO CHECK CHARSET emojis and special symbols arent allowed
     Value v1("__VALUE1__");
-    v1.addAttr(Attr::dataU32("first attr", UINT32_MAX));
-    v1.addAttr(Attr::dataU16("second attr", UINT16_MAX));
+    v1.createAttr(Attr::dataU32("first attr", UINT32_MAX));
+    v1.createAttr(Attr::dataU16("second attr", UINT16_MAX));
     Key k1("__KEYstore__");
     k1.addValue((v1));
 
     Key k2("__KEY2__");
     Value v2("__VALUE2__");
-    v2.addAttr(Attr::dataU64("random attr", UINT64_MAX));
+    v2.createAttr(Attr::dataString("random attr", "(((((((DATA)))))))"));
+    std::array<std::byte, 3> binData = {std::byte{1}, std::byte{2}, std::byte{3}};
+
+    v2.updateAttr(Attr::dataBinData("random attr", binData));
+    v2.deleteAttr("random attr");
     k2.addValue(v2);
 
     Key kRoot("\\\\ROOTFS-/.");
