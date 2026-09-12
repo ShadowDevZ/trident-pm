@@ -149,15 +149,15 @@ namespace Trd::Err {
             secondaryError.reset();
         }
         /// returns user friendly primary error as string
-        std::string_view getErrorAsString() const noexcept {
+        std::string getErrorAsString() const noexcept {
             return TrdError::translateError(primaryError);
         }
         /// @brief translates primary error code to string
         /// @param primary primary error code
         /// @return translated string
-        static std::string_view translateError(Trd::Err::Code primary) noexcept;
+        static std::string translateError(Trd::Err::Code primary) noexcept;
 
-        static std::string_view translateError(const TrdError& trdErr) noexcept {
+        static std::string translateError(const TrdError& trdErr) noexcept {
             return translateError(trdErr.primaryError);
         }
         friend std::ostream& operator<<(std::ostream& os, const TrdError& m) {

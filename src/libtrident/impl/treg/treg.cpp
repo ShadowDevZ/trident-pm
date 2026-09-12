@@ -33,13 +33,13 @@ u32 TregHiveSerializer::iPoolAppendBytes(PoolData& p, std::span<const std::byte>
     return offset;
 }
 
-TregAttrRecord TregHiveSerializer::iRecordAttributes(const Attr& attr, PoolData& pool) {
+TregValueRecord TregHiveSerializer::iRecordValues(const Value& attr, PoolData& pool) {
     // dbgprintf("TregDataAttr:%u\n", (u8)attr.getPayload().index()); //why is this 12 ???
-    TregAttrRecord attrRec{};
+    TregValueRecord attrRec{};
     auto [nameOff, nameLen] = iPoolAppendName(pool, attr.getName());
-    attrRec.attrNamePoolOffset = nameOff;
-    attrRec.attrNameLength = nameLen;
-    attrRec.datatype = attr.getAttrDataType();
+    attrRec.valNamePoolOffset = nameOff;
+    attrRec.valNameLength = nameLen;
+    attrRec.datatype = attr.getValueDataType();
     auto payload = attr.getPayload();
 
     std::visit(
@@ -49,13 +49,13 @@ TregAttrRecord TregHiveSerializer::iRecordAttributes(const Attr& attr, PoolData&
                           std::is_same_v<T, std::vector<std::byte>>) {
                 u32 dataOff = iPoolAppendBytes(
                     pool, {reinterpret_cast<const std::byte*>(value.data()), value.size()});
-                TregAttrRecord::PayloadPoolData p;
+                TregValueRecord::PayloadPoolData p;
                 p.payloadPoolOffset = dataOff;
                 p.payloadSize = static_cast<u32>(value.size());
                 attrRec.payload = p;
                 //   dbgprintf("larlsadlasd\n\n\n\n\n");
             } else {
-                TregAttrRecord::TrivialData tData;
+                TregValueRecord::TrivialData tData;
                 std::memcpy(tData.data(), &value, sizeof(value));
                 attrRec.payload = tData;
             }
@@ -65,20 +65,20 @@ TregAttrRecord TregHiveSerializer::iRecordAttributes(const Attr& attr, PoolData&
     return attrRec;
 }
 //okay so attr payload is passsed wrongly
-TregValueRecord TregHiveSerializer::iRecordValues(const Value& val, PoolData& pool,
-                                                  std::vector<TregAttrRecord>& attrRec) {
-    TregValueRecord valRec{};
+TregEntryRecord TregHiveSerializer::iRecordEntries(const Entry& val, PoolData& pool,
+                                                   std::vector<TregValueRecord>& attrRec) {
+    TregEntryRecord valRec{};
     auto [nameOffset, nameLen] = iPoolAppendName(pool, val.getName());
-    valRec.valNameLength = nameLen;
-    valRec.valNameOffset = nameOffset;
-    std::vector<const Attr*> sortedAttrs = iSortByName(val.getAttrs());
-    valRec.attrFirstIndex = static_cast<u32>(attrRec.size());
-    valRec.attrCount = static_cast<u16>(sortedAttrs.size());
+    valRec.entryNameLength = nameLen;
+    valRec.entryNameOffset = nameOffset;
+    std::vector<const Value*> sortedAttrs = iSortByName(val.getValues());
+    valRec.valsFirstIndex = static_cast<u32>(attrRec.size());
+    valRec.valsCount = static_cast<u16>(sortedAttrs.size());
 
-    for (const Attr* a : sortedAttrs) {
+    for (const Value* a : sortedAttrs) {
         //  dbgprintf("%u\n", (u8)a->getAttrDataType());
-        dbgprintf("BeforePassTregDataAttr:%u\n", (u8)a->getPayload().index()); //why is this 12 ???
-        attrRec.push_back(iRecordAttributes(*a, pool));
+        //    dbgprintf("BeforePassTregDataAttr:%u\n", (u8)a->getPayload().index()); //why is this 12 ???
+        attrRec.push_back(iRecordValues(*a, pool));
     }
     return valRec;
 }
@@ -88,8 +88,8 @@ TregHiveSerializer::build(const Trd::Key& root) {
     auto keys = iRecordKeys(root);
 
     std::vector<TregKeyRecord> keyRec(keys.size());
-    std::vector<TregValueRecord> valRec;
-    std::vector<TregAttrRecord> attrRec;
+    std::vector<TregEntryRecord> entryRec;
+    std::vector<TregValueRecord> attrRec;
     PoolData pool;
     for (size_t i = 0; i < keys.size(); ++i) {
         const Key& k = *keys[i].key;
@@ -99,32 +99,32 @@ TregHiveSerializer::build(const Trd::Key& root) {
         keyRec[i].childKeysCount = keys[i].childCount;
         keyRec[i].firstChildKeyIndex = keys[i].childStart;
 
-        std::vector<const Value*> sortedVal = iSortByName(k.getValues());
-        keyRec[i].firstValIndex = static_cast<u32>(valRec.size());
-        keyRec[i].valueCount = static_cast<u16>(sortedVal.size());
+        std::vector<const Entry*> sortedVal = iSortByName(k.getEntries());
+        keyRec[i].firstEntryIndex = static_cast<u32>(entryRec.size());
+        keyRec[i].entryCount = static_cast<u16>(sortedVal.size());
         for (const auto* v : sortedVal) {
             //  dbgprintf("XPassTregDataAttr:%u\n", (u8)v->getAttrs().at(0).getPayload().index());
-            valRec.push_back(iRecordValues(*v, pool, attrRec));
+            entryRec.push_back(iRecordEntries(*v, pool, attrRec));
         }
     }
-    return serializeData(keyRec, valRec, attrRec, pool);
+    return serializeData(keyRec, entryRec, attrRec, pool);
 }
 
 std::vector<std::byte> TregHiveSerializer::serializeData(const std::vector<TregKeyRecord>& keys,
-                                                         const std::vector<TregValueRecord>& val,
-                                                         const std::vector<TregAttrRecord>& attr,
+                                                         const std::vector<TregEntryRecord>& val,
+                                                         const std::vector<TregValueRecord>& attr,
                                                          const PoolData& pool) {
     const auto poolSize = pool.size() * sizeof(std::byte);
     const u64 bodySize = (keys.size() * TregKeyRecord::keyRecordSize()) +
-        (val.size() * TregValueRecord::valueRecordSize() +
-         (attr.size() * TregAttrRecord::attrRecordSize())) +
+        (val.size() * TregEntryRecord::entryRecordSize() +
+         (attr.size() * TregValueRecord::valRecordSize())) +
         (poolSize);
 
     TregHeader hdr;
     hdr.magic = Trd::Consts::Treg::TREG_MAGIC;
-    hdr.keyEntriesCount = static_cast<u32>(keys.size());
-    hdr.valEntriesCount = static_cast<u32>(val.size());
-    hdr.attrEntriesCount = static_cast<u32>(attr.size());
+    hdr.subKeysCount = static_cast<u32>(keys.size());
+    hdr.subEntriesCount = static_cast<u32>(val.size());
+    hdr.subValsCount = static_cast<u32>(attr.size());
     hdr.poolSize = poolSize;
     hdr._reserved1 = 0;
 
@@ -141,7 +141,7 @@ std::vector<std::byte> TregHiveSerializer::serializeData(const std::vector<TregK
     dbgprintf("TREG_CKSUM: 0x%X\nexpected:size: %luB\n", crcGenerator.getCrc32(),
               bodySize + TregHeader::headerSize());
     hdr.checksum = crcGenerator.getCrc32();
-    hdr.dbgInfoPrint();
+    //  hdr.dbgInfoPrint();
     auto hdrOpt = hdr.serialize();
     if (!hdrOpt)
         throw std::runtime_error("theader serialization failed");

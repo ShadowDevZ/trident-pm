@@ -15,7 +15,7 @@ are embedding struct or using std::pair, also we cannot do this because it makes
 //constexpr std::array gErrorMessages {_errmsgTbl};
 */
 using eCode = Err::Code;
-constexpr std::pair<Err::Code, std::string_view> gErrorMessages[] = {
+constexpr std::pair<Err::Code, const char*> gErrorMessages[] = {
     {eCode::UndefinedError, "Undefined error"},
     {eCode::Success, "Operation was successful"},
     {eCode::CustomError, "(Custom error)"},
@@ -45,12 +45,12 @@ constexpr std::pair<Err::Code, std::string_view> gErrorMessages[] = {
     {eCode::SerializerFailure, "Failed to serialize/deserialize binary data object"},
     {eCode::SectionSizeViolated, "Size of the section does not match the specified size"}};
 
-std::string_view Err::TrdError::translateError(Trd::Err::Code primary) noexcept {
+std::string Err::TrdError::translateError(Trd::Err::Code primary) noexcept {
 
     for (const auto& x : gErrorMessages) {
         if (x.first == primary) {
 
-            return x.second;
+            return std::string{x.second};
         }
     }
 

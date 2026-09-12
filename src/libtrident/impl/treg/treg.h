@@ -33,9 +33,6 @@ now we can dynamically calculate where each section inside treg starts and ends
 
 if parser doesnt know what is some certain table doing they can just currentOffset += cellSize
 
-cell data info varies depending whether its K,V, or A, they share in common the CELL_INFO struct
-each entry also has internal CRC32 validation. Also the cell data contains attribute on child nodes.
-
 The first version will probably be immutable meaning that to rewrite or update the data we have to
 firsly read the data then modify in memory then write at offset if we are adding fields we need
 to do COW the entire treg. In future i definitely want windows like registry where data can be added/deleted
@@ -44,6 +41,10 @@ without copying to the new file and deleting certain tables, finding holes (cell
 also we need an interface for CELLDATA tables so the tables are required to fill the basic info
 
 each cell should contain header crc ?
+
+Key - main key record may contain subkeys
+Entry - junction M:N table between keys and valus
+Value - contains stored data, its datatype and other info
 */
 
 /*
@@ -95,18 +96,18 @@ namespace Trd {
                 const auto serialized = x.serialize();
                 if (!serialized)
                     throw std::runtime_error("failed to serialize entity");
-                x.dbgInfoPrint();
+                //    x.dbgInfoPrint();
                 out.append_range(std::move(serialized.value()));
             }
         }
 
-        static TregAttrRecord iRecordAttributes(const Attr& attr, PoolData& pool);
-        static TregValueRecord iRecordValues(const Value& val, PoolData& pool,
-                                             std::vector<TregAttrRecord>& attrRec);
+        static TregValueRecord iRecordValues(const Value& attr, PoolData& pool);
+        static TregEntryRecord iRecordEntries(const Entry& val, PoolData& pool,
+                                              std::vector<TregValueRecord>& attrRec);
 
         static std::vector<std::byte> serializeData(const std::vector<TregKeyRecord>& keys,
-                                                    const std::vector<TregValueRecord>& val,
-                                                    const std::vector<TregAttrRecord>& attr,
+                                                    const std::vector<TregEntryRecord>& val,
+                                                    const std::vector<TregValueRecord>& attr,
                                                     const PoolData& pool);
 
       public:

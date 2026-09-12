@@ -9,8 +9,8 @@
 namespace Trd::Consts::Treg {
     inline constexpr u32 TREG_MAGIC = 0x52444852; //RHDR (BE)
     inline constexpr u16 KEY_REC_ID = 0x526B; //kR (BE)
-    inline constexpr u16 VAL_REC_ID = 0x5276; //vR (BE)
-    inline constexpr u16 ATTR_REC_ID = 0x5261; //aR (BE)
+    inline constexpr u16 ENTRY_REC_ID = 0x5265; //eR (BE)
+    inline constexpr u16 VALUE_REC_ID = 0x5276; //vR (BE)
     //stored string is not guaranteed to be null terminated
     inline constexpr u16 KEYNAME_MAXLEN = 0xFFFF;
     /*limit for the string/vector for value, 64KiB, treg is NOT a file storage
@@ -25,7 +25,7 @@ namespace Trd {
             Clear = 0
         };
     };
-    enum class TregAttrDatatype : u8 {
+    enum class TregValueDatatype : u8 {
         i8 = 0,
         i16 = 1,
         i32 = 2,
@@ -36,7 +36,7 @@ namespace Trd {
         u64 = 7,
         u8_bool = 10,
         cstr = 11,
-        binDataLE = 12,
+        binLE = 12,
         //   binDataBE = 13 //not implemented currently
         //symLink = 14 // link to another key,value
     };
@@ -53,9 +53,9 @@ namespace Trd {
 
         u32 magic{Consts::Treg::TREG_MAGIC};
         RegFlags::Flag flags{RegFlags::Clear};
-        u32 keyEntriesCount;
-        u32 valEntriesCount;
-        u32 attrEntriesCount;
+        u32 subKeysCount;
+        u32 subEntriesCount;
+        u32 subValsCount;
         u64 poolSize;
         u32 checksum; //everything after header until the end of treg section
         u16 _reserved1 = 0;
@@ -65,9 +65,9 @@ namespace Trd {
         }
 
         constexpr u64 size() const override {
-            constexpr auto x = Impl::BinarySerializer::elementSize(
-                magic, flags, keyEntriesCount, valEntriesCount, attrEntriesCount, poolSize,
-                checksum, _reserved1);
+            constexpr auto x =
+                Impl::BinarySerializer::elementSize(magic, flags, subKeysCount, subEntriesCount,
+                                                    subValsCount, poolSize, checksum, _reserved1);
             static_assert(x == headerSize(), "Size missmatch");
             return x;
         }
@@ -87,8 +87,8 @@ namespace Trd {
         u32 firstChildKeyIndex;
         u16 childKeysCount;
 
-        u32 firstValIndex;
-        u16 valueCount;
+        u32 firstEntryIndex;
+        u16 entryCount;
         u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         /*
         sum of all fields in bytes, there is probably a way better way to do this but i want this 
@@ -100,7 +100,7 @@ namespace Trd {
         constexpr u64 size() const override {
             constexpr auto x = Impl::BinarySerializer::elementSize(
                 identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
-                firstValIndex, valueCount, recordChecksum);
+                firstEntryIndex, entryCount, recordChecksum);
 
             static_assert(x == keyRecordSize(), "Size missmatch");
             return x;
@@ -110,22 +110,22 @@ namespace Trd {
         bool deserialize(const std::vector<std::byte>& dataIn) override;
         void dbgInfoPrint() const override;
     };
-    //all sizes are checked in Value class that fills this record, this class must NOT be used directly
-    struct TregValueRecord : Impl::SerializableData {
-        u16 identifier = Consts::Treg::VAL_REC_ID;
-        u32 valNameOffset;
-        u16 valNameLength;
-        u32 attrFirstIndex;
-        u16 attrCount;
+    //all sizes are checked in Entry class that fills this record, this class must NOT be used directly
+    struct TregEntryRecord : Impl::SerializableData {
+        u16 identifier = Consts::Treg::ENTRY_REC_ID;
+        u32 entryNameOffset;
+        u16 entryNameLength;
+        u32 valsFirstIndex;
+        u16 valsCount;
         u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
-        static constexpr int valueRecordSize() {
+        static constexpr int entryRecordSize() {
             return 18;
         }
         constexpr u64 size() const override {
             constexpr auto x =
-                Impl::BinarySerializer::elementSize(identifier, valNameOffset, valNameLength,
-                                                    attrFirstIndex, attrCount, recordChecksum);
-            static_assert(x == valueRecordSize(), "Size missmatch");
+                Impl::BinarySerializer::elementSize(identifier, entryNameOffset, entryNameLength,
+                                                    valsFirstIndex, valsCount, recordChecksum);
+            static_assert(x == entryRecordSize(), "Size missmatch");
             return x;
         }
         std::optional<std::vector<std::byte>> serialize() const override;
@@ -134,11 +134,11 @@ namespace Trd {
         void dbgInfoPrint() const override;
     };
     //all sizes are checked in Attr class that fills this record, this class must NOT be used directly
-    struct TregAttrRecord : Impl::SerializableData {
-        u16 identifier = Consts::Treg::ATTR_REC_ID;
-        u32 attrNamePoolOffset;
-        u16 attrNameLength;
-        TregAttrDatatype
+    struct TregValueRecord : Impl::SerializableData {
+        u16 identifier = Consts::Treg::VALUE_REC_ID;
+        u32 valNamePoolOffset;
+        u16 valNameLength;
+        TregValueDatatype
             datatype; // if dataType < 11 store data in smallData otherwiese point to pool
         //with LargeData; if dataSize smaller than 8 && dataType < 11 pad with 0's until end
 
@@ -153,15 +153,15 @@ namespace Trd {
         // using TrivialData = std::byte[8];
         std::variant<TrivialData, PayloadPoolData> payload;
 
-        static constexpr int attrRecordSize() {
+        static constexpr int valRecordSize() {
             return 21; //align everything later we need functioning prototype
         }
         constexpr u64 size() const override {
             constexpr auto x =
-                Impl::BinarySerializer::elementSize(identifier, attrNamePoolOffset, attrNameLength,
+                Impl::BinarySerializer::elementSize(identifier, valNamePoolOffset, valNameLength,
                                                     datatype, recordChecksum) +
                 (sizeof(std::byte) * 8);
-            static_assert(x == attrRecordSize(), "Size missmatch");
+            static_assert(x == valRecordSize(), "Size missmatch");
             return x;
             //using sizeof when we are storing struct may or may not work even if packed on all platforms
         }
@@ -171,7 +171,7 @@ namespace Trd {
         void dbgInfoPrint() const override;
     };
 
-    class Attr {
+    class Value {
 
         /*
         i8 = 0,
@@ -192,7 +192,7 @@ namespace Trd {
         using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, std::string,
                                      std::vector<std::byte>>; //add later
 
-        explicit Attr(std::string_view name, TregAttrDatatype dtype, Payload payload) {
+        explicit Value(std::string_view name, TregValueDatatype dtype, Payload payload) {
             //check key name length size
             setName(name);
             type = dtype;
@@ -211,7 +211,7 @@ namespace Trd {
                 throw std::runtime_error("Name exceeded max char limit");
             attributeName = name;
         }
-        TregAttrDatatype getAttrDataType() const {
+        TregValueDatatype getValueDataType() const {
             return type;
         }
         const Payload& getPayload() const {
@@ -231,73 +231,74 @@ namespace Trd {
             payload = std::move(p);
         }
 
-        static Attr dataI8(std::string n, i8 v) {
-            return Attr(std::move(n), TregAttrDatatype::i8, v);
+        static Value dataI8(std::string n, i8 v) {
+            return Value(std::move(n), TregValueDatatype::i8, v);
         }
-        static Attr dataU8(std::string n, u8 v) {
-            return Attr(std::move(n), TregAttrDatatype::u8, v);
+        static Value dataU8(std::string n, u8 v) {
+            return Value(std::move(n), TregValueDatatype::u8, v);
         }
-        static Attr dataI16(std::string n, i16 v) {
-            return Attr(std::move(n), TregAttrDatatype::i16, v);
+        static Value dataI16(std::string n, i16 v) {
+            return Value(std::move(n), TregValueDatatype::i16, v);
         }
-        static Attr dataU16(std::string n, u16 v) {
-            return Attr(std::move(n), TregAttrDatatype::u16, v);
+        static Value dataU16(std::string n, u16 v) {
+            return Value(std::move(n), TregValueDatatype::u16, v);
         }
-        static Attr dataI32(std::string n, i32 v) {
-            return Attr(std::move(n), TregAttrDatatype::i32, v);
+        static Value dataI32(std::string n, i32 v) {
+            return Value(std::move(n), TregValueDatatype::i32, v);
         }
-        static Attr dataU32(std::string n, u32 v) {
-            return Attr(std::move(n), TregAttrDatatype::u32, v);
+        static Value dataU32(std::string n, u32 v) {
+            return Value(std::move(n), TregValueDatatype::u32, v);
         }
-        static Attr dataI64(std::string n, i64 v) {
-            return Attr(std::move(n), TregAttrDatatype::i64, v);
+        static Value dataI64(std::string n, i64 v) {
+            return Value(std::move(n), TregValueDatatype::i64, v);
         }
-        static Attr dataU64(std::string n, u64 v) {
-            return Attr(std::move(n), TregAttrDatatype::u64, v);
+        static Value dataU64(std::string n, u64 v) {
+            return Value(std::move(n), TregValueDatatype::u64, v);
         }
-        static Attr dataBool(std::string n, bool v) {
-            return Attr(std::move(n), TregAttrDatatype::u8_bool,
-                        static_cast<u8>(u8bool::fromBool(v)));
+        static Value dataBool(std::string n, bool v) {
+            return Value(std::move(n), TregValueDatatype::u8_bool,
+                         static_cast<u8>(u8bool::fromBool(v)));
         }
-        static Attr dataString(std::string n, std::string v) {
-            return Attr(std::move(n), TregAttrDatatype::cstr, std::move(v));
+        static Value dataString(std::string n, std::string v) {
+            return Value(std::move(n), TregValueDatatype::cstr, std::move(v));
         }
-        static Attr dataBinData(std::string n, std::span<std::byte> v) {
-            return Attr(std::move(n), TregAttrDatatype::binDataLE,
-                        std::vector<std::byte>{v.begin(), v.end()});
+        static Value dataBinData(std::string n, std::span<std::byte> v) {
+            return Value(std::move(n), TregValueDatatype::binLE,
+                         std::vector<std::byte>{v.begin(), v.end()});
         }
+        static std::optional<const char*> DatatypeAsString(TregValueDatatype vd);
 
         template <typename T>
         const T& get() const {
             if (!std::holds_alternative<T>(payload))
-                throw std::runtime_error("Attr::get<T> type missmatch");
+                throw std::runtime_error("Value::get<T> type missmatch");
             return std::get<T>(payload);
         }
 
       private:
         std::string attributeName;
-        TregAttrDatatype type;
+        TregValueDatatype type;
         Payload payload;
     };
 
-    class Value {
+    class Entry {
       public:
-        explicit Value(std::string name) : name(std::move(name)) {};
+        explicit Entry(std::string name) : name(std::move(name)) {};
 
         std::string_view getName() const {
             return name;
         }
-        const std::vector<Attr>& getAttrs() const {
-            return attrs;
+        const std::vector<Value>& getValues() const {
+            return values;
         }
-        std::vector<Attr>& getAttrs() {
-            return attrs;
+        std::vector<Value>& getValues() {
+            return values;
         }
-        inline void updateAttr(const Attr& a) {
-            IManageAttr(a, true);
+        inline void updateValue(const Value& a) {
+            IManageValue(a, true);
         }
-        inline void createAttr(const Attr& a) {
-            IManageAttr(a, false);
+        inline void createValue(const Value& a) {
+            IManageValue(a, false);
         }
 
         /**
@@ -307,16 +308,16 @@ namespace Trd {
          * @return true if attribute was found and deleted
          * @return false if attribute does not exist
          */
-        bool deleteAttr(std::string_view name);
+        bool deleteValue(std::string_view name);
 
-        Attr const* findAttr(std::string_view name) const;
-        Attr* findAttr(std::string_view name);
+        Value const* findValue(std::string_view name) const;
+        Value* findValue(std::string_view name);
 
       private:
         std::string name;
-        std::vector<Attr> attrs;
+        std::vector<Value> values;
 
-        void IManageAttr(const Attr& a, bool overwrite);
+        void IManageValue(const Value& a, bool overwrite);
     };
 
     class Key {
@@ -332,29 +333,30 @@ namespace Trd {
             return children;
         }
 
-        const std::vector<Value>& getValues() const {
-            return values;
+        const std::vector<Entry>& getEntries() const {
+            return entries;
         }
-        std::vector<Value>& getValues() {
-            return values;
+        std::vector<Entry>& getEntries() {
+            return entries;
         }
 
         void addChild(Key k) {
             children.push_back(std::move(k));
         }
-        void addValue(Value v) {
-            values.push_back(std::move(v));
+        void addEntry(Entry v) {
+            entries.push_back(std::move(v));
         }
+        static void printTree(const Key& k, const std::string& prefix = "", bool isRoot = true);
         Key* findChild(std::string_view name);
-        Value* findValue(std::string_view name);
+        Entry* findEntry(std::string_view name);
 
       private:
         std::string key;
         std::vector<Key> children;
-        std::vector<Value> values;
+        std::vector<Entry> entries;
     };
 
-    static inline bool AttrIsTrivial(TregAttrDatatype type) {
+    static inline bool AttrIsTrivial(TregValueDatatype type) {
         constexpr int lastTrivialAttrIndex = 10;
         if (static_cast<u8>(type) <= lastTrivialAttrIndex)
             return true;

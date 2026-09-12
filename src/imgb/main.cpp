@@ -45,7 +45,7 @@ int main(void) {
     TASSERT("CreateHeader()",
             trPkgHdr.create(BuildFlags::PlatformLinux, ArchType::Amd64, GlobalCompression::None));
 #ifdef _LIBTRIDENT_DEBUG
-    print_header(trPkgHdr.getHeader());
+    // print_header(trPkgHdr.getHeader());
 #endif
     // NOLINTNEXTLINE
     TASSERT("WriteHeader()", trPkgHdr.write());
@@ -71,7 +71,7 @@ int main(void) {
     TASSERT("ValidateHeader()", trPkgHdr.isValid());
 #ifdef _LIBTRIDENT_DEBUG
     auto vxa = trPkgHdr.getHeader();
-    print_header(vxa);
+    //  print_header(vxa);
 #endif
     //SD
     auto trpkgSD = ltTrPkg.sd();
@@ -133,8 +133,8 @@ int main(void) {
             break;
         const auto& da = zv.value();
 
-        dump_arr(std::span{da.data});
-        dbgprintf("\nchunk_no%d\n", num++);
+        //      dump_arr(std::span{da.data});
+        //      dbgprintf("\nchunk_no%d\n", num++);
     } while (next);
 
     dbgprintf("\ndtbl read ok\n");
@@ -152,26 +152,28 @@ int main(void) {
     }
     //this is only testing interface, actual end user interface will feature registry path
     // like usage without the details. TODO ALSO CHECK CHARSET emojis and special symbols arent allowed
-    Value v1("__VALUE1__");
-    v1.createAttr(Attr::dataU32("first attr", UINT32_MAX));
-    v1.createAttr(Attr::dataU16("second attr", UINT16_MAX));
-    Key k1("__KEYstore__");
-    k1.addValue((v1));
+    Entry v1("__ENTRY1__");
+    v1.createValue(Value::dataU32("first value", UINT32_MAX));
+    v1.createValue(Value::dataU16("second value", UINT16_MAX));
+    Key k1("__KEY1__");
+    k1.addEntry((v1));
 
     Key k2("__KEY2__");
-    Value v2("__VALUE2__");
-    v2.createAttr(Attr::dataString("random attr", "(((((((DATA)))))))"));
+    Entry v2("__ENTRY2__");
+    v2.createValue(Value::dataString("random value", "(((((((DATA)))))))"));
     std::array<std::byte, 3> binData = {std::byte{1}, std::byte{2}, std::byte{3}};
 
-    v2.updateAttr(Attr::dataBinData("random attr", binData));
-    v2.deleteAttr("random attr");
-    k2.addValue(v2);
+    v2.updateValue(Value::dataBinData("random value", binData));
+    // v2.deleteAttr("random attr");
+    k2.addEntry(v2);
 
     Key kRoot("\\\\ROOTFS-/.");
-    kRoot.addChild(std::move(k1));
-    kRoot.addChild(std::move(k2));
+    k1.addChild(k2);
+    kRoot.addChild(k1);
+    // kRoot.addChild(k2);
     // dbgprintf("XPassTregDataAttr:%u\n",
     //         (u8)v1.getAttrs().at(0).getPayload().index()); //okay so it gets passed wrongly here
+    Key::printTree(kRoot);
     auto treg = TregHiveSerializer::build(kRoot).value();
     dbgprintf("actual_size: %luB\n", treg.size());
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), treg, false,
