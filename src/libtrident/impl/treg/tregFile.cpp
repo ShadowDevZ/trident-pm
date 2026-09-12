@@ -184,6 +184,38 @@ bool Value::deleteAttr(std::string_view name) {
         return false;
     return true;
 }
+
+Key* Key::findChild(std::string_view name) {
+    for (auto& x : children) {
+        if (x.getName() == name)
+            return &x;
+    }
+    return nullptr;
+}
+Value* Key::findValue(std::string_view name) {
+    for (auto& x : values) {
+        if (x.getName() == name)
+            return &x;
+    }
+    return nullptr;
+}
+
+Attr const* Value::findAttr(std::string_view name) const {
+    for (const auto& x : attrs) {
+        if (x.getName() == name)
+            return &x;
+    }
+    return nullptr;
+}
+
+Attr* Value::findAttr(std::string_view name) {
+    for (auto& x : attrs) {
+        if (x.getName() == name)
+            return &x;
+    }
+    return nullptr;
+}
+
 //std::optional<Impl::Crc32Gen> TregHeader::checksumCRC32() const {
 //    return std::nullopt;
 //}

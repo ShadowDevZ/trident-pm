@@ -192,12 +192,32 @@ namespace Trd {
         using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, std::string,
                                      std::vector<std::byte>>; //add later
 
-        explicit Attr(std::string name, TregAttrDatatype dtype, Payload payload) :
-            attributeName(std::move(name)), type(dtype), payload(std::move(payload)) {
-            [[unlikely]]
+        explicit Attr(std::string_view name, TregAttrDatatype dtype, Payload payload) {
             //check key name length size
-            if (attributeName.length() > Consts::Treg::KEYNAME_MAXLEN)
+            setName(name);
+            type = dtype;
+            //check if payload variant size is valid
+            setPayload(payload);
+        };
+
+        std::string_view getName() const {
+            return attributeName;
+        }
+        void setName(std::string_view name) {
+
+            //check key name length size
+            [[unlikely]]
+            if (name.length() > Consts::Treg::KEYNAME_MAXLEN)
                 throw std::runtime_error("Name exceeded max char limit");
+            attributeName = name;
+        }
+        TregAttrDatatype getAttrDataType() const {
+            return type;
+        }
+        const Payload& getPayload() const {
+            return payload;
+        }
+        void setPayload(Payload p) {
             //check if payload variant size is valid
             std::visit(
                 [&](const auto& v) {
@@ -208,18 +228,6 @@ namespace Trd {
                             std::to_string(Consts::Treg::VALUE_MAXSIZE - sizeof(v)) + "B");
                 },
                 this->payload);
-        };
-
-        std::string_view getName() const {
-            return attributeName;
-        }
-        TregAttrDatatype getAttrDataType() const {
-            return type;
-        }
-        const Payload& getPayload() const {
-            return payload;
-        }
-        void setPayload(Payload p) {
             payload = std::move(p);
         }
 
@@ -291,6 +299,7 @@ namespace Trd {
         inline void createAttr(const Attr& a) {
             IManageAttr(a, false);
         }
+
         /**
          * @brief Deletes attribute from list
          * 
@@ -300,20 +309,8 @@ namespace Trd {
          */
         bool deleteAttr(std::string_view name);
 
-        Attr const* findAttr(std::string_view name) const {
-            for (const auto& x : attrs) {
-                if (x.getName() == name)
-                    return &x;
-            }
-            return nullptr;
-        }
-        Attr* findAttr(std::string_view name) {
-            for (auto& x : attrs) {
-                if (x.getName() == name)
-                    return &x;
-            }
-            return nullptr;
-        }
+        Attr const* findAttr(std::string_view name) const;
+        Attr* findAttr(std::string_view name);
 
       private:
         std::string name;
@@ -348,20 +345,8 @@ namespace Trd {
         void addValue(Value v) {
             values.push_back(std::move(v));
         }
-        Key* findChild(std::string_view name) {
-            for (auto& x : children) {
-                if (x.getName() == name)
-                    return &x;
-            }
-            return nullptr;
-        }
-        Value* findValue(std::string_view name) {
-            for (auto& x : values) {
-                if (x.getName() == name)
-                    return &x;
-            }
-            return nullptr;
-        }
+        Key* findChild(std::string_view name);
+        Value* findValue(std::string_view name);
 
       private:
         std::string key;
