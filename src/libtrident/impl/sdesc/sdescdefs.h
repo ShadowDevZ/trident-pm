@@ -33,7 +33,7 @@ namespace Trd::Impl {
     };
 */
     struct SD_TBLENTRY {
-        file_offset offset{0};
+        soffset offset{0};
         u64 size{0};
         u8bool::type available{u8bool::type::False};
     };

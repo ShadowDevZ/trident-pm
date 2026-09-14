@@ -152,22 +152,22 @@ int main(void) {
     }
     //this is only testing interface, actual end user interface will feature registry path
     // like usage without the details. TODO ALSO CHECK CHARSET emojis and special symbols arent allowed
-    Entry v1("__ENTRY1__");
+    Entry v1("ClassInfo");
     v1.createValue(Value::dataU32("first value", UINT32_MAX));
-    v1.createValue(Value::dataU16("second value", UINT16_MAX));
-    Key k1("__KEY1__");
+    v1.createValue(Value::dataSoffset("second value", 3232));
+    Key k1("DTBL");
     k1.addEntry((v1));
 
-    Key k2("__KEY2__");
-    Entry v2("__ENTRY2__");
+    Key k2("STBL");
+    Entry v2("MANIFEST");
     v2.createValue(Value::dataString("random value", "(((((((DATA)))))))"));
     std::array<std::byte, 3> binData = {std::byte{1}, std::byte{2}, std::byte{3}};
 
-    v2.updateValue(Value::dataBinData("random value", binData));
+    v2.updateValue(Value::dataBinData("manifest", binData));
     // v2.deleteAttr("random attr");
     k2.addEntry(v2);
 
-    Key kRoot("\\\\ROOTFS-/.");
+    Key kRoot("@ROOT");
     k1.addChild(k2);
     kRoot.addChild(k1);
     // kRoot.addChild(k2);

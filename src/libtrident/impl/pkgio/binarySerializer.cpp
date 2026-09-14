@@ -24,7 +24,7 @@ void BinarySerializer::addRaw(const void* data, u64 size) {
     bufferData.insert(bufferData.end(), bytes, bytes + size);
 }
 
-u64 BinarySerializer::readRaw(void* dataOut, u64 size, file_offset offset) {
+u64 BinarySerializer::readRaw(void* dataOut, u64 size, soffset offset) {
     if (dataOut == nullptr) {
         throw std::invalid_argument("nullptr was passed");
     }
@@ -44,7 +44,7 @@ u64 BinarySerializer::readRaw(void* dataOut, u64 size, file_offset offset) {
 }
 //todo use std expected instead of exceptions
 std::vector<std::byte> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamInfo& tStream,
-                                                             file_offset seekPos, u64 size,
+                                                             soffset seekPos, u64 size,
                                                              bool requireAlignment,
                                                              bool keepOriginalSeek) {
 
@@ -68,7 +68,7 @@ std::vector<std::byte> BinarySerializer::readDataFromTStream(Trd::Impl::TStreamI
 
 void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
                                           std::span<const std::byte> data, bool requireAlignment,
-                                          file_offset seekPos, std::ios_base::seekdir seekDir,
+                                          soffset seekPos, std::ios_base::seekdir seekDir,
                                           bool keepOriginalSeek) {
     //todo make this boilerplate in all classes a function
 
@@ -81,7 +81,7 @@ void BinarySerializer::writeDataToTStream(Trd::Impl::TStreamInfo& tStream,
     if (!tStream.checkFileStreamInfo()) {
         throw std::runtime_error("CheckFileStreamInfo() failed");
     }
-    const file_offset ogSeek = tStream.getSeekPos();
+    const soffset ogSeek = tStream.getSeekPos();
 
     tStream.setSeekPos(seekPos, seekDir);
     /*IOChunkData chunkData{tStream};

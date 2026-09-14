@@ -248,9 +248,10 @@ std::optional<const char*> Value::DatatypeAsString(TregValueDatatype vd) {
         //symLink = 14 // link to another key,value*/
     using v = TregValueDatatype;
     static constexpr std::pair<TregValueDatatype, const char*> dataString[] = {
-        {v::i8, "i8"},           {v::i16, "i16"},   {v::i32, "i32"},    {v::i64, "i64"},
-        {v::u8, "u8"},           {v::u16, "u16"},   {v::u32, "u32"},    {v::u64, "u64"},
-        {v::u8_bool, "u8_bool"}, {v::cstr, "cstr"}, {v::binLE, "binLE"}};
+        {v::i8, "i8"},           {v::i16, "i16"},   {v::i32, "i32"},     {v::i64, "i64"},
+        {v::u8, "u8"},           {v::u16, "u16"},   {v::u32, "u32"},     {v::u64, "u64"},
+        {v::u8_bool, "u8_bool"}, {v::cstr, "cstr"}, {v::binLE, "binLE"}, {v::soffset, "soffset"},
+    };
 
     for (const auto& [flag, text] : dataString) {
         if (flag == vd)

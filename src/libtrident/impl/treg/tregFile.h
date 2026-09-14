@@ -25,27 +25,33 @@ namespace Trd {
             Clear = 0
         };
     };
+    /*
+    trivial data is data storable within 8 bytes
+    even though string and vector could be less than 8 bytes they are stored inside pool no matter what
+    0-127 Trivial datatypes
+    128-255 Non trivial datatypes
+    */
     enum class TregValueDatatype : u8 {
         i8 = 0,
-        i16 = 1,
-        i32 = 2,
-        i64 = 3,
-        u8 = 4,
-        u16 = 5,
-        u32 = 6,
-        u64 = 7,
-        u8_bool = 10,
-        cstr = 11,
-        binLE = 12,
-        //   binDataBE = 13 //not implemented currently
-        //symLink = 14 // link to another key,value
+        i16,
+        i32,
+        i64,
+        u8,
+        u16,
+        u32,
+        u64,
+        u8_bool,
+        soffset,
+        // tregSymLink, //no implemented
+        cstr = 128,
+        binLE,
     };
 
     struct TregHeader : Impl::SerializableData {
         /*
         u32 magic{Consts::Treg::TREG_MAGIC};
         RegFlags::Flag flags{RegFlags::Clear};
-        file_offset regRootOffset;
+        soffset regRootOffset;
         u64 regSizeTotal;
         u64 _reserved;
         u16 _reserved1;
@@ -111,6 +117,7 @@ namespace Trd {
         void dbgInfoPrint() const override;
     };
     //all sizes are checked in Entry class that fills this record, this class must NOT be used directly
+
     struct TregEntryRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::ENTRY_REC_ID;
         u32 entryNameOffset;
@@ -134,6 +141,48 @@ namespace Trd {
         void dbgInfoPrint() const override;
     };
     //all sizes are checked in Attr class that fills this record, this class must NOT be used directly
+    namespace DataOptions {
+        //together all these fields should stored up to 2 bytes all data is encoded as series of bits in LE
+        //determiens how the stored data should be handled. For example if DtblOffset is set we then
+        //expect the set value to be valid file offset
+        //lower 4 bits
+        enum ValueDataTemplate : u8 {
+
+            RawData = 0b0000,
+            DtblOffset = 0b0001,
+            //digital signatures and hashes
+            CryptoData = 0b0010,
+            DebugData = 0b0100,
+            ExtendedMetadata = 0b1000,
+            //Data may be excluded from next rewrite operation as it no longer contains new data
+            Temporary = 0b0011,
+            Symlink = 0b0101,
+
+            Reserved = 0b1111
+        };
+        //higher 4 bits reserved for now
+        //  enum ValueDataReserved : u8 {
+        //      Todo = 0b0000
+        //  };
+
+        //for security descriptor
+        //todo probably for  KEY/ENTRY and value add 2 separate permissions
+        enum PermissionFlags : u8 {
+            //for all, set always as default, cant be unset
+            ReadOnly,
+            //for all, read access
+            Read = ReadOnly,
+            //for keys/entries, new data can be written. Required for creation of subkeys
+            CreateNew = 1 << 1,
+            //for all, existing data can be edited/renaned, addition of new data is not permitted
+            Editable = 1 << 2,
+            //any change beyond read operation is denied automatically and this value must NOT be changed
+            //unless ChangePermissions is set
+            LockPermissions = 1 << 3,
+            //Every operation is permitted
+            AllAccess = 1 << 4
+        };
+    };
     struct TregValueRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::VALUE_REC_ID;
         u32 valNamePoolOffset;
@@ -173,20 +222,6 @@ namespace Trd {
 
     class Value {
 
-        /*
-        i8 = 0,
-        i16 = 1,
-        i32 = 2,
-        i64 = 3,
-        u8 = 4,
-        u16 = 5,
-        u32 = 6,
-        u64 = 7,
-       
-        u8_bool = 10,
-        cstr = 11, // null terminated
-        binDataLE = 12,
-       */
       public:
         //decimal numbers are represented as a string
         using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, std::string,
@@ -266,6 +301,10 @@ namespace Trd {
             return Value(std::move(n), TregValueDatatype::binLE,
                          std::vector<std::byte>{v.begin(), v.end()});
         }
+        static Value dataSoffset(std::string n, soffset v) {
+            return Value(std::move(n), TregValueDatatype::soffset, static_cast<u64>(v));
+        }
+
         static std::optional<const char*> DatatypeAsString(TregValueDatatype vd);
 
         template <typename T>
@@ -357,7 +396,7 @@ namespace Trd {
     };
 
     static inline bool AttrIsTrivial(TregValueDatatype type) {
-        constexpr int lastTrivialAttrIndex = 10;
+        constexpr int lastTrivialAttrIndex = 127;
         if (static_cast<u8>(type) <= lastTrivialAttrIndex)
             return true;
         return false;

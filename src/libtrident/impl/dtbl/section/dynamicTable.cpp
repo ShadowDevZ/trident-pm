@@ -15,7 +15,7 @@ std::expected<u64, Trd::Err::TrdError> DtblDirectory::getOffset() {
 
     return off.value() + 1;
 }
-std::expected<void, Trd::Err::TrdError> DtblDirectory::writeSDEntry(file_offset offset, u64 size,
+std::expected<void, Trd::Err::TrdError> DtblDirectory::writeSDEntry(soffset offset, u64 size,
                                                                     bool available) {
 
     if (available && offset < badOffset())
@@ -47,7 +47,7 @@ std::expected<SD_TBLENTRY, Trd::Err::TrdError> DtblDirectory::readSDEntry() cons
     return internalSD.getSD().tblDynamic;
 }
 std::expected<void, Trd::Err::TrdError>
-DtblDirectory::writeRawRegion(std::span<const std::byte> data, file_offset writeOffset) const {
+DtblDirectory::writeRawRegion(std::span<const std::byte> data, soffset writeOffset) const {
     if (data.empty())
         return std::unexpected(
             Err::TrdError(eCode::InvalidFuncArg, 1, "Empty data array was passed"));
@@ -62,7 +62,7 @@ DtblDirectory::writeRawRegion(std::span<const std::byte> data, file_offset write
     return {};
 }
 std::expected<std::vector<std::byte>, Trd::Err::TrdError>
-DtblDirectory::readRawRegion(file_offset readOffset, u64 size) const {
+DtblDirectory::readRawRegion(soffset readOffset, u64 size) const {
     std::vector<std::byte> readData(size);
     EXP_TRY(trpkg.fstrInfo.checkFileStreamInfo());
 
@@ -74,7 +74,7 @@ DtblDirectory::readRawRegion(file_offset readOffset, u64 size) const {
     return readData;
 }
 std::expected<void, Trd::Err::TrdError>
-DtblDirectory::writeRegionInChunks(std::span<const std::byte> data, file_offset writeOffset) const {
+DtblDirectory::writeRegionInChunks(std::span<const std::byte> data, soffset writeOffset) const {
     //todo call tregHaveValidEntry(writeOffset)
     if (data.empty())
         return std::unexpected(Err::TrdError(eCode::NullObject, 1, "data was empty"));
@@ -102,7 +102,7 @@ DtblDirectory::writeRegionInChunks(std::span<const std::byte> data, file_offset 
 DtblDirectory::DtblDirectory(TrPkg& pkg) :
     trpkg{pkg}, internalSD{pkg}, readChunkBuffer{pkg.fstrInfo} {};
 
-std::expected<void, Trd::Err::TrdError> DtblDirectory::readRegionChunkSetup(file_offset setupRead,
+std::expected<void, Trd::Err::TrdError> DtblDirectory::readRegionChunkSetup(soffset setupRead,
                                                                             u64 size) {
     if (setupRead < badOffset())
         return std::unexpected(
@@ -127,7 +127,7 @@ std::expected<Trd::Impl::IOReadChunk, Trd::Err::TrdError> DtblDirectory::readNex
     //todo call tregHaveValidEntry(writeOffset)
 }
 
-std::expected<void, Trd::Err::TrdError> DtblDirectory::invalidateRegion(file_offset writeOffset,
+std::expected<void, Trd::Err::TrdError> DtblDirectory::invalidateRegion(soffset writeOffset,
                                                                         u64 len) const {
     std::vector<std::byte> data(len, std::byte{0xFF});
     return writeRawRegion(data, writeOffset);

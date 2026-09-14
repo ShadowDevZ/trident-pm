@@ -32,7 +32,7 @@ namespace Trd::Impl {
         //checks if the stream is only MARKED as open, data may be missing or corrupted
         std::expected<void, Err::TrdError> isOpen() const;
         //throws std::iosbase::failure on exception
-        void setSeekPos(file_offset pos, std::ios_base::seekdir seek = std::ios::beg);
+        void setSeekPos(soffset pos, std::ios_base::seekdir seek = std::ios::beg);
         //throws std::iosbase::failure on exception
         i64 getSeekPos() const;
 

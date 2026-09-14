@@ -21,8 +21,8 @@ namespace Trd {
     using uint = uint32_t;
 
     using IO_OpenFlag = uint32_t;
-
-    using file_offset = uint64_t;
+    //stream (file) offset
+    using soffset = uint64_t;
 
     //used instead of the C++ bool because bool does not have standard size
     //the size could be anywhere from 1 byte, to make things platform independent we have to improvise

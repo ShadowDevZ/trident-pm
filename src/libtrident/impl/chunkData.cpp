@@ -7,7 +7,7 @@
 
 using namespace Trd;
 using namespace Trd::Impl;
-void IOChunkData::setupWrite(std::span<const std::byte> data, file_offset offsetWrite) {
+void IOChunkData::setupWrite(std::span<const std::byte> data, soffset offsetWrite) {
     if (data.empty())
         throw std::runtime_error("empty (null) data passed");
     writeData.chunksDone = 0;
@@ -16,7 +16,7 @@ void IOChunkData::setupWrite(std::span<const std::byte> data, file_offset offset
     writeData._writeSeek = offsetWrite;
     writeData.isInit = true;
 }
-void IOChunkData::setupRead(file_offset offsetRead, u64 size) {
+void IOChunkData::setupRead(soffset offsetRead, u64 size) {
     if (size == 0)
         throw std::runtime_error("tried to read 0 bytes");
     readData.chunksDone = 0;

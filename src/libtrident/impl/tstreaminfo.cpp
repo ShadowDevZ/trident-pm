@@ -122,7 +122,7 @@ void TStreamInfo::readTStream(char* s, u64 size) const {
     }
 }
 
-void TStreamInfo::setSeekPos(file_offset pos, std::ios_base::seekdir seekd) {
+void TStreamInfo::setSeekPos(soffset pos, std::ios_base::seekdir seekd) {
     xfInfo.hFile->seekg(pos, seekd);
     xfInfo.hFile->seekp(pos, seekd);
     if (!xfInfo.hFile) {
