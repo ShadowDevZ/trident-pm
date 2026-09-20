@@ -140,49 +140,7 @@ namespace Trd {
         bool deserialize(const std::vector<std::byte>& dataIn) override;
         void dbgInfoPrint() const override;
     };
-    //all sizes are checked in Attr class that fills this record, this class must NOT be used directly
-    namespace DataOptions {
-        //together all these fields should stored up to 2 bytes all data is encoded as series of bits in LE
-        //determiens how the stored data should be handled. For example if DtblOffset is set we then
-        //expect the set value to be valid file offset
-        //lower 4 bits
-        enum ValueDataTemplate : u8 {
 
-            RawData = 0b0000,
-            DtblOffset = 0b0001,
-            //digital signatures and hashes
-            CryptoData = 0b0010,
-            DebugData = 0b0100,
-            ExtendedMetadata = 0b1000,
-            //Data may be excluded from next rewrite operation as it no longer contains new data
-            Temporary = 0b0011,
-            Symlink = 0b0101,
-
-            Reserved = 0b1111
-        };
-        //higher 4 bits reserved for now
-        //  enum ValueDataReserved : u8 {
-        //      Todo = 0b0000
-        //  };
-
-        //for security descriptor
-        //todo probably for  KEY/ENTRY and value add 2 separate permissions
-        enum PermissionFlags : u8 {
-            //for all, set always as default, cant be unset
-            ReadOnly,
-            //for all, read access
-            Read = ReadOnly,
-            //for keys/entries, new data can be written. Required for creation of subkeys
-            CreateNew = 1 << 1,
-            //for all, existing data can be edited/renaned, addition of new data is not permitted
-            Editable = 1 << 2,
-            //any change beyond read operation is denied automatically and this value must NOT be changed
-            //unless ChangePermissions is set
-            LockPermissions = 1 << 3,
-            //Every operation is permitted
-            AllAccess = 1 << 4
-        };
-    };
     struct TregValueRecord : Impl::SerializableData {
         u16 identifier = Consts::Treg::VALUE_REC_ID;
         u32 valNamePoolOffset;

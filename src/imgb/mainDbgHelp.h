@@ -9,6 +9,8 @@
 #include "trdconsts.h"
 #include "ccattribs.h"
 #include <chrono>
+#include "treg/access.h"
+#include <bitset>
 //only included in main file during testing so this is ok
 using namespace Trd;
 
@@ -213,3 +215,23 @@ struct NTC_INFO_TEST : Trd::Impl::SerializableData {
         return true;
     }
 };
+void print_treg_access(access_word aw) {
+    //yeah using helper functions would be better
+
+    u16 word = static_cast<u16>(aw);
+    u8 lowByte = (word & 0xFF);
+    u8 highByte = ((word >> 8) & 0xFF);
+
+    u8 loNibbleLow = (lowByte & 0x0F);
+    u8 hiNibbleLow = ((lowByte >> 4) & 0xF0);
+
+    // u8 loNibbleHigh = (highByte & 0x0F);
+    // u8 hiNibbleHigh = ((highByte >> 4) & 0xF0);
+    dbgprintf("\n   [TREG_ACCESS]\n┌─────────┬────────┐\n");
+    dbgprintf("│   VDT   │   RSV  │\n│NBLO│NBHI│HIGHBYTE│\n│");
+    std::cout << std::bitset<4>(loNibbleLow) << "│" << std::bitset<4>(hiNibbleLow) << "│"
+              << std::bitset<8>(highByte) << "│\n└────┴────┴────────┘" << std::endl;
+    dbgprintf("VDT(lb.nblo): %u\n", loNibbleLow);
+    dbgprintf("RSV(lb.nbhi): %u\n", hiNibbleLow);
+    dbgprintf("PFL(hb.nall): %u\n\n", highByte);
+}

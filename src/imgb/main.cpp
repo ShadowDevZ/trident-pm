@@ -12,6 +12,7 @@
 #include "treg/tregFile.h"
 #include "treg/treg.h"
 #include <array>
+#include "treg/access.h"
 //TODO THIS FILE SHOULD CONTAIN STATIC_ASSERTIONS
 using namespace Trd;
 
@@ -178,6 +179,12 @@ int main(void) {
     dbgprintf("actual_size: %luB\n", treg.size());
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), treg, false,
                                                dtblOffset + dummySize + 6);
+    Impl::TregAccess tac;
+    tac.setAccessVdt(Impl::ValueDataTemplate::DebugData);
+    tac.appendPermission(Impl::PermissionFlags::Editable);
+    tac.appendPermission(Impl::PermissionFlags::LockPermissions);
+    print_treg_access(tac.getAccessWord());
+
     /*
     TregHeader testHeader{};
     testHeader.poolSize = 0xBEBACCCCCAFF;

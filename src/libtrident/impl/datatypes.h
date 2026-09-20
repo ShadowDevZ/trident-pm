@@ -24,6 +24,8 @@ namespace Trd {
     //stream (file) offset
     using soffset = uint64_t;
 
+    using access_word = uint16_t;
+
     //used instead of the C++ bool because bool does not have standard size
     //the size could be anywhere from 1 byte, to make things platform independent we have to improvise
     namespace u8bool {
