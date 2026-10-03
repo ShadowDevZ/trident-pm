@@ -14,31 +14,31 @@ u8 getHIByte(access_word v) {
     return (v >> 8) & 0xFF;
 }
 
-void TregAccess::appendPermission(PermissionFlags perms) {
+void TregAccess::appendFlagPFL(u8 f) {
     u8 updated = getHIByte(access);
-    updated |= static_cast<u8>(perms);
+    updated |= f;
     updateHIByte(access, updated);
 }
-void TregAccess::removePermission(PermissionFlags perms) {
+void TregAccess::clearFlagPFL(u8 perms) {
     u8 original = getHIByte(access);
-    original &= ~(static_cast<u8>(perms));
+    original &= ~(perms);
     updateHIByte(access, original);
 }
 void TregAccess::clearPermissions() {
     u8 original = getHIByte(access);
-    original = static_cast<u8>(PermissionFlags::ReadOnly);
+    original = 0;
     updateHIByte(access, original);
 }
 
-PermissionFlags TregAccess::getAccessPerms(access_word v) {
-    return static_cast<PermissionFlags>(getHIByte(v));
+u8 TregAccess::getPFL(access_word v) {
+    return getHIByte(v);
 }
 ValueDataTemplate TregAccess::getAccessVdt(access_word v) {
     u8 low = getLOByte(v);
     //returns lower nibble from the first byte
     return static_cast<ValueDataTemplate>(low & 0x0F);
 }
-void TregAccess::setAccessVdt(ValueDataTemplate vdt) {
+void TregAccess::setAccessVDT(ValueDataTemplate vdt) {
 
     u8 hiNibble = (getLOByte(access) >> 4) & 0x0F;
     u8 loNibble = static_cast<u8>(vdt);
@@ -46,14 +46,14 @@ void TregAccess::setAccessVdt(ValueDataTemplate vdt) {
     u8 lowByte = (hiNibble << 4) | (loNibble & 0x0F);
     updateLOByte(access, lowByte);
 }
-u8 TregAccess::getAccessReserved(access_word v) {
+u8 TregAccess::getReservedNibble(access_word v) {
     u8 low = getLOByte(v);
     //returns higher nibble from the first byte
     return ((low >> 4) & 0xF0);
 }
-bool TregAccess::permExists(PermissionFlags perms) const {
+bool TregAccess::existsFlagPFL(u8 perms) const {
     u8 check = getHIByte(access);
-    if (check & static_cast<u8>(perms))
+    if (check & perms)
         return true;
 
     return false;

@@ -179,10 +179,10 @@ int main(void) {
     dbgprintf("actual_size: %luB\n", treg.size());
     Impl::BinarySerializer::writeDataToTStream(ltTrPkg.getTstream(), treg, false,
                                                dtblOffset + dummySize + 6);
-    Impl::TregAccess tac;
-    tac.setAccessVdt(Impl::ValueDataTemplate::DebugData);
-    tac.appendPermission(Impl::PermissionFlags::Editable);
-    tac.appendPermission(Impl::PermissionFlags::LockPermissions);
+    Impl::TregValAccess tac;
+    tac.setAccessVDT(Impl::ValueDataTemplate::DebugData);
+    tac.appendPermission(Impl::PFValue::EditValue);
+    tac.appendPermission(Impl::PFValue::LockPermissions);
     print_treg_access(tac.getAccessWord());
 
     /*

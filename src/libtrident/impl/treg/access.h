@@ -20,6 +20,8 @@ namespace Trd::Impl {
         DebugData = 0b0100,
         Symlink = 0b0101,
         ExtendedMetadata = 0b0110,
+        //only valid for key/entry
+        Directory = 0b0111,
 
         Reserved = 0b1111
     };
@@ -31,31 +33,44 @@ namespace Trd::Impl {
     //for security descriptor
     //todo probably for  KEY/ENTRY and value add 2 separate permissions
     //PFL
-    enum class PermissionFlags : Trd::u8 {
+    enum class PFDirectory : Trd::u8 {
+        ReadOnly,
+        Read = ReadOnly,
+        CreateSubKey = 1 << 1,
+        EditSubKey = 1 << 2,
+        EditKey = 1 << 3,
+        CreateValue = 1 << 4,
+        LockPermissions = 1 << 5,
+        AllAccess = (1 << 8) - 1
+    };
+    enum class PFValue : Trd::u8 {
         //for all, set always as default, cant be unset
         ReadOnly,
         //for all, read access
         Read = ReadOnly,
-        //for keys/entries, new data can be written. Required for creation of subkeys
-        CreateNew = 1 << 1,
-        //for all, existing data can be edited/renaned, addition of new data is not permitted
-        Editable = 1 << 2,
+
+        EditContent = 1 << 1,
+
+        EditDatatype = 1 << 2,
+        EditValue = EditContent | EditDatatype,
+
+        Deletable = 1 << 3,
         //any change beyond read operation is denied automatically and this value must NOT be changed
         //unless ChangePermissions is set
-        LockPermissions = 1 << 3,
+        LockPermissions = 1 << 4,
         //Every operation is permitted
-        AllAccess = 1 << 4
+        AllAccess = (1 << 8) - 1
     };
     //Permission control for treg entities
     /* example layout consisting of 2 bytes
         +-----+-----+----------+
-        |VDT  |RSV  |   PFL    |
+        |VDT  |RSV  |   PF     |
         |NBLO |NBHI |HIGHBYTE  |
         |0100 |0000 |00001100  |
         +-----+-----+----------+
     */
     class TregAccess {
-      private:
+      protected:
         access_word access{0};
 
       public:
@@ -71,18 +86,59 @@ namespace Trd::Impl {
             access = word;
         }
 
-        bool isPermsLocked() const {
-            return permExists(PermissionFlags::LockPermissions);
-        }
+        // bool isPermsLocked() const {
+        //     return permExists(PFDirectory::LockPermissions);
+        // }
         //note this whole class doesnt prevent changing permissions if they are locked
         //as this class is not used directly
-        void appendPermission(PermissionFlags perms);
-        void removePermission(PermissionFlags perms);
         void clearPermissions();
-        bool permExists(PermissionFlags perms) const;
-        void setAccessVdt(ValueDataTemplate vdt);
+
+        void setAccessVDT(ValueDataTemplate vdt);
         static ValueDataTemplate getAccessVdt(access_word v);
-        static u8 getAccessReserved(access_word v);
-        static PermissionFlags getAccessPerms(access_word v);
+
+      protected:
+        void appendFlagPFL(u8 f);
+        void clearFlagPFL(u8 f);
+        bool existsFlagPFL(u8 perms) const;
+        static u8 getReservedNibble(access_word v);
+        static u8 getPFL(access_word v);
+    };
+    class TregValAccess : public TregAccess {
+      public:
+        TregValAccess(access_word acword) {
+            setAccessWord(acword);
+        };
+        TregValAccess() = default;
+        void appendPermission(PFValue perms) {
+            appendFlagPFL(static_cast<u8>(perms));
+        }
+        void removePermission(PFValue perms) {
+            clearFlagPFL(static_cast<u8>(perms));
+        }
+        void permExists(PFValue perms) {
+            existsFlagPFL(static_cast<u8>(perms));
+        }
+        static PFValue getAccessPerms(access_word v) {
+            return static_cast<PFValue>(getPFL(v));
+        }
+    };
+    class TregDirAccess : public TregAccess {
+      public:
+        TregDirAccess(access_word acword) {
+            setAccessWord(acword);
+        };
+        TregDirAccess() = default;
+        void appendPermission(PFDirectory perms) {
+            appendFlagPFL(static_cast<u8>(perms));
+        }
+        void removePermission(PFDirectory perms) {
+            clearFlagPFL(static_cast<u8>(perms));
+        }
+        void permExists(PFDirectory perms) {
+            existsFlagPFL(static_cast<u8>(perms));
+        }
+        static PFDirectory getAccessPerms(access_word v) {
+            return static_cast<PFDirectory>(getPFL(v));
+        }
     };
 };
