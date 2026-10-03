@@ -227,8 +227,8 @@ void print_treg_access(access_word aw) {
 
     // u8 loNibbleHigh = (highByte & 0x0F);
     // u8 hiNibbleHigh = ((highByte >> 4) & 0xF0);
-    dbgprintf("\n   [TREG_ACCESS]\n┌─────────┬────────┐\n");
-    dbgprintf("│   VDT   │   RSV  │\n│NBLO│NBHI│HIGHBYTE│\n│");
+    dbgprintf("\n   [TREG_ACCESS]\n┌────┬────┬────────┐\n");
+    dbgprintf("│VDT │RSV │   PFL  │\n│NBLO│NBHI│HIGHBYTE│\n│");
     std::cout << std::bitset<4>(loNibbleLow) << "│" << std::bitset<4>(hiNibbleLow) << "│"
               << std::bitset<8>(highByte) << "│\n└────┴────┴────────┘" << std::endl;
     dbgprintf("VDT(lb.nblo): %u\n", loNibbleLow);

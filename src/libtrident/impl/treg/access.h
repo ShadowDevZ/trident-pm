@@ -8,6 +8,7 @@ namespace Trd::Impl {
     //determiens how the stored data should be handled. For example if DtblOffset is set we then
     //expect the set value to be valid file offset
     //lower 4 bits
+    //VDT
     enum class ValueDataTemplate : Trd::u8 {
 
         GenericData = 0b0000,
@@ -29,6 +30,7 @@ namespace Trd::Impl {
 
     //for security descriptor
     //todo probably for  KEY/ENTRY and value add 2 separate permissions
+    //PFL
     enum class PermissionFlags : Trd::u8 {
         //for all, set always as default, cant be unset
         ReadOnly,
@@ -44,6 +46,14 @@ namespace Trd::Impl {
         //Every operation is permitted
         AllAccess = 1 << 4
     };
+    //Permission control for treg entities
+    /* example layout consisting of 2 bytes
+        +-----+-----+----------+
+        |VDT  |RSV  |   PFL    |
+        |NBLO |NBHI |HIGHBYTE  |
+        |0100 |0000 |00001100  |
+        +-----+-----+----------+
+    */
     class TregAccess {
       private:
         access_word access{0};
