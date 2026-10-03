@@ -41,7 +41,7 @@ namespace Trd::Impl {
         EditKey = 1 << 3,
         CreateValue = 1 << 4,
         LockPermissions = 1 << 5,
-        AllAccess = (1 << 8) - 1
+        AllAccess = Read | CreateSubKey | EditSubKey | EditKey | CreateValue
     };
     enum class PFValue : Trd::u8 {
         //for all, set always as default, cant be unset
@@ -59,7 +59,7 @@ namespace Trd::Impl {
         //unless ChangePermissions is set
         LockPermissions = 1 << 4,
         //Every operation is permitted
-        AllAccess = (1 << 8) - 1
+        AllAccess = Read | EditContent | EditDatatype | EditValue | Deletable
     };
     //Permission control for treg entities
     /* example layout consisting of 2 bytes
@@ -74,7 +74,7 @@ namespace Trd::Impl {
         access_word access{0};
 
       public:
-        TregAccess(access_word acword) {
+        explicit TregAccess(access_word acword) {
             setAccessWord(acword);
         };
         TregAccess() = default;
@@ -94,6 +94,7 @@ namespace Trd::Impl {
         void clearPermissions();
 
         void setAccessVDT(ValueDataTemplate vdt);
+        void setAccessPFL(u8 f);
         static ValueDataTemplate getAccessVdt(access_word v);
 
       protected:
@@ -104,30 +105,40 @@ namespace Trd::Impl {
         static u8 getPFL(access_word v);
     };
     class TregValAccess : public TregAccess {
+
       public:
-        TregValAccess(access_word acword) {
+        explicit TregValAccess(access_word acword) {
             setAccessWord(acword);
         };
-        TregValAccess() = default;
+        TregValAccess() {
+            setAccessPFL(static_cast<u8>(Trd::Impl::PFValue::AllAccess));
+            setAccessVDT(Trd::Impl::ValueDataTemplate::GenericData);
+        }
         void appendPermission(PFValue perms) {
             appendFlagPFL(static_cast<u8>(perms));
         }
         void removePermission(PFValue perms) {
             clearFlagPFL(static_cast<u8>(perms));
         }
-        void permExists(PFValue perms) {
+        void permExists(PFValue perms) const {
             existsFlagPFL(static_cast<u8>(perms));
         }
-        static PFValue getAccessPerms(access_word v) {
-            return static_cast<PFValue>(getPFL(v));
+        PFValue getPerms() const {
+            return static_cast<PFValue>(getPFL(access));
+        }
+        ValueDataTemplate getVDT() const {
+            return getAccessVdt(access);
         }
     };
     class TregDirAccess : public TregAccess {
       public:
-        TregDirAccess(access_word acword) {
+        explicit TregDirAccess(access_word acword) {
             setAccessWord(acword);
         };
-        TregDirAccess() = default;
+        TregDirAccess() {
+            setAccessPFL(static_cast<u8>(Trd::Impl::PFValue::AllAccess));
+            setAccessVDT(Trd::Impl::ValueDataTemplate::Directory);
+        }
         void appendPermission(PFDirectory perms) {
             appendFlagPFL(static_cast<u8>(perms));
         }
@@ -137,8 +148,11 @@ namespace Trd::Impl {
         void permExists(PFDirectory perms) {
             existsFlagPFL(static_cast<u8>(perms));
         }
-        static PFDirectory getAccessPerms(access_word v) {
-            return static_cast<PFDirectory>(getPFL(v));
+        PFDirectory getPerms() const {
+            return static_cast<PFDirectory>(getPFL(access));
+        }
+        ValueDataTemplate getVDT() const {
+            return getAccessVdt(access);
         }
     };
 };

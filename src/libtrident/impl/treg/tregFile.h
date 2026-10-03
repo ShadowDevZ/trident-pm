@@ -6,6 +6,7 @@
 #include "serdatacommon.h"
 #include "binarySerializer.h"
 #include <variant>
+#include "access.h"
 namespace Trd::Consts::Treg {
     inline constexpr u32 TREG_MAGIC = 0x52444852; //RHDR (BE)
     inline constexpr u16 KEY_REC_ID = 0x526B; //kR (BE)
@@ -95,18 +96,19 @@ namespace Trd {
 
         u32 firstEntryIndex;
         u16 entryCount;
+        Trd::access_word accessWord;
         u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         /*
         sum of all fields in bytes, there is probably a way better way to do this but i want this 
         to be static and i dont want to use magic numbers that make no sense
         */
         static constexpr int keyRecordSize() {
-            return 24;
+            return 26;
         }
         constexpr u64 size() const override {
             constexpr auto x = Impl::BinarySerializer::elementSize(
                 identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
-                firstEntryIndex, entryCount, recordChecksum);
+                firstEntryIndex, entryCount, accessWord, recordChecksum);
 
             static_assert(x == keyRecordSize(), "Size missmatch");
             return x;
@@ -124,14 +126,15 @@ namespace Trd {
         u16 entryNameLength;
         u32 valsFirstIndex;
         u16 valsCount;
+        Trd::access_word accessWord;
         u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         static constexpr int entryRecordSize() {
-            return 18;
+            return 20;
         }
         constexpr u64 size() const override {
-            constexpr auto x =
-                Impl::BinarySerializer::elementSize(identifier, entryNameOffset, entryNameLength,
-                                                    valsFirstIndex, valsCount, recordChecksum);
+            constexpr auto x = Impl::BinarySerializer::elementSize(
+                identifier, entryNameOffset, entryNameLength, valsFirstIndex, valsCount, accessWord,
+                recordChecksum);
             static_assert(x == entryRecordSize(), "Size missmatch");
             return x;
         }
@@ -150,23 +153,24 @@ namespace Trd {
         //with LargeData; if dataSize smaller than 8 && dataType < 11 pad with 0's until end
 
         //not part of the struct just definition for variant
+        //were using the fields manually so no need to worry about padding
         struct PayloadPoolData {
             u32 payloadPoolOffset;
             u32 payloadSize;
         };
-        //
+        Trd::access_word accessWord;
         u32 recordChecksum = Consts::TRD_INVALID_CHKSUM;
         using TrivialData = std::array<std::byte, 8>;
         // using TrivialData = std::byte[8];
         std::variant<TrivialData, PayloadPoolData> payload;
 
         static constexpr int valRecordSize() {
-            return 21; //align everything later we need functioning prototype
+            return 23; //align everything later we need functioning prototype
         }
         constexpr u64 size() const override {
             constexpr auto x =
                 Impl::BinarySerializer::elementSize(identifier, valNamePoolOffset, valNameLength,
-                                                    datatype, recordChecksum) +
+                                                    datatype, accessWord, recordChecksum) +
                 (sizeof(std::byte) * 8);
             static_assert(x == valRecordSize(), "Size missmatch");
             return x;
@@ -181,6 +185,7 @@ namespace Trd {
     class Value {
 
       public:
+        Trd::Impl::TregValAccess permissions{};
         //decimal numbers are represented as a string
         using Payload = std::variant<i8, i16, i32, i64, u8, u16, u32, u64, std::string,
                                      std::vector<std::byte>>; //add later
@@ -310,6 +315,8 @@ namespace Trd {
         Value const* findValue(std::string_view name) const;
         Value* findValue(std::string_view name);
 
+        Trd::Impl::TregDirAccess permissions{};
+
       private:
         std::string name;
         std::vector<Value> values;
@@ -346,6 +353,8 @@ namespace Trd {
         static void printTree(const Key& k, const std::string& prefix = "", bool isRoot = true);
         Key* findChild(std::string_view name);
         Entry* findEntry(std::string_view name);
+
+        Trd::Impl::TregDirAccess permissions{};
 
       private:
         std::string key;

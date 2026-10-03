@@ -46,6 +46,9 @@ void TregAccess::setAccessVDT(ValueDataTemplate vdt) {
     u8 lowByte = (hiNibble << 4) | (loNibble & 0x0F);
     updateLOByte(access, lowByte);
 }
+void TregAccess::setAccessPFL(u8 f) {
+    updateHIByte(access, f);
+}
 u8 TregAccess::getReservedNibble(access_word v) {
     u8 low = getLOByte(v);
     //returns higher nibble from the first byte

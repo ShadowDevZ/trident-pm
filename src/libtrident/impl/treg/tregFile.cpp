@@ -30,7 +30,7 @@ std::optional<std::vector<std::byte>> TregKeyRecord::serialize() const {
 
     Trd::Impl::BinarySerializer bs(std::endian::native, false);
     bs.addTrivial(identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
-                  firstEntryIndex, entryCount, recordChecksum);
+                  firstEntryIndex, entryCount, accessWord, recordChecksum);
     return bs.getFormattedData();
 }
 
@@ -38,7 +38,7 @@ bool TregKeyRecord::deserialize(const std::vector<std::byte>& dataIn) {
     Impl::BinarySerializer bs(dataIn);
 
     bs.readTrivial(identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
-                   firstEntryIndex, entryCount, recordChecksum);
+                   firstEntryIndex, entryCount, accessWord, recordChecksum);
 
     if (bs.getReadOffset() != this->size() || identifier != Consts::Treg::KEY_REC_ID) {
         return false;
@@ -51,7 +51,7 @@ std::optional<std::vector<std::byte>> TregEntryRecord::serialize() const {
 
     Trd::Impl::BinarySerializer bs(std::endian::native, false);
     bs.addTrivial(identifier, entryNameOffset, entryNameLength, valsFirstIndex, valsCount,
-                  recordChecksum);
+                  accessWord, recordChecksum);
     return bs.getFormattedData();
 }
 
@@ -59,7 +59,7 @@ bool TregEntryRecord::deserialize(const std::vector<std::byte>& dataIn) {
     Trd::Impl::BinarySerializer bs(std::endian::native, false);
 
     bs.readTrivial(identifier, entryNameOffset, entryNameLength, valsFirstIndex, valsCount,
-                   recordChecksum);
+                   accessWord, recordChecksum);
 
     if (bs.getReadOffset() != this->size() || identifier != Consts::Treg::ENTRY_REC_ID) {
         return false;
@@ -73,7 +73,8 @@ std::optional<std::vector<std::byte>> TregValueRecord::serialize() const {
 
     Trd::Impl::BinarySerializer bs(std::endian::native, false);
 
-    bs.addTrivial(identifier, valNamePoolOffset, valNameLength, datatype, recordChecksum);
+    bs.addTrivial(identifier, valNamePoolOffset, valNameLength, datatype, accessWord,
+                  recordChecksum);
     if (AttrIsTrivial(datatype) && std::holds_alternative<TrivialData>(payload)) {
         // bs.addContainer(std::get<TrivialData>(payload));
         auto pData = std::get<TrivialData>(payload);
@@ -90,7 +91,8 @@ std::optional<std::vector<std::byte>> TregValueRecord::serialize() const {
 bool TregValueRecord::deserialize(const std::vector<std::byte>& dataIn) {
     Impl::BinarySerializer bs(dataIn);
 
-    bs.readTrivial(identifier, valNamePoolOffset, valNameLength, datatype, recordChecksum);
+    bs.readTrivial(identifier, valNamePoolOffset, valNameLength, datatype, accessWord,
+                   recordChecksum);
 
     if (bs.getReadOffset() != this->size() || identifier != Consts::Treg::VALUE_REC_ID) {
         return false;
@@ -121,23 +123,25 @@ void TregKeyRecord::dbgInfoPrint() const {
         "\x1B[33m  [TregKR]\n"
         "\tidentifier: 0x%X\n\tkeyNameOffset: %u\n\tkeyNameLength: %u\n"
         "\tfirstChildKeyIndex: %u\n\tchildKeysCount: %u\n"
-        "\tfirstValIndex: %u\n\tentryCount: 0x%X\n\trecordChecksum: 0x%X\n  [TregKR]\n\x1B[0m",
+        "\tfirstValIndex: %u\n\tentryCount: 0x%X\n\taccess_word: %x\n\trecordChecksum: 0x%X\n  "
+        "[TregKR]\n\x1B[0m",
         identifier, keyNameOffset, keyNameLength, firstChildKeyIndex, childKeysCount,
-        firstEntryIndex, entryCount, recordChecksum);
+        firstEntryIndex, entryCount, accessWord, recordChecksum);
 }
 void TregEntryRecord::dbgInfoPrint() const {
     dbgprintf("\x1B[33m  [TregVR]\n"
               "\tidentifier: 0x%X\n\tvalNameOffset: %u\n\tentryNameLength: %u\n"
-              "\tattrFirstIndex: %u\n\tattrCount: %u\n\trecordChecksum: 0x%X\n  [TregVR]\n\x1B[0m",
-              identifier, entryNameOffset, entryNameLength, valsFirstIndex, valsCount,
+              "\tattrFirstIndex: %u\n\tattrCount: %u\n\taccess_word: %u\n\trecordChecksum: 0x%X\n  "
+              "[TregVR]\n\x1B[0m",
+              identifier, entryNameOffset, entryNameLength, valsFirstIndex, valsCount, accessWord,
               recordChecksum);
 }
 
 void TregValueRecord::dbgInfoPrint() const {
     dbgprintf("\x1B[33m  [TregAR]\n"
               "\tidentifier: 0x%X\n\tattrNamePoolOffset: %u\n\tattrNameLength: %u\n"
-              "\tdatatype: %u\n\trecordChecksum: 0x%x\n",
-              identifier, valNamePoolOffset, valNameLength, static_cast<u8>(datatype),
+              "\tdatatype: %u\n\taccess_word: %u\n\trecordChecksum: 0x%x\n",
+              identifier, valNamePoolOffset, valNameLength, static_cast<u8>(datatype), accessWord,
               recordChecksum);
     if (std::holds_alternative<TrivialData>(payload)) {
         TrivialData td = std::get<TrivialData>(payload);
@@ -225,10 +229,12 @@ void printValues(const Entry& entry, const std::string& prefix) {
             isLast = true;
         const auto& e = entries[i];
         auto entryName = e.getName();
+        u8 pfl = static_cast<u8>(e.permissions.getPerms());
+        u8 vdt = static_cast<u8>(e.permissions.getVDT());
         auto type = Value::DatatypeAsString(e.getValueDataType()).value_or("???");
-        dbgprintf("%s%s\x1B[33m[%.*s] (type.%s, vid.%lu)\n\x1B[0m", prefix.c_str(),
+        dbgprintf("%s%s\x1B[33m[%.*s] (type.%s(%lu), pfl.%d vdt.%d)\n\x1B[0m", prefix.c_str(),
                   isLast ? "└──" : "├──", static_cast<int>(entryName.size()), entryName.data(),
-                  type, e.getPayload().index());
+                  type, e.getPayload().index(), pfl, vdt);
     }
 }
 std::optional<const char*> Value::DatatypeAsString(TregValueDatatype vd) {
@@ -286,14 +292,23 @@ void Key::printTree(const Key& k, const std::string& prefix, bool isRoot) {
             isLast = true;
 
         std::string childPrefix = prefix + (isLast ? "    " : "│   ");
-        if (list[i].isKey) {
-            dbgprintf("%s%s\x1B[31m[%.*s]\n\x1B[0m", prefix.c_str(), isLast ? "└──" : "├──",
-                      static_cast<int>(list[i].name.size()), list[i].name.data());
-            printTree(children[list[i].idx], childPrefix, false);
-        } else {
-            dbgprintf("%s%s\x1B[32m[%.*s]\n\x1B[0m", prefix.c_str(), isLast ? "└──" : "├──",
-                      static_cast<int>(list[i].name.size()), list[i].name.data());
-            printValues(entries[list[i].idx], childPrefix);
+        if (list[i].isKey) { //key
+            const Trd::Key& key = children[list[i].idx];
+            u8 pfl = static_cast<u8>(key.permissions.getPerms());
+            u8 vdt = static_cast<u8>(key.permissions.getVDT());
+
+            dbgprintf("%s%s\x1B[31m[%.*s] (pfl.%d vdt.%d)\n\x1B[0m", prefix.c_str(),
+                      isLast ? "└──" : "├──", static_cast<int>(list[i].name.size()),
+                      list[i].name.data(), pfl, vdt);
+            printTree(key, childPrefix, false);
+        } else { //entry
+            const Trd::Entry& entry = entries[list[i].idx];
+            u8 pfl = static_cast<u8>(entry.permissions.getPerms());
+            u8 vdt = static_cast<u8>(entry.permissions.getVDT());
+            dbgprintf("%s%s\x1B[32m[%.*s] (pfl.%d vdt.%d)\n\x1B[0m", prefix.c_str(),
+                      isLast ? "└──" : "├──", static_cast<int>(list[i].name.size()),
+                      list[i].name.data(), pfl, vdt);
+            printValues(entry, childPrefix);
         }
     }
 }

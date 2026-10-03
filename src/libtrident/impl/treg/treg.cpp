@@ -14,6 +14,7 @@ std::vector<TregHiveSerializer::KeyMapPool> TregHiveSerializer::iRecordKeys(cons
         std::vector<const Trd::Key*> sorted = iSortByName(plan[i].key->getChildren());
         plan[i].childStart = static_cast<u32>(plan.size());
         plan[i].childCount = static_cast<u32>(sorted.size());
+        //fill the plan with blank data
         for (const Key* k : sorted) {
             plan.push_back({k, 0, 0});
         }
@@ -40,6 +41,7 @@ TregValueRecord TregHiveSerializer::iRecordValues(const Value& attr, PoolData& p
     attrRec.valNamePoolOffset = nameOff;
     attrRec.valNameLength = nameLen;
     attrRec.datatype = attr.getValueDataType();
+    attrRec.accessWord = attr.permissions.getAccessWord();
     auto payload = attr.getPayload();
 
     std::visit(
@@ -74,6 +76,7 @@ TregEntryRecord TregHiveSerializer::iRecordEntries(const Entry& val, PoolData& p
     std::vector<const Value*> sortedAttrs = iSortByName(val.getValues());
     valRec.valsFirstIndex = static_cast<u32>(attrRec.size());
     valRec.valsCount = static_cast<u16>(sortedAttrs.size());
+    valRec.accessWord = val.permissions.getAccessWord();
 
     for (const Value* a : sortedAttrs) {
         //  dbgprintf("%u\n", (u8)a->getAttrDataType());
@@ -98,7 +101,8 @@ TregHiveSerializer::build(const Trd::Key& root) {
         keyRec[i].keyNameOffset = nameOff;
         keyRec[i].childKeysCount = keys[i].childCount;
         keyRec[i].firstChildKeyIndex = keys[i].childStart;
-
+        keyRec[i].accessWord = k.permissions.getAccessWord();
+        //record each key entry
         std::vector<const Entry*> sortedVal = iSortByName(k.getEntries());
         keyRec[i].firstEntryIndex = static_cast<u32>(entryRec.size());
         keyRec[i].entryCount = static_cast<u16>(sortedVal.size());
